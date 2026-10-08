@@ -242,10 +242,12 @@ public final class MediaEngine {
         }
 
         String rootPath = Prefs.rootPath();
+        // Пока галерея «закрыта» маскировкой — корневой папки как будто нет
+        boolean rootHidden = MaskGuard.hidden();
 
         // Мои папки (рекурсивно внутри корня)
         List<Album> user = new ArrayList<>();
-        if (rootPath != null) {
+        if (rootPath != null && !rootHidden) {
             File root = new File(rootPath);
             if (root.exists()) {
                 List<File> dirs = new ArrayList<>();

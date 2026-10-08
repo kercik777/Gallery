@@ -28,6 +28,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.premiumlab.galleryx.MainActivity;
 import com.premiumlab.galleryx.R;
 import com.premiumlab.galleryx.RootPickerActivity;
+import com.premiumlab.galleryx.data.MaskGuard;
 import com.premiumlab.galleryx.data.MediaItem;
 import com.premiumlab.galleryx.data.Prefs;
 import com.premiumlab.galleryx.data.SessionManager;
@@ -246,7 +247,8 @@ public abstract class BaseMediaFragment extends Fragment
 
     protected void updateHideNowButton() {
         if (btnHideNow == null) return;
-        boolean show = Prefs.masking() && Prefs.autoHide() == Prefs.AUTOHIDE_MANUAL;
+        boolean show = Prefs.masking() && Prefs.autoHide() == Prefs.AUTOHIDE_MANUAL
+                && SessionManager.isUnlocked();
         btnHideNow.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 
@@ -278,8 +280,13 @@ public abstract class BaseMediaFragment extends Fragment
 
         if (selTop != null) {
             selTop.findViewById(R.id.btnSelClose).setOnClickListener(x -> exitSelection());
-            selTop.findViewById(R.id.btnSelAll).setOnClickListener(x -> {
-                if (adapter != null) {
+            View btnAll = selTop.findViewById(R.id.btnSelAll);
+            btnAll.setVisibility(View.VISIBLE);
+            btnAll.setOnClickListener(x -> {
+                if (adapter == null) return;
+                if (isAllSelected()) {
+                    exitSelection();
+                } else {
                     adapter.selectAll(shownItems);
                     updateSelBar();
                 }
@@ -288,6 +295,10 @@ public abstract class BaseMediaFragment extends Fragment
         }
 
         if (selActions != null) {
+            // Панели общие для всех вкладок activity: сначала возвращаем набор
+            // кнопок по умолчанию, иначе после «Альбомов» (где остаётся только
+            // «Удалить») в галерее пропадали остальные действия.
+            resetSelectionBar();
             selActions.findViewById(R.id.btnSelFavorite).setOnClickListener(x -> {
                 List<MediaItem> sel = selectedItems();
                 if (!sel.isEmpty()) {
@@ -318,7 +329,31 @@ public abstract class BaseMediaFragment extends Fragment
         }
 
         configureSelectionBar();
+        // Пока галерея «закрыта» маскировкой — сейф и корневые папки не показываем
+        if (MaskGuard.hidden() && selActions != null) {
+            selActions.findViewById(R.id.btnSelSafe).setVisibility(View.GONE);
+            selActions.findViewById(R.id.btnSelCopy).setVisibility(View.GONE);
+            selActions.findViewById(R.id.btnSelMove).setVisibility(View.GONE);
+        }
         updateSelBar();
+    }
+
+    /** Набор кнопок нижнего ряда по умолчанию (обычная сетка медиа). */
+    private void resetSelectionBar() {
+        if (selActions == null) return;
+        int[] visible = {R.id.btnSelFavorite, R.id.btnSelShare, R.id.btnSelCopy,
+                R.id.btnSelMove, R.id.btnSelSafe, R.id.btnSelDelete};
+        for (int id : visible) {
+            View b = selActions.findViewById(id);
+            if (b != null) b.setVisibility(View.VISIBLE);
+        }
+        View restore = selActions.findViewById(R.id.btnSelRestore);
+        if (restore != null) restore.setVisibility(View.GONE);
+    }
+
+    protected boolean isAllSelected() {
+        return adapter != null && !shownItems.isEmpty()
+                && adapter.getSelectedCount() >= shownItems.size();
     }
 
     protected void setupPinchZoom(View v) {
@@ -376,7 +411,10 @@ public abstract class BaseMediaFragment extends Fragment
     protected void applyFilter() {
         List<MediaItem> filtered = new ArrayList<>();
         String q = query;
+        boolean maskHidden = MaskGuard.hidden();
         for (MediaItem it : extraFilter(allItems)) {
+            // Содержимое корневой папки скрыто, пока маскировка «закрыта»
+            if (maskHidden && MaskGuard.isHiddenPath(it.path)) continue;
             if (q.isEmpty() || it.name.toLowerCase(Locale.getDefault()).contains(q)) {
                 filtered.add(it);
             }
@@ -416,6 +454,15 @@ public abstract class BaseMediaFragment extends Fragment
         loadMedia();
     }
 
+    /** Полное обновление экрана после смены состояния маскировки. */
+    public void reloadForMask() {
+        if (!isAdded() || adapter == null) return;
+        exitSelection();
+        setupSelectionChrome();
+        updateHideNowButton();
+        loadMedia();
+    }
+
     protected void afterAction() {
         exitSelection();
         loadMedia();
@@ -443,13 +490,21 @@ public abstract class BaseMediaFragment extends Fragment
     }
 
     protected void updateSelBar() {
-        if (adapter == null) return;
+        if (adapter == null || !isAdded()) return;
         int count = adapter.getSelectedCount();
         boolean active = count > 0;
         if (selTop != null) {
             selTop.setVisibility(active ? View.VISIBLE : View.GONE);
             if (active && txtSelCount != null) {
                 txtSelCount.setText(Fmt_sel(count));
+            }
+            ImageView btnAll = selTop.findViewById(R.id.btnSelAll);
+            if (btnAll != null) {
+                boolean all = isAllSelected();
+                btnAll.setImageResource(all
+                        ? R.drawable.ic_deselect_all : R.drawable.ic_select_all);
+                btnAll.setContentDescription(getString(all
+                        ? R.string.deselect_all : R.string.select_all));
             }
         }
         if (selActions != null) {
@@ -579,7 +634,11 @@ public abstract class BaseMediaFragment extends Fragment
     @Override
     public void onHiddenChanged(boolean hidden) {
         super.onHiddenChanged(hidden);
-        if (!hidden && isAdded()) {
+        if (!isAdded()) return;
+        if (hidden) {
+            // Уходим с вкладки — сбрасываем выделение, чтобы панели не «зависали»
+            exitSelection();
+        } else {
             // Видимая вкладка заново владеет панелями выделения
             setupSelectionChrome();
             reload();

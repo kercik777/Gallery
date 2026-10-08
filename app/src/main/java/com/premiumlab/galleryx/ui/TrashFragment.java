@@ -50,6 +50,8 @@ public class TrashFragment extends BaseMediaFragment {
             entries.addAll(TrashStore.get().entries());
             List<MediaItem> items = new ArrayList<>();
             for (TrashStore.Entry e : entries) {
+                // Файлы из скрытой корневой папки не показываем и в корзине
+                if (com.premiumlab.galleryx.data.MaskGuard.isHiddenPath(e.origPath)) continue;
                 MediaItem it = new MediaItem();
                 it.path = e.path;
                 it.name = e.name;

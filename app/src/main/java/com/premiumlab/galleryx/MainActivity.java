@@ -11,9 +11,7 @@ import android.os.Looper;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -21,10 +19,12 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.premiumlab.galleryx.data.MaskGuard;
 import com.premiumlab.galleryx.data.Prefs;
 import com.premiumlab.galleryx.data.SessionManager;
 import com.premiumlab.galleryx.ui.AlbumsFragment;
 import com.premiumlab.galleryx.ui.BackHandler;
+import com.premiumlab.galleryx.ui.BaseMediaFragment;
 import com.premiumlab.galleryx.ui.FavoritesFragment;
 import com.premiumlab.galleryx.ui.GalleryFragment;
 import com.premiumlab.galleryx.ui.SelectionHost;
@@ -34,10 +34,10 @@ import com.premiumlab.galleryx.util.Perms;
 /**
  * Главный экран приложения. Без Splash и онбординга — мгновенный запуск.
  *
- * Режим маскировки: когда включён и галерея «закрыта», показывается пустая
- * фальшивая галерея. Доступ к настоящей — удержание заголовка (или заставки,
- * или строки версии) в течение 3 секунд, при установленном PIN-коде — после
- * его ввода.
+ * Режим маскировки: галерея всегда настоящая, но пока она «закрыта» —
+ * скрыты корневая папка (все «Мои папки» и их файлы), сейф и пункт
+ * настроек маскировки. Открыть: удержание заголовка «Галерея» 3 секунды,
+ * при установленном PIN-коде — после его ввода.
  *
  * В режиме выделения bottom bar заменяется рядом действий (нижняя зона
  * фиксированной высоты — сетка не смещается).
@@ -48,23 +48,21 @@ public class MainActivity extends AppCompatActivity
     private static final int REQ_PIN = 101;
     private static final long HOLD_MS = 3000L;
 
-    private View layoutReal, layoutMasked, layoutPermission;
+    private View layoutReal, layoutPermission;
     private BottomNavigationView bottomNav;
     private View selectionTop, selectionActions;
     private ProgressBar progressHold;
-    private TextView txtMaskedTitle, txtMaskedVersion;
-    private ImageView imgMaskedEmpty;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Runnable holdRunnable;
     private ValueAnimator holdAnimator;
     private boolean holdTriggered;
 
-    private final int[] navIds = {R.id.nav_gallery, R.id.nav_albums,
-            R.id.nav_favorites, R.id.nav_settings};
     private final String[] fragTags = {"gallery", "albums", "favorites", "settings"};
     private String currentTag = null;
     private boolean fragmentsAdded = false;
+    /** Состояние маскировки на момент последнего показа — чтобы обновить вкладки. */
+    private boolean lastMaskHidden;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,15 +73,11 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         layoutReal = findViewById(R.id.layoutReal);
-        layoutMasked = findViewById(R.id.layoutMasked);
         layoutPermission = findViewById(R.id.layoutPermission);
         bottomNav = findViewById(R.id.bottomNav);
         selectionTop = findViewById(R.id.selectionTop);
         selectionActions = findViewById(R.id.selectionActions);
         progressHold = findViewById(R.id.progressHold);
-        txtMaskedTitle = findViewById(R.id.txtMaskedTitle);
-        txtMaskedVersion = findViewById(R.id.txtMaskedVersion);
-        imgMaskedEmpty = findViewById(R.id.imgMaskedEmpty);
 
         findViewById(R.id.btnGrant).setOnClickListener(v -> requestPermissionsFlow());
 
@@ -95,10 +89,6 @@ public class MainActivity extends AppCompatActivity
             else if (id == R.id.nav_settings) showFragment(3);
             return true;
         });
-
-        setupHoldTarget(txtMaskedTitle);
-        setupHoldTarget(imgMaskedEmpty);
-        setupHoldTarget(txtMaskedVersion);
     }
 
     // ---------- Разрешения ----------
@@ -130,6 +120,7 @@ public class MainActivity extends AppCompatActivity
     protected void onPause() {
         super.onPause();
         SessionManager.setListener(null);
+        cancelHold();
     }
 
     @Override
@@ -147,51 +138,25 @@ public class MainActivity extends AppCompatActivity
         if (!Perms.ok(this)) {
             layoutPermission.setVisibility(View.VISIBLE);
             layoutReal.setVisibility(View.GONE);
-            layoutMasked.setVisibility(View.GONE);
             return;
         }
         layoutPermission.setVisibility(View.GONE);
-        if (Prefs.masking() && !SessionManager.isUnlocked()) {
-            showMasked(false);
-        } else {
-            showReal(false);
-        }
-    }
-
-    private void showReal(boolean animate) {
-        cancelHold();
-        if (animate) {
-            layoutMasked.animate().alpha(0f).setDuration(180).withEndAction(() -> {
-                layoutMasked.setVisibility(View.GONE);
-                layoutMasked.setAlpha(1f);
-            }).start();
-            layoutReal.setAlpha(0f);
-            layoutReal.animate().alpha(1f).setDuration(220).start();
-        } else {
-            layoutMasked.setVisibility(View.GONE);
-        }
         layoutReal.setVisibility(View.VISIBLE);
         syncChromeWithCurrentFragment();
-        ensureFragments();
-    }
-
-    private void showMasked(boolean animate) {
-        cancelHold();
-        if (animate) {
-            layoutReal.animate().alpha(0f).setDuration(180).withEndAction(() -> {
-                layoutReal.setAlpha(1f);
-            }).start();
+        if (!ensureFragments() && lastMaskHidden != MaskGuard.hidden()) {
+            // Галерея закрылась/открылась, пока экран был не на переднем плане
+            // (таймер автоскрытия, сворачивание, кнопка в другой activity)
+            refreshAllFragments();
         }
-        layoutReal.setVisibility(View.GONE);
-        layoutMasked.setVisibility(View.VISIBLE);
-        // В замаскированном состоянии панелей выделения быть не должно
-        setContextualChrome(false);
+        lastMaskHidden = MaskGuard.hidden();
     }
 
-    private void ensureFragments() {
-        if (fragmentsAdded) return;
+    /** @return true, если вкладки только что были созданы. */
+    private boolean ensureFragments() {
+        if (fragmentsAdded) return false;
         fragmentsAdded = true;
         showFragment(0);
+        return true;
     }
 
     private Fragment createFragment(int index) {
@@ -230,6 +195,24 @@ public class MainActivity extends AppCompatActivity
         currentTag = fragTags[index];
     }
 
+    /** Обновляет все созданные вкладки после открытия/закрытия скрытого содержимого. */
+    private void refreshAllFragments() {
+        lastMaskHidden = MaskGuard.hidden();
+        androidx.fragment.app.FragmentManager fm = getSupportFragmentManager();
+        for (String tag : fragTags) {
+            Fragment f = fm.findFragmentByTag(tag);
+            if (f == null || !f.isAdded()) continue;
+            if (f instanceof BaseMediaFragment) {
+                ((BaseMediaFragment) f).reloadForMask();
+            } else if (f instanceof AlbumsFragment) {
+                ((AlbumsFragment) f).reload();
+            } else if (f instanceof SettingsFragment) {
+                ((SettingsFragment) f).refresh();
+            }
+        }
+        syncChromeWithCurrentFragment();
+    }
+
     // ---------- Режим выделения (SelectionHost) ----------
 
     @Override
@@ -242,8 +225,8 @@ public class MainActivity extends AppCompatActivity
         Fragment f = currentTag == null
                 ? null : getSupportFragmentManager().findFragmentByTag(currentTag);
         boolean active = false;
-        if (f instanceof com.premiumlab.galleryx.ui.BaseMediaFragment) {
-            active = ((com.premiumlab.galleryx.ui.BaseMediaFragment) f).isInSelection();
+        if (f instanceof BaseMediaFragment) {
+            active = ((BaseMediaFragment) f).isInSelection();
         } else if (f instanceof AlbumsFragment) {
             active = ((AlbumsFragment) f).isInSelection();
         }
@@ -272,12 +255,18 @@ public class MainActivity extends AppCompatActivity
         super.onBackPressed();
     }
 
-    // ---------- Маскировка: удержание 3 секунды ----------
+    // ---------- Маскировка: удержание заголовка 3 секунды ----------
 
+    /**
+     * Делает view «секретной кнопкой»: удержание 3 секунды открывает скрытое
+     * содержимое. Вызывается вкладкой «Галерея» для своего заголовка.
+     * Когда маскировка выключена или уже открыта — касания проходят как обычно.
+     */
     @SuppressLint("ClickableViewAccessibility")
-    private void setupHoldTarget(View target) {
+    public void registerHoldTarget(View target) {
         if (target == null) return;
         target.setOnTouchListener((v, event) -> {
+            if (!MaskGuard.hidden()) return false;
             switch (event.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
                     startHold(v);
@@ -293,6 +282,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void startHold(final View v) {
+        cancelHold();
         holdTriggered = false;
         v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);
         progressHold.setVisibility(View.VISIBLE);
@@ -317,6 +307,7 @@ public class MainActivity extends AppCompatActivity
             holdTriggered = true;
             progressHold.setVisibility(View.GONE);
             progressHold.setProgress(0);
+            v.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS);
             attemptUnlock();
         };
         handler.postDelayed(holdRunnable, HOLD_MS);
@@ -340,11 +331,11 @@ public class MainActivity extends AppCompatActivity
     private void attemptUnlock() {
         if (Prefs.pinSet()) {
             Intent intent = new Intent(this, PinActivity.class);
-            intent.putExtra("mode", "unlock");
+            intent.putExtra("mode", PinActivity.MODE_UNLOCK);
             startActivityForResult(intent, REQ_PIN);
         } else {
             SessionManager.unlock();
-            showReal(true);
+            refreshAllFragments();
         }
     }
 
@@ -353,7 +344,7 @@ public class MainActivity extends AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQ_PIN && resultCode == RESULT_OK) {
             SessionManager.unlock();
-            showReal(true);
+            refreshAllFragments();
         }
     }
 
@@ -362,7 +353,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onSessionLocked() {
         if (Prefs.masking()) {
-            showMasked(true);
+            refreshAllFragments();
         }
     }
 

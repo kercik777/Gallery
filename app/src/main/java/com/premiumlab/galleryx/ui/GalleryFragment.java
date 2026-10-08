@@ -7,6 +7,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
+import com.premiumlab.galleryx.MainActivity;
 import com.premiumlab.galleryx.PhotoViewerActivity;
 import com.premiumlab.galleryx.R;
 import com.premiumlab.galleryx.VideoPlayerActivity;
@@ -42,6 +43,10 @@ public class GalleryFragment extends BaseMediaFragment {
         chipPhotos.setOnClickListener(v -> setFilter(FILTER_PHOTO));
         chipVideos.setOnClickListener(v -> setFilter(FILTER_VIDEO));
         updateChips();
+        // Заголовок «Галерея» — секретная кнопка маскировки (удержание 3 секунды)
+        if (getActivity() instanceof MainActivity && txtHeaderTitle != null) {
+            ((MainActivity) getActivity()).registerHoldTarget(txtHeaderTitle);
+        }
     }
 
     private void setFilter(int f) {

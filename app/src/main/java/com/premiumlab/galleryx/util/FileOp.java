@@ -16,6 +16,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -251,6 +252,217 @@ public class FileOp {
             }
             finish(p, d, ok, fail, entries.size());
         });
+    }
+
+    // ---------- Операции с папками (альбомами) ----------
+
+    /**
+     * Копирует папки целиком (со всеми медиафайлами и подпапками) внутрь destDir.
+     * Папка-источник становится подпапкой назначения: A → dest/A.
+     */
+    public void copyDirs(List<File> dirs, File destDir, Progress p, Done d) {
+        exec.execute(() -> {
+            int ok = 0, fail = 0;
+            List<File[]> jobs = new ArrayList<>(); // [src, target]
+            long totalBytes = 0;
+            for (File dir : dirs) {
+                if (!dir.isDirectory() || isSameOrInside(destDir, dir)) {
+                    fail++;
+                    continue;
+                }
+                File targetRoot = uniqueDir(destDir, dir.getName());
+                List<File> files = new ArrayList<>();
+                collectMedia(dir, files, 0);
+                for (File f : files) {
+                    jobs.add(new File[]{f, new File(targetRoot,
+                            relativePath(dir, f))});
+                    totalBytes += f.length();
+                }
+                if (files.isEmpty()) {
+                    //noinspection ResultOfMethodCallIgnored
+                    targetRoot.mkdirs();
+                    ok++;
+                }
+            }
+            long copiedBytes = 0;
+            List<String> scan = new ArrayList<>();
+            for (int i = 0; i < jobs.size(); i++) {
+                if (cancelled) break;
+                File src = jobs.get(i)[0];
+                File target = jobs.get(i)[1];
+                File parent = target.getParentFile();
+                if (parent != null) {
+                    //noinspection ResultOfMethodCallIgnored
+                    parent.mkdirs();
+                }
+                target = Fmt.uniqueFile(parent == null ? destDir : parent, target.getName());
+                postProgress(p, i, jobs.size(), src.getName(),
+                        percentOf(copiedBytes, totalBytes));
+                long done = copyFile(src, target, copiedBytes, totalBytes, p, i,
+                        jobs.size(), src.getName());
+                if (done >= 0) {
+                    copiedBytes += src.length();
+                    ok++;
+                    scan.add(target.getAbsolutePath());
+                } else {
+                    fail++;
+                }
+            }
+            if (!scan.isEmpty()) Scan.files(ctx, scan.toArray(new String[0]));
+            finish(p, d, ok, fail, Math.max(1, jobs.size()));
+        });
+    }
+
+    /**
+     * Перемещает папки целиком внутрь destDir (A → dest/A).
+     * На одном разделе — мгновенный rename, иначе — копирование и удаление.
+     */
+    public void moveDirs(List<File> dirs, File destDir, Progress p, Done d) {
+        exec.execute(() -> {
+            int ok = 0, fail = 0;
+            List<String> scan = new ArrayList<>();
+            for (int i = 0; i < dirs.size(); i++) {
+                if (cancelled) break;
+                File dir = dirs.get(i);
+                postProgress(p, i, dirs.size(), dir.getName(), percentOf(i, dirs.size()));
+                if (!dir.isDirectory() || isSameOrInside(destDir, dir)) {
+                    fail++;
+                    continue;
+                }
+                File target = uniqueDir(destDir, dir.getName());
+                List<File> files = new ArrayList<>();
+                collectMedia(dir, files, 0);
+                for (File f : files) scan.add(f.getAbsolutePath());
+
+                if (dir.renameTo(target)) {
+                    for (File f : files) {
+                        scan.add(new File(target, relativePath(dir, f)).getAbsolutePath());
+                    }
+                    FavStore.remove(dir.getAbsolutePath());
+                    ok++;
+                    continue;
+                }
+                // Разные разделы: копируем файл за файлом, затем удаляем источник
+                boolean allOk = true;
+                for (File f : files) {
+                    if (cancelled) {
+                        allOk = false;
+                        break;
+                    }
+                    File t = new File(target, relativePath(dir, f));
+                    File parent = t.getParentFile();
+                    if (parent != null) {
+                        //noinspection ResultOfMethodCallIgnored
+                        parent.mkdirs();
+                    }
+                    if (copyFile(f, t, -1, -1, null, 0, 0, null) >= 0) {
+                        //noinspection ResultOfMethodCallIgnored
+                        f.delete();
+                        scan.add(t.getAbsolutePath());
+                    } else {
+                        allOk = false;
+                    }
+                }
+                if (allOk) {
+                    deleteTree(dir);
+                    ok++;
+                } else {
+                    fail++;
+                }
+            }
+            if (!scan.isEmpty()) Scan.files(ctx, scan.toArray(new String[0]));
+            finish(p, d, ok, fail, dirs.size());
+        });
+    }
+
+    /** Удаляет папки: все медиафайлы — в корзину, затем удаляется пустое дерево. */
+    public void trashDirs(List<File> dirs, Progress p, Done d) {
+        exec.execute(() -> {
+            int ok = 0, fail = 0;
+            File trashDir = TrashStore.trashDir();
+            List<String> scan = new ArrayList<>();
+            for (int i = 0; i < dirs.size(); i++) {
+                if (cancelled) break;
+                File dir = dirs.get(i);
+                postProgress(p, i, dirs.size(), dir.getName(), percentOf(i, dirs.size()));
+                if (!dir.exists()) {
+                    fail++;
+                    continue;
+                }
+                List<File> files = new ArrayList<>();
+                collectMedia(dir, files, 0);
+                boolean allOk = true;
+                for (File f : files) {
+                    File target = new File(trashDir, "t" + System.nanoTime() + "_" + f.getName());
+                    if (f.renameTo(target)) {
+                        TrashStore.get().add(f.getAbsolutePath(), target, f.getName(),
+                                target.length(), com.premiumlab.galleryx.data.MediaEngine
+                                        .isVideoName(f.getName()));
+                        FavStore.remove(f.getAbsolutePath());
+                        scan.add(f.getAbsolutePath());
+                    } else {
+                        allOk = false;
+                    }
+                }
+                if (allOk) {
+                    deleteTree(dir);
+                    ok++;
+                } else {
+                    fail++;
+                }
+            }
+            if (!scan.isEmpty()) Scan.files(ctx, scan.toArray(new String[0]));
+            finish(p, d, ok, fail, dirs.size());
+        });
+    }
+
+    /** true, если candidate совпадает с dir или лежит внутри него. */
+    private static boolean isSameOrInside(File candidate, File dir) {
+        String c = candidate.getAbsolutePath();
+        String d = dir.getAbsolutePath();
+        return c.equals(d) || c.startsWith(d + "/");
+    }
+
+    private static String relativePath(File base, File f) {
+        String b = base.getAbsolutePath();
+        String p = f.getAbsolutePath();
+        if (p.startsWith(b + "/")) return p.substring(b.length() + 1);
+        return f.getName();
+    }
+
+    /** Свободное имя папки внутри parent: name, name (2), name (3)… */
+    private static File uniqueDir(File parent, String name) {
+        File f = new File(parent, name);
+        int n = 2;
+        while (f.exists()) {
+            f = new File(parent, name + " (" + n + ")");
+            n++;
+        }
+        return f;
+    }
+
+    private static void collectMedia(File dir, List<File> out, int depth) {
+        if (depth > 8) return;
+        File[] arr = dir.listFiles();
+        if (arr == null) return;
+        for (File f : arr) {
+            if (f.getName().startsWith(".")) continue;
+            if (f.isDirectory()) collectMedia(f, out, depth + 1);
+            else out.add(f);
+        }
+    }
+
+    private static void deleteTree(File dir) {
+        File[] arr = dir.listFiles();
+        if (arr != null) {
+            for (File f : arr) {
+                if (f.isDirectory()) deleteTree(f);
+                //noinspection ResultOfMethodCallIgnored
+                f.delete();
+            }
+        }
+        //noinspection ResultOfMethodCallIgnored
+        dir.delete();
     }
 
     // ---------- Вспомогательные ----------

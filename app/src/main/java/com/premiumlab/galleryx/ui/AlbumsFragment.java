@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,14 +23,16 @@ import com.premiumlab.galleryx.MainActivity;
 import com.premiumlab.galleryx.R;
 import com.premiumlab.galleryx.RootPickerActivity;
 import com.premiumlab.galleryx.data.Album;
+import com.premiumlab.galleryx.data.MaskGuard;
 import com.premiumlab.galleryx.data.MediaEngine;
 import com.premiumlab.galleryx.data.Prefs;
 import com.premiumlab.galleryx.data.SessionManager;
-import com.premiumlab.galleryx.data.TrashStore;
 import com.premiumlab.galleryx.ui.adapter.AlbumsAdapter;
 import com.premiumlab.galleryx.ui.dialog.CreateFolderDialog;
+import com.premiumlab.galleryx.ui.dialog.DestSheet;
+import com.premiumlab.galleryx.ui.dialog.OpProgressDialog;
+import com.premiumlab.galleryx.util.FileOp;
 import com.premiumlab.galleryx.util.Fmt;
-import com.premiumlab.galleryx.util.Scan;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -37,7 +40,9 @@ import java.util.List;
 
 /**
  * Экран альбомов: «Мои папки» (внутри корня) и «Папки устройства».
- * Поддерживает выделение нескольких папок для удаления.
+ * Долгое нажатие на альбом включает режим выделения: можно выбрать несколько
+ * папок (или все сразу) и скопировать / переместить их в другой альбом либо
+ * удалить (содержимое уходит в корзину).
  * Панели выделения берутся с уровня MainActivity.
  */
 public class AlbumsFragment extends Fragment
@@ -50,6 +55,7 @@ public class AlbumsFragment extends Fragment
     private View layoutEmpty, layoutLoading, btnHideNow;
     private View selTop, selActions;
     private TextView txtSelCount;
+    private ImageView btnSelAll;
     private Runnable pendingAfterRoot;
 
     @Nullable
@@ -107,18 +113,31 @@ public class AlbumsFragment extends Fragment
 
         if (selTop != null) {
             selTop.findViewById(R.id.btnSelClose).setOnClickListener(x -> exitSelection());
-            // «Выбрать все» для папок не нужен
-            selTop.findViewById(R.id.btnSelAll).setVisibility(View.GONE);
+            btnSelAll = selTop.findViewById(R.id.btnSelAll);
+            btnSelAll.setVisibility(View.VISIBLE);
+            btnSelAll.setOnClickListener(x -> {
+                if (adapter == null) return;
+                if (adapter.isAllSelected()) {
+                    exitSelection();
+                } else {
+                    adapter.selectAll();
+                    updateSelBar();
+                }
+            });
             txtSelCount = selTop.findViewById(R.id.txtSelCount);
         }
         if (selActions != null) {
-            // Для папок актуально только удаление
+            // Для папок: копировать, переместить, удалить (+ выбрать все сверху)
             setActionVisible(R.id.btnSelFavorite, false);
             setActionVisible(R.id.btnSelShare, false);
-            setActionVisible(R.id.btnSelCopy, false);
-            setActionVisible(R.id.btnSelMove, false);
             setActionVisible(R.id.btnSelSafe, false);
             setActionVisible(R.id.btnSelRestore, false);
+            boolean canDest = !MaskGuard.hidden();
+            setActionVisible(R.id.btnSelCopy, canDest);
+            setActionVisible(R.id.btnSelMove, canDest);
+            setActionVisible(R.id.btnSelDelete, true);
+            selActions.findViewById(R.id.btnSelCopy).setOnClickListener(x -> destFlow(true));
+            selActions.findViewById(R.id.btnSelMove).setOnClickListener(x -> destFlow(false));
             selActions.findViewById(R.id.btnSelDelete)
                     .setOnClickListener(x -> onDeleteSelected());
         }
@@ -133,7 +152,14 @@ public class AlbumsFragment extends Fragment
     private void updateHideNow() {
         btnHideNow.setVisibility(
                 Prefs.masking() && Prefs.autoHide() == Prefs.AUTOHIDE_MANUAL
+                        && SessionManager.isUnlocked()
                         ? View.VISIBLE : View.GONE);
+        // Новые папки создаются в корневой — пока она скрыта, кнопку не показываем
+        View v = getView();
+        if (v != null) {
+            v.findViewById(R.id.btnNewFolder)
+                    .setVisibility(MaskGuard.hidden() ? View.GONE : View.VISIBLE);
+        }
     }
 
     private void loadAlbums() {
@@ -147,6 +173,15 @@ public class AlbumsFragment extends Fragment
             layoutEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
             updateSelBar();
         });
+    }
+
+    /** Перезагрузка списка (после смены состояния маскировки). */
+    public void reload() {
+        if (!isAdded() || adapter == null) return;
+        exitSelection();
+        setupSelectionChrome();
+        updateHideNow();
+        loadAlbums();
     }
 
     // ---------- Клики по альбомам ----------
@@ -166,7 +201,6 @@ public class AlbumsFragment extends Fragment
 
     @Override
     public void onAlbumLongClick(Album album, int position) {
-        if (!album.isUser) return;
         if (!adapter.isSelection()) {
             adapter.toggle(album.path);
             updateSelBar();
@@ -174,6 +208,7 @@ public class AlbumsFragment extends Fragment
     }
 
     private void updateSelBar() {
+        if (!isAdded()) return;
         int count = adapter == null ? 0 : adapter.getSelectedCount();
         boolean active = count > 0;
         if (selTop != null) {
@@ -181,6 +216,13 @@ public class AlbumsFragment extends Fragment
             if (active && txtSelCount != null) {
                 txtSelCount.setText(Fmt.plural(requireContext(),
                         R.plurals.selected_count, count));
+            }
+            if (btnSelAll != null && adapter != null) {
+                boolean all = adapter.isAllSelected();
+                btnSelAll.setImageResource(all
+                        ? R.drawable.ic_deselect_all : R.drawable.ic_select_all);
+                btnSelAll.setContentDescription(getString(all
+                        ? R.string.deselect_all : R.string.select_all));
             }
         }
         if (selActions != null) {
@@ -211,83 +253,120 @@ public class AlbumsFragment extends Fragment
         return adapter != null && adapter.isSelection();
     }
 
+    private List<File> selectedDirs() {
+        List<File> out = new ArrayList<>();
+        for (Album a : adapter.selectedAlbums()) out.add(new File(a.path));
+        return out;
+    }
+
+    // ---------- Копирование / перемещение папок ----------
+
+    private void destFlow(boolean copy) {
+        List<File> dirs = selectedDirs();
+        if (dirs.isEmpty()) return;
+        FragmentActivity act = requireActivity();
+
+        if (Prefs.rootPath() == null) {
+            showRootNeeded(() -> destFlow(copy));
+            return;
+        }
+
+        DestSheet sheet = DestSheet.newInstance(copy);
+        sheet.setListener(new DestSheet.Listener() {
+            @Override
+            public void onDestPicked(File dir) {
+                runCopyMove(copy, dirs, dir);
+            }
+
+            @Override
+            public void onNewFolderRequested() {
+                CreateFolderDialog.show(act, null, folder -> runCopyMove(copy, dirs, folder));
+            }
+        });
+        sheet.show(getParentFragmentManager(), "dest");
+    }
+
+    private void runCopyMove(boolean copy, List<File> dirs, File dest) {
+        FragmentActivity act = requireActivity();
+        // Нельзя переносить папку саму в себя или в свою подпапку
+        List<File> safeDirs = new ArrayList<>();
+        for (File d : dirs) {
+            String dp = d.getAbsolutePath();
+            String tp = dest.getAbsolutePath();
+            if (!(tp.equals(dp) || tp.startsWith(dp + "/"))) safeDirs.add(d);
+        }
+        if (safeDirs.isEmpty()) {
+            Toast.makeText(act, R.string.album_dest_inside_itself, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        FileOp op = new FileOp(act);
+        OpProgressDialog dlg = OpProgressDialog.show(act,
+                act.getString(copy ? R.string.op_copy : R.string.op_move), op::cancel);
+        FileOp.Done done = (albumsOk, fail, cancelled) -> {
+            dlg.dismiss();
+            if (!isAdded()) return;
+            Toast.makeText(act, cancelled ? act.getString(R.string.op_cancelled)
+                    : Fmt.plural(act, copy ? R.plurals.result_albums_copied
+                    : R.plurals.result_albums_moved, albumsOk), Toast.LENGTH_SHORT).show();
+            exitSelection();
+            loadAlbums();
+        };
+        if (copy) {
+            // copyDirs считает файлы — для сообщения пользователю считаем альбомы
+            op.copyDirs(safeDirs, dest, dlg, (ok, fail, cancelled) ->
+                    done.onDone(cancelled ? 0 : safeDirs.size(), fail, cancelled));
+        } else {
+            op.moveDirs(safeDirs, dest, dlg, done);
+        }
+    }
+
     // ---------- Удаление папок ----------
 
     private void onDeleteSelected() {
-        List<String> selected = new ArrayList<>(adapter.getSelectedPaths());
-        if (selected.isEmpty()) return;
+        List<File> dirs = selectedDirs();
+        if (dirs.isEmpty()) return;
         new MaterialAlertDialogBuilder(requireActivity())
                 .setTitle(R.string.delete_folder)
                 .setMessage(R.string.delete_selected_folders_confirm)
-                .setPositiveButton(R.string.delete, (d, w) -> deleteFolders(selected))
+                .setPositiveButton(R.string.delete, (d, w) -> deleteFolders(dirs))
                 .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
-    private void deleteFolders(List<String> paths) {
-        Toast.makeText(requireContext(), R.string.loading, Toast.LENGTH_SHORT).show();
+    private void deleteFolders(List<File> dirs) {
         FragmentActivity act = requireActivity();
-        new Thread(() -> {
-            for (String p : paths) {
-                File dir = new File(p);
-                if (!dir.exists()) continue;
-                List<File> files = new ArrayList<>();
-                collectFiles(dir, files);
-                for (File f : files) {
-                    File trashDir = TrashStore.trashDir();
-                    File target = new File(trashDir, "t" + System.nanoTime() + "_" + f.getName());
-                    if (f.renameTo(target)) {
-                        TrashStore.get().add(f.getAbsolutePath(), target,
-                                f.getName(), f.length(), MediaEngine.isVideoName(f.getName()));
-                    }
-                }
-                deleteTree(dir);
-                Scan.files(act, p);
-            }
-            act.runOnUiThread(() -> {
-                exitSelection();
-                loadAlbums();
-            });
-        }).start();
+        FileOp op = new FileOp(act);
+        OpProgressDialog dlg = OpProgressDialog.show(act,
+                act.getString(R.string.op_trash), op::cancel);
+        op.trashDirs(dirs, dlg, (ok, fail, cancelled) -> {
+            dlg.dismiss();
+            if (!isAdded()) return;
+            Toast.makeText(act, Fmt.plural(act, R.plurals.result_albums_deleted, ok),
+                    Toast.LENGTH_SHORT).show();
+            exitSelection();
+            loadAlbums();
+        });
     }
 
-    private void collectFiles(File dir, List<File> out) {
-        File[] arr = dir.listFiles();
-        if (arr == null) return;
-        for (File f : arr) {
-            if (f.isDirectory()) collectFiles(f, out);
-            else if (!f.getName().startsWith(".")) out.add(f);
-        }
-    }
-
-    private void deleteTree(File dir) {
-        File[] arr = dir.listFiles();
-        if (arr != null) {
-            for (File f : arr) {
-                if (f.isDirectory()) deleteTree(f);
-                //noinspection ResultOfMethodCallIgnored
-                f.delete();
-            }
-        }
-        //noinspection ResultOfMethodCallIgnored
-        dir.delete();
-    }
-
-    // ---------- Создание и переименование ----------
+    // ---------- Создание папки / корневая папка ----------
 
     private void onCreateFolder() {
         FragmentActivity act = requireActivity();
-        CreateFolderDialog.show(act, () -> {
-            pendingAfterRoot = this::onCreateFolder;
-            new MaterialAlertDialogBuilder(act)
-                    .setTitle(R.string.root_needed_title)
-                    .setMessage(R.string.root_needed_desc)
-                    .setPositiveButton(R.string.continue_btn, (d, w) ->
-                            startActivityForResult(new Intent(act, RootPickerActivity.class),
-                                    REQ_ROOT))
-                    .setNegativeButton(R.string.cancel, (d, w) -> pendingAfterRoot = null)
-                    .show();
-        }, folder -> loadAlbums());
+        CreateFolderDialog.show(act, () -> showRootNeeded(this::onCreateFolder),
+                folder -> loadAlbums());
+    }
+
+    private void showRootNeeded(Runnable after) {
+        FragmentActivity act = requireActivity();
+        pendingAfterRoot = after;
+        new MaterialAlertDialogBuilder(act)
+                .setTitle(R.string.root_needed_title)
+                .setMessage(R.string.root_needed_desc)
+                .setPositiveButton(R.string.continue_btn, (d, w) ->
+                        startActivityForResult(new Intent(act, RootPickerActivity.class),
+                                REQ_ROOT))
+                .setNegativeButton(R.string.cancel, (d, w) -> pendingAfterRoot = null)
+                .show();
     }
 
     @Override
@@ -303,8 +382,13 @@ public class AlbumsFragment extends Fragment
     @Override
     public void onHiddenChanged(boolean hidden) {
         super.onHiddenChanged(hidden);
-        if (!hidden && isAdded()) {
+        if (!isAdded()) return;
+        if (hidden) {
+            // Уходим с вкладки — выделение сбрасываем, чтобы панели не «зависали»
+            exitSelection();
+        } else {
             setupSelectionChrome();
+            updateHideNow();
             loadAlbums();
         }
     }

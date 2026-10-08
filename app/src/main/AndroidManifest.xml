@@ -55,7 +55,7 @@
         <activity
             android:name=".PhotoViewerActivity"
             android:exported="false"
-            android:theme="@style/Theme.GalleryX.Viewer" />
+            android:theme="@style/Theme.GalleryX.Viewer.Photo" />
 
         <activity
             android:name=".VideoPlayerActivity"

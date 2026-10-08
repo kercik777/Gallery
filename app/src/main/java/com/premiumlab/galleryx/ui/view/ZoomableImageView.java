@@ -1,5 +1,8 @@
 package com.premiumlab.galleryx.ui.view;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Matrix;
@@ -9,22 +12,22 @@ import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.VelocityTracker;
+import android.view.ViewConfiguration;
 import android.view.ViewParent;
 import android.view.animation.AccelerateDecelerateInterpolator;
 
 import androidx.appcompat.widget.AppCompatImageView;
 
-import android.animation.ValueAnimator;
-
 /**
- * ImageView с зумом двумя пальцами, двойным тапом и панорамированием.
+ * ImageView с зумом двумя пальцами, двойным тапом, панорамированием
+ * и вертикальным свайпом (закрыть / показать свойства).
  *
- * Ключевая особенность: сначала строится базовая матрица вписывания
- * (fit-center) изображения в границы view, а пользовательский зум
- * накладывается поверх неё. Поэтому фотография всегда открывается
- * целиком, а не в пиксельном масштабе 1:1.
+ * Сначала строится базовая матрица вписывания (fit-center), пользовательский
+ * зум накладывается поверх неё — фото всегда открывается целиком.
  *
- * При масштабе 1x не перехватывает горизонтальные свайпы (работает ViewPager2).
+ * При масштабе 1x горизонтальные свайпы отдаются ViewPager2, а вертикальные
+ * уходят в {@link DragListener} (просмотрщик рисует «улетание» картинки).
  */
 public class ZoomableImageView extends AppCompatImageView {
 
@@ -38,6 +41,17 @@ public class ZoomableImageView extends AppCompatImageView {
         void onSingleTap();
     }
 
+    /** Вертикальное перетаскивание невзумленной картинки. */
+    public interface DragListener {
+        void onDragStart(ZoomableImageView view);
+
+        /** dx/dy — суммарное смещение от точки касания. */
+        void onDrag(ZoomableImageView view, float dx, float dy);
+
+        /** velocityY — скорость по вертикали (px/s) в момент отпускания. */
+        void onDragEnd(ZoomableImageView view, float dx, float dy, float velocityY);
+    }
+
     private final Matrix baseMatrix = new Matrix();
     private final Matrix suppMatrix = new Matrix();
     private final Matrix drawMatrix = new Matrix();
@@ -47,9 +61,15 @@ public class ZoomableImageView extends AppCompatImageView {
     private ScaleGestureDetector scaleDetector;
     private GestureDetector gestureDetector;
     private TapListener tapListener;
+    private DragListener dragListener;
     private ValueAnimator zoomAnimator;
+    private VelocityTracker velocityTracker;
 
     private float lastX = 0f, lastY = 0f;
+    private float downX = 0f, downY = 0f;
+    private boolean dragging = false;
+    private boolean dragCancelled = false;
+    private int touchSlop;
 
     public ZoomableImageView(Context context) {
         super(context);
@@ -70,21 +90,25 @@ public class ZoomableImageView extends AppCompatImageView {
         tapListener = l;
     }
 
+    public void setDragListener(DragListener l) {
+        dragListener = l;
+    }
+
     private void init() {
         setScaleType(ScaleType.MATRIX);
         setImageMatrix(new Matrix());
+        touchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
         setOnTouchListener((v, event) -> onTouchEventInternal(event));
     }
 
     /** Создаёт детекторы жестов (идемпотентно, вызывается при привязке страницы). */
     public void setupGestureDetectors(Context context) {
-        if (scaleDetector != null && gestureDetector != null) return;
         if (scaleDetector == null) {
             scaleDetector = new ScaleGestureDetector(context,
                     new ScaleGestureDetector.SimpleOnScaleGestureListener() {
                         @Override
                         public boolean onScaleBegin(ScaleGestureDetector d) {
-                            if (zoomAnimator != null) zoomAnimator.cancel();
+                            cancelZoomAnimation();
                             return true;
                         }
 
@@ -98,10 +122,18 @@ public class ZoomableImageView extends AppCompatImageView {
                             return true;
                         }
                     });
+            // «Быстрый зум» (двойной тап + протяжка) конфликтует с обычным
+            // двойным тапом — отключаем.
+            scaleDetector.setQuickScaleEnabled(false);
         }
         if (gestureDetector == null) {
             gestureDetector = new GestureDetector(context,
                     new GestureDetector.SimpleOnGestureListener() {
+                        @Override
+                        public boolean onDown(MotionEvent e) {
+                            return true;
+                        }
+
                         @Override
                         public boolean onDoubleTap(MotionEvent e) {
                             animateDoubleTap(e.getX(), e.getY());
@@ -117,7 +149,7 @@ public class ZoomableImageView extends AppCompatImageView {
         }
     }
 
-    // ---------- Базовое вписивание ----------
+    // ---------- Базовое вписывание ----------
 
     @Override
     public void setImageDrawable(Drawable drawable) {
@@ -185,57 +217,84 @@ public class ZoomableImageView extends AppCompatImageView {
 
     /** Не даёт утащить изображение за пределы экрана. */
     private void clampTranslation() {
+        float[] fix = translationFix(suppMatrix);
+        if (fix[0] != 0f || fix[1] != 0f) suppMatrix.postTranslate(fix[0], fix[1]);
+    }
+
+    /**
+     * Считает поправку сдвига (dx, dy), которую нужно добавить к матрице,
+     * чтобы изображение не уезжало за края и центрировалось, если меньше view.
+     */
+    private float[] translationFix(Matrix supp) {
+        float[] out = new float[]{0f, 0f};
         Drawable d = getDrawable();
-        if (d == null || d.getIntrinsicWidth() <= 0 || getWidth() <= 0) return;
+        if (d == null || d.getIntrinsicWidth() <= 0 || getWidth() <= 0) return out;
 
         displayRect.set(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
-        drawMatrix.set(baseMatrix);
-        drawMatrix.postConcat(suppMatrix);
-        drawMatrix.mapRect(displayRect);
+        Matrix m = new Matrix(baseMatrix);
+        m.postConcat(supp);
+        m.mapRect(displayRect);
 
-        float vx = 0f, vy = 0f;
         float vw = getWidth();
         float vh = getHeight();
 
         if (displayRect.width() <= vw + 1f) {
-            vx = (vw - displayRect.width()) / 2f - displayRect.left;
+            out[0] = (vw - displayRect.width()) / 2f - displayRect.left;
         } else if (displayRect.left > 0f) {
-            vx = -displayRect.left;
+            out[0] = -displayRect.left;
         } else if (displayRect.right < vw) {
-            vx = vw - displayRect.right;
+            out[0] = vw - displayRect.right;
         }
 
         if (displayRect.height() <= vh + 1f) {
-            vy = (vh - displayRect.height()) / 2f - displayRect.top;
+            out[1] = (vh - displayRect.height()) / 2f - displayRect.top;
         } else if (displayRect.top > 0f) {
-            vy = -displayRect.top;
+            out[1] = -displayRect.top;
         } else if (displayRect.bottom < vh) {
-            vy = vh - displayRect.bottom;
+            out[1] = vh - displayRect.bottom;
         }
-
-        if (vx != 0f || vy != 0f) suppMatrix.postTranslate(vx, vy);
+        return out;
     }
 
     // ---------- Касания ----------
 
     @SuppressLint("ClickableViewAccessibility")
     private boolean onTouchEventInternal(MotionEvent event) {
+        int action = event.getActionMasked();
+
+        // Анимацию зума прерываем ДО передачи события детекторам: иначе
+        // двойной тап (срабатывает на втором ACTION_DOWN) был бы тут же отменён.
+        if (action == MotionEvent.ACTION_DOWN) {
+            cancelZoomAnimation();
+            downX = lastX = event.getX();
+            downY = lastY = event.getY();
+            dragging = false;
+            dragCancelled = false;
+            if (velocityTracker == null) velocityTracker = VelocityTracker.obtain();
+            else velocityTracker.clear();
+        }
+        if (velocityTracker != null) velocityTracker.addMovement(event);
+
         if (gestureDetector != null) gestureDetector.onTouchEvent(event);
         if (scaleDetector != null) scaleDetector.onTouchEvent(event);
 
-        switch (event.getActionMasked()) {
+        switch (action) {
             case MotionEvent.ACTION_DOWN:
-                lastX = event.getX();
-                lastY = event.getY();
-                if (zoomAnimator != null) zoomAnimator.cancel();
+                return true;
+
+            case MotionEvent.ACTION_POINTER_DOWN:
+                // Второй палец — это зум, а не свайп
+                if (dragging) {
+                    dragging = false;
+                    if (dragListener != null) dragListener.onDragEnd(this, 0f, 0f, 0f);
+                }
+                dragCancelled = true;
                 return true;
 
             case MotionEvent.ACTION_MOVE:
                 if (scaleDetector != null && scaleDetector.isInProgress()) {
-                    // Зум обрабатывается в onScale (включая сдвиг фокуса)
-                    ViewParent p = getParent();
-                    if (p != null) p.requestDisallowInterceptTouchEvent(true);
-                } else if (event.getPointerCount() == 1 && currentZoom() > 1f + ZOOM_EPS) {
+                    disallowParentIntercept(true);
+                } else if (event.getPointerCount() == 1 && isZoomed()) {
                     float dx = event.getX() - lastX;
                     float dy = event.getY() - lastY;
                     lastX = event.getX();
@@ -243,8 +302,9 @@ public class ZoomableImageView extends AppCompatImageView {
                     suppMatrix.postTranslate(dx, dy);
                     clampTranslation();
                     apply();
-                    ViewParent parent = getParent();
-                    if (parent != null) parent.requestDisallowInterceptTouchEvent(true);
+                    disallowParentIntercept(true);
+                } else if (event.getPointerCount() == 1) {
+                    handleVerticalDrag(event);
                 } else {
                     lastX = event.getX();
                     lastY = event.getY();
@@ -253,14 +313,32 @@ public class ZoomableImageView extends AppCompatImageView {
 
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
-                if (currentZoom() <= 1f + ZOOM_EPS) {
-                    reset();
-                } else {
-                    clampTranslation();
-                    apply();
+                if (dragging) {
+                    dragging = false;
+                    float vy = 0f;
+                    if (velocityTracker != null) {
+                        velocityTracker.computeCurrentVelocity(1000);
+                        vy = velocityTracker.getYVelocity();
+                    }
+                    if (dragListener != null) {
+                        dragListener.onDragEnd(this, event.getX() - downX,
+                                event.getY() - downY, vy);
+                    }
+                } else if (zoomAnimator == null || !zoomAnimator.isRunning()) {
+                    // Во время анимации двойного тапа матрицу не трогаем
+                    if (!isZoomed()) {
+                        suppMatrix.reset();
+                        apply();
+                    } else {
+                        clampTranslation();
+                        apply();
+                    }
                 }
-                ViewParent parent = getParent();
-                if (parent != null) parent.requestDisallowInterceptTouchEvent(false);
+                if (velocityTracker != null) {
+                    velocityTracker.recycle();
+                    velocityTracker = null;
+                }
+                disallowParentIntercept(false);
                 return true;
 
             default:
@@ -268,44 +346,81 @@ public class ZoomableImageView extends AppCompatImageView {
         }
     }
 
+    /** Вертикальный свайп при масштабе 1x: вниз — закрыть, вверх — свойства. */
+    private void handleVerticalDrag(MotionEvent event) {
+        float totalDx = event.getX() - downX;
+        float totalDy = event.getY() - downY;
+        lastX = event.getX();
+        lastY = event.getY();
+        if (dragListener == null || dragCancelled) return;
+
+        if (!dragging) {
+            if (Math.abs(totalDy) > touchSlop && Math.abs(totalDy) > Math.abs(totalDx) * 1.3f) {
+                dragging = true;
+                disallowParentIntercept(true);
+                dragListener.onDragStart(this);
+            } else if (Math.abs(totalDx) > touchSlop) {
+                // Пользователь листает страницы — вертикальный жест больше не начинаем
+                dragCancelled = true;
+                return;
+            }
+        }
+        if (dragging) dragListener.onDrag(this, totalDx, totalDy);
+    }
+
+    private void disallowParentIntercept(boolean disallow) {
+        ViewParent p = getParent();
+        if (p != null) p.requestDisallowInterceptTouchEvent(disallow);
+    }
+
+    private void cancelZoomAnimation() {
+        if (zoomAnimator != null) {
+            zoomAnimator.cancel();
+            zoomAnimator = null;
+        }
+    }
+
     // ---------- Двойной тап ----------
 
     private void animateDoubleTap(float focusX, float focusY) {
-        if (zoomAnimator != null) zoomAnimator.cancel();
+        cancelZoomAnimation();
+        if (getDrawable() == null) return;
 
-        float startZoom = currentZoom();
-        float targetZoom;
-        if (startZoom > 1f + ZOOM_EPS) {
-            targetZoom = 1f;
-        } else {
-            targetZoom = MID_ZOOM;
-        }
+        final float startZoom = currentZoom();
+        final float targetZoom = startZoom > 1f + ZOOM_EPS ? 1f : MID_ZOOM;
 
         suppMatrix.getValues(matrixValues);
         final float startTx = matrixValues[Matrix.MTRANS_X];
         final float startTy = matrixValues[Matrix.MTRANS_Y];
 
-        // Целевая матрица: зум вокруг точки тапа
+        // Целевая матрица: зум вокруг точки тапа, сразу с поправкой на края —
+        // тогда в конце анимации картинка не «дёргается».
         Matrix target = new Matrix();
         target.postScale(targetZoom, targetZoom, focusX, focusY);
+        float[] fix = translationFix(target);
+        target.postTranslate(fix[0], fix[1]);
         float[] tv = new float[9];
         target.getValues(tv);
+        final float endTx = tv[Matrix.MTRANS_X];
+        final float endTy = tv[Matrix.MTRANS_Y];
 
         ValueAnimator a = ValueAnimator.ofFloat(0f, 1f);
-        a.setDuration(220);
+        a.setDuration(240);
         a.setInterpolator(new AccelerateDecelerateInterpolator());
         a.addUpdateListener(animation -> {
             float t = (float) animation.getAnimatedValue();
             float z = startZoom + (targetZoom - startZoom) * t;
-            float tx = startTx + (tv[Matrix.MTRANS_X] - startTx) * t;
-            float ty = startTy + (tv[Matrix.MTRANS_Y] - startTy) * t;
+            float tx = startTx + (endTx - startTx) * t;
+            float ty = startTy + (endTy - startTy) * t;
             suppMatrix.setScale(z, z);
             suppMatrix.postTranslate(tx, ty);
             apply();
         });
-        a.addListener(new android.animation.AnimatorListenerAdapter() {
+        a.addListener(new AnimatorListenerAdapter() {
             @Override
-            public void onAnimationEnd(android.animation.Animator anim) {
+            public void onAnimationEnd(Animator anim) {
+                if (zoomAnimator == anim) zoomAnimator = null;
+                if (targetZoom <= 1f) suppMatrix.reset();
                 clampTranslation();
                 apply();
             }
@@ -318,7 +433,7 @@ public class ZoomableImageView extends AppCompatImageView {
 
     /** Сброс зума (вызывается при привязке новой страницы). */
     public void reset() {
-        if (zoomAnimator != null) zoomAnimator.cancel();
+        cancelZoomAnimation();
         suppMatrix.reset();
         apply();
     }

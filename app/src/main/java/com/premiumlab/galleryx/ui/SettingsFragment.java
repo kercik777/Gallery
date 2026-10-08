@@ -19,6 +19,7 @@ import com.premiumlab.galleryx.RootPickerActivity;
 import com.premiumlab.galleryx.SafeActivity;
 import com.premiumlab.galleryx.TrashActivity;
 import com.premiumlab.galleryx.data.FavStore;
+import com.premiumlab.galleryx.data.MaskGuard;
 import com.premiumlab.galleryx.data.Prefs;
 import com.premiumlab.galleryx.data.SafeStore;
 import com.premiumlab.galleryx.data.TrashStore;
@@ -37,7 +38,7 @@ public class SettingsFragment extends Fragment {
 
     private TextView txtMaskingStatus, txtThemeCurrent, txtGridCurrent;
     private TextView txtRootCurrent, txtTrashCount, txtSafeCount, txtPermsStatus, txtVersion;
-    private View rowSafe;
+    private View rowSafe, rowMasking, sectionMasking;
     private Runnable pendingAfterRoot;
 
     @Nullable
@@ -59,8 +60,10 @@ public class SettingsFragment extends Fragment {
         txtPermsStatus = v.findViewById(R.id.txtPermsStatus);
         txtVersion = v.findViewById(R.id.txtVersion);
         rowSafe = v.findViewById(R.id.rowSafe);
+        rowMasking = v.findViewById(R.id.rowMasking);
+        sectionMasking = v.findViewById(R.id.sectionMasking);
 
-        v.findViewById(R.id.rowMasking).setOnClickListener(x ->
+        v.findViewById(R.id.rowMaskingInner).setOnClickListener(x ->
                 startActivity(new Intent(requireContext(), MaskingSettingsActivity.class)));
 
         v.findViewById(R.id.rowTheme).setOnClickListener(x -> {
@@ -117,14 +120,18 @@ public class SettingsFragment extends Fragment {
         refresh();
     }
 
-    private void refresh() {
+    public void refresh() {
         if (!isAdded()) return;
         txtMaskingStatus.setText(Prefs.masking()
                 ? R.string.masking_status_on : R.string.masking_status_off);
 
-        // При включённой маскировке пункт «Сейф» скрывается из настроек
-        if (rowSafe != null) {
-            rowSafe.setVisibility(Prefs.masking() ? View.GONE : View.VISIBLE);
+        // Пока галерея «закрыта» маскировкой — пункты «Режим маскировки»
+        // и «Сейф» из настроек исчезают. После удержания заголовка возвращаются.
+        boolean hidden = MaskGuard.hidden();
+        if (rowSafe != null) rowSafe.setVisibility(hidden ? View.GONE : View.VISIBLE);
+        if (rowMasking != null) rowMasking.setVisibility(hidden ? View.GONE : View.VISIBLE);
+        if (sectionMasking != null) {
+            sectionMasking.setVisibility(hidden ? View.GONE : View.VISIBLE);
         }
 
         int theme = Prefs.theme();

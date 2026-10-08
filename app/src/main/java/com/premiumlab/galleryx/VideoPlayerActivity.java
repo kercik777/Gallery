@@ -1,10 +1,13 @@
 package com.premiumlab.galleryx;
 
+import android.annotation.SuppressLint;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -25,6 +28,7 @@ import java.util.Collections;
 /**
  * Видеоплеер с кастомными премиум-управлением: play/pause, перемотка,
  * полный экран с поворотом, автоскрытие панелей.
+ * Свайп вниз — закрыть, свайп вверх — свойства файла.
  */
 public class VideoPlayerActivity extends AppCompatActivity {
 
@@ -70,8 +74,8 @@ public class VideoPlayerActivity extends AppCompatActivity {
         btnFullscreen = findViewById(R.id.btnFullscreen);
 
         txtTitle.setText(name);
-        findViewById(R.id.btnVBack).setOnClickListener(v -> finish());
-        findViewById(R.id.viewTapCatcher).setOnClickListener(v -> toggleBars());
+        findViewById(R.id.btnVBack).setOnClickListener(v -> close());
+        setupGestures(findViewById(R.id.viewTapCatcher));
 
         setupPlayer();
         setupSeekbar();
@@ -171,6 +175,70 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 btnFullscreen.setImageResource(R.drawable.ic_fullscreen_exit);
             }
         });
+    }
+
+    // ---------- Жесты: тап, свайп вниз (закрыть), свайп вверх (свойства) ----------
+
+    @SuppressLint("ClickableViewAccessibility")
+    private void setupGestures(View catcher) {
+        final int slop = ViewConfiguration.get(this).getScaledTouchSlop();
+        final float density = getResources().getDisplayMetrics().density;
+        final View content = findViewById(R.id.videoRoot);
+        catcher.setOnTouchListener(new View.OnTouchListener() {
+            float downX, downY;
+            boolean moved;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent e) {
+                switch (e.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN:
+                        downX = e.getX();
+                        downY = e.getY();
+                        moved = false;
+                        return true;
+                    case MotionEvent.ACTION_MOVE: {
+                        float dy = e.getY() - downY;
+                        float dx = e.getX() - downX;
+                        if (Math.abs(dy) > slop || Math.abs(dx) > slop) moved = true;
+                        if (dy > 0 && Math.abs(dy) > Math.abs(dx)) {
+                            content.setTranslationY(dy * 0.5f);
+                        }
+                        return true;
+                    }
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL: {
+                        float dy = e.getY() - downY;
+                        float dx = e.getX() - downX;
+                        boolean vertical = Math.abs(dy) > Math.abs(dx) * 1.3f;
+                        if (!moved) {
+                            toggleBars();
+                        } else if (vertical && dy > 110f * density) {
+                            close();
+                            return true;
+                        } else if (vertical && dy < -90f * density) {
+                            showInfo();
+                        }
+                        content.animate().translationY(0f).setDuration(180).start();
+                        return true;
+                    }
+                    default:
+                        return false;
+                }
+            }
+        });
+    }
+
+    private void showInfo() {
+        MediaItem item = MediaItem.fromFile(new File(path));
+        item.name = name;
+        Actions.showInfo(this, item);
+    }
+
+    /** Закрытие с анимацией «уезжает вниз». */
+    private void close() {
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+        finish();
+        overridePendingTransition(0, R.anim.slide_out_down);
     }
 
     // ---------- Панели ----------

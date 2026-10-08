@@ -25,11 +25,6 @@
     <string name="permission_btn">Разрешить доступ</string>
     <string name="permission_note">Все данные обрабатываются только на вашем устройстве</string>
 
-    <!-- Маскировка (пустая галерея) -->
-    <string name="masked_empty_title">Нет медиафайлов</string>
-    <string name="masked_empty_sub">Сделайте фото или загрузите файлы, чтобы они появились здесь</string>
-    <string name="masked_version">Версия 1.0</string>
-
     <!-- Поиск и фильтры -->
     <string name="search_hint">Поиск…</string>
     <string name="search_no_results_title">Ничего не найдено</string>
@@ -104,23 +99,23 @@
 
     <!-- Режим маскировки -->
     <string name="masking_title">Режим маскировки</string>
-    <string name="masking_subtitle">Двойное пространство: снаружи — пустая галерея, внутри — настоящая</string>
+    <string name="masking_subtitle">Галерея выглядит обычной, но корневая папка и сейф скрыты, пока вы их не откроете</string>
     <string name="masking_status_on">Включена</string>
     <string name="masking_status_off">Выключена</string>
     <string name="masking_switch">Включить маскировку</string>
-    <string name="masking_switch_desc">Скрывать галерею за пустым экраном</string>
+    <string name="masking_switch_desc">Прятать корневую папку, сейф и эти настройки</string>
     <string name="masking_enable_title">Включить режим маскировки?</string>
-    <string name="masking_enable_msg">При включении приложение будет показывать пустую галерею.\n\nЧтобы открыть настоящую галерею, удерживайте заголовок «Галерея» на главном экране в течение 3 секунд.</string>
+    <string name="masking_enable_msg">Галерея останется обычной, но из неё исчезнут корневая папка со всеми вашими папками, сейф и пункт «Режим маскировки» в настройках.\n\nЧтобы снова всё показать, удерживайте заголовок «Галерея» на главном экране в течение 3 секунд.</string>
     <string name="masking_disable_title">Выключить режим маскировки?</string>
-    <string name="masking_disable_msg">Галерея снова будет открываться обычным способом.</string>
+    <string name="masking_disable_msg">Корневая папка и сейф будут видны всегда.</string>
     <string name="masking_hint_title">Как открыть скрытую галерею</string>
-    <string name="masking_hint_steps">1. Откройте приложение — вы увидите пустую галерею.\n2. Удерживайте заголовок «Галерея» 3 секунды (также работает удержание пустой заставки или строки версии внизу).\n3. Если установлен PIN-код — введите его.\n4. Появится настоящая галерея.</string>
+    <string name="masking_hint_steps">1. Откройте приложение — это обычная галерея без корневой папки и сейфа.\n2. Удерживайте заголовок «Галерея» 3 секунды.\n3. Если установлен PIN-код — введите его.\n4. Появятся ваши папки, сейф и настройки маскировки.</string>
     <string name="masking_suggest_pin">Рекомендуется установить PIN-код</string>
     <string name="masking_active_now">Маскировка активна</string>
 
     <!-- PIN-код -->
     <string name="pin_title">PIN-код</string>
-    <string name="pin_switch_desc">Запрашивается при открытии скрытой галереи</string>
+    <string name="pin_switch_desc">Запрашивается при открытии скрытых папок</string>
     <string name="pin_change">Сменить PIN-код</string>
     <string name="pin_enter_title">Введите PIN-код</string>
     <string name="pin_create_title">Придумайте PIN-код</string>
@@ -130,26 +125,28 @@
     <string name="pin_saved">PIN-код установлен</string>
     <string name="pin_removed">PIN-код отключён</string>
     <string name="pin_disabled_confirm_title">Отключить PIN-код?</string>
-    <string name="pin_disabled_confirm_msg">Скрытая галерея будет открываться без пароля — сразу после удержания заголовка.</string>
+    <string name="pin_disabled_confirm_msg">Скрытые папки будут открываться без пароля — сразу после удержания заголовка.</string>
     <string name="pin_locked_seconds">Слишком много попыток. Подождите %1$d сек.</string>
 
     <!-- Автоскрытие -->
     <string name="autohide_title">Автоскрытие</string>
-    <string name="autohide_desc">Когда скрытая галерея снова закроется</string>
+    <string name="autohide_desc">Когда корневая папка и сейф снова скроются</string>
     <string name="autohide_minimize">При сворачивании приложения</string>
-    <string name="autohide_minimize_desc">Галерея скроется, когда вы уйдёте из приложения</string>
+    <string name="autohide_minimize_desc">Скроются, когда вы уйдёте из приложения</string>
     <string name="autohide_1min">Через 1 минуту</string>
-    <string name="autohide_1min_desc">После открытия скрытая галерея закроется через минуту</string>
+    <string name="autohide_1min_desc">После открытия снова скроются через минуту</string>
     <string name="autohide_5min">Через 5 минут</string>
-    <string name="autohide_5min_desc">После открытия скрытая галерея закроется через 5 минут</string>
+    <string name="autohide_5min_desc">После открытия снова скроются через 5 минут</string>
     <string name="autohide_manual">Только вручную</string>
-    <string name="autohide_manual_desc">Галерея скрывается только по кнопке «Скрыть сейчас»</string>
+    <string name="autohide_manual_desc">Скрываются только по кнопке «Скрыть сейчас»</string>
     <string name="hide_now">Скрыть сейчас</string>
     <string name="secure_shots">Запретить скриншоты</string>
     <string name="secure_shots_desc">Скрывает содержимое приложения в панели недавних и мешает делать снимки экрана</string>
 
     <!-- Выделение и действия -->
     <string name="select_all">Выбрать все</string>
+    <string name="deselect_all">Снять выделение</string>
+    <string name="album_dest_inside_itself">Нельзя переместить папку в саму себя</string>
     <string name="action_copy">Копировать</string>
     <string name="action_move">Переместить</string>
     <string name="action_favorite">В избранное</string>
@@ -305,6 +302,27 @@
         <item quantity="few">Восстановлено %d файла</item>
         <item quantity="many">Восстановлено %d файлов</item>
         <item quantity="other">Восстановлено %d файлов</item>
+    </plurals>
+
+    <plurals name="result_albums_copied">
+        <item quantity="one">Скопирован %d альбом</item>
+        <item quantity="few">Скопировано %d альбома</item>
+        <item quantity="many">Скопировано %d альбомов</item>
+        <item quantity="other">Скопировано %d альбомов</item>
+    </plurals>
+
+    <plurals name="result_albums_moved">
+        <item quantity="one">Перемещён %d альбом</item>
+        <item quantity="few">Перемещено %d альбома</item>
+        <item quantity="many">Перемещено %d альбомов</item>
+        <item quantity="other">Перемещено %d альбомов</item>
+    </plurals>
+
+    <plurals name="result_albums_deleted">
+        <item quantity="one">Удалён %d альбом (файлы в корзине)</item>
+        <item quantity="few">Удалено %d альбома (файлы в корзине)</item>
+        <item quantity="many">Удалено %d альбомов (файлы в корзине)</item>
+        <item quantity="other">Удалено %d альбомов (файлы в корзине)</item>
     </plurals>
 
     <plurals name="result_deleted">

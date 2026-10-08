@@ -90,6 +90,35 @@ public class AlbumsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         return selected.size();
     }
 
+    /** Все альбомы списка (без заголовков секций). */
+    public List<Album> albums() {
+        List<Album> out = new ArrayList<>();
+        for (Object o : rows) {
+            if (o instanceof Album) out.add((Album) o);
+        }
+        return out;
+    }
+
+    /** Выбранные альбомы в порядке списка. */
+    public List<Album> selectedAlbums() {
+        List<Album> out = new ArrayList<>();
+        for (Album a : albums()) {
+            if (selected.contains(a.path)) out.add(a);
+        }
+        return out;
+    }
+
+    public boolean isAllSelected() {
+        List<Album> all = albums();
+        return !all.isEmpty() && selected.size() >= all.size();
+    }
+
+    public void selectAll() {
+        for (Album a : albums()) selected.add(a.path);
+        selectionMode = !selected.isEmpty();
+        notifyDataSetChanged();
+    }
+
     // ---------- VH ----------
 
     @Override

@@ -6,21 +6,31 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.premiumlab.galleryx.data.FavStore;
+import com.premiumlab.galleryx.data.MaskGuard;
 import com.premiumlab.galleryx.data.MediaItem;
+import com.premiumlab.galleryx.data.Prefs;
 import com.premiumlab.galleryx.data.SafeStore;
 import com.premiumlab.galleryx.data.TrashStore;
 import com.premiumlab.galleryx.ui.Actions;
 import com.premiumlab.galleryx.ui.adapter.PhotoPagerAdapter;
 import com.premiumlab.galleryx.ui.dialog.DestSheet;
 import com.premiumlab.galleryx.ui.dialog.OpProgressDialog;
+import com.premiumlab.galleryx.ui.view.ZoomableImageView;
 import com.premiumlab.galleryx.util.FileOp;
 import com.premiumlab.galleryx.util.Fmt;
 
@@ -32,6 +42,9 @@ import java.util.List;
 /**
  * Полноэкранный просмотрщик фотографий с зумом.
  * Режимы: 0 — обычный, 1 — корзина, 2 — сейф.
+ *
+ * Жесты: тап — показать/скрыть панели, двойной тап — зум,
+ * свайп вниз — закрыть («картинка улетает»), свайп вверх — свойства файла.
  */
 public class PhotoViewerActivity extends AppCompatActivity {
 
@@ -41,6 +54,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
 
     private static final int REQ_ROOT = 601;
 
+    private View root;
     private ViewPager2 pager;
     private PhotoPagerAdapter adapter;
     private View topBar, bottomBar;
@@ -48,15 +62,20 @@ public class PhotoViewerActivity extends AppCompatActivity {
     private ImageView btnFav, btnMove, btnSafe, btnRestore, btnDelete, btnShare;
     private int mode = MODE_NORMAL;
     private boolean barsVisible = true;
-    private Runnable pendingAfterRoot;
+    private boolean dismissing = false;
     private List<MediaItem> pendingMoveItem;
+
+    /** Исходные отступы панелей (к ним прибавляются системные insets). */
+    private int topBarPadTop, bottomBarPadBottom, bottomBarPadSide;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (com.premiumlab.galleryx.data.Prefs.flagSecure()) {
+        if (Prefs.flagSecure()) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
+        // Рисуем под системными панелями; отступы для своих панелей берём из insets
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_photo_viewer);
 
         ArrayList<String> paths = getIntent().getStringArrayListExtra("paths");
@@ -67,6 +86,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
             return;
         }
 
+        root = findViewById(R.id.viewerRoot);
         pager = findViewById(R.id.pager);
         topBar = findViewById(R.id.viewerTopBar);
         bottomBar = findViewById(R.id.viewerBottomBar);
@@ -79,9 +99,14 @@ public class PhotoViewerActivity extends AppCompatActivity {
         btnRestore = findViewById(R.id.btnVwRestore);
         btnDelete = findViewById(R.id.btnVwDelete);
 
+        topBarPadTop = topBar.getPaddingTop();
+        bottomBarPadBottom = bottomBar.getPaddingBottom();
+        bottomBarPadSide = bottomBar.getPaddingLeft();
+        applyInsets();
+
         findViewById(R.id.btnViewerBack).setOnClickListener(v -> finish());
 
-        adapter = new PhotoPagerAdapter(this, () -> toggleBars());
+        adapter = new PhotoPagerAdapter(this, this::toggleBars, dragListener);
         adapter.submit(paths);
         pager.setAdapter(adapter);
         pager.setCurrentItem(Math.min(index, paths.size() - 1), false);
@@ -94,6 +119,20 @@ public class PhotoViewerActivity extends AppCompatActivity {
 
         setupActions();
         updateToolbar(pager.getCurrentItem());
+    }
+
+    /** Панели не должны уходить под статус-бар и навигационную панель. */
+    private void applyInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            Insets sb = insets.getInsets(WindowInsetsCompat.Type.systemBars()
+                    | WindowInsetsCompat.Type.displayCutout());
+            topBar.setPadding(sb.left, topBarPadTop + sb.top, sb.right,
+                    topBar.getPaddingBottom());
+            bottomBar.setPadding(bottomBarPadSide + sb.left, bottomBar.getPaddingTop(),
+                    bottomBarPadSide + sb.right, bottomBarPadBottom + sb.bottom);
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(root);
     }
 
     private void setupActions() {
@@ -122,6 +161,11 @@ public class PhotoViewerActivity extends AppCompatActivity {
                 if (it == null) return;
                 Actions.confirmTrash(this, Collections.singletonList(it), this::finish);
             });
+            // Пока галерея «закрыта» маскировкой — сейф и корневые папки не показываем
+            if (MaskGuard.hidden()) {
+                btnSafe.setVisibility(View.GONE);
+                btnMove.setVisibility(View.GONE);
+            }
         } else {
             btnFav.setVisibility(View.GONE);
             btnMove.setVisibility(View.GONE);
@@ -139,10 +183,12 @@ public class PhotoViewerActivity extends AppCompatActivity {
                         this::finish);
             });
         }
-        findViewById(R.id.btnVwInfo).setOnClickListener(v -> {
-            MediaItem it = current();
-            if (it != null) Actions.showInfo(this, decorateName(it));
-        });
+        findViewById(R.id.btnVwInfo).setOnClickListener(v -> showInfo());
+    }
+
+    private void showInfo() {
+        MediaItem it = current();
+        if (it != null) Actions.showInfo(this, decorateName(it));
     }
 
     private MediaItem current() {
@@ -190,7 +236,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
     private void moveCurrent() {
         MediaItem it = current();
         if (it == null) return;
-        if (com.premiumlab.galleryx.data.Prefs.rootPath() == null) {
+        if (Prefs.rootPath() == null) {
             pendingMoveItem = Collections.singletonList(it);
             showRootNeeded();
             return;
@@ -274,13 +320,24 @@ public class PhotoViewerActivity extends AppCompatActivity {
         if (requestCode == REQ_ROOT && resultCode == RESULT_OK && pendingMoveItem != null) {
             List<MediaItem> items = pendingMoveItem;
             pendingMoveItem = null;
-            runCopyMove(items, new File(com.premiumlab.galleryx.data.Prefs.rootPath()));
+            runCopyMove(items, new File(Prefs.rootPath()));
         }
     }
 
+    // ---------- Панели ----------
+
     private void toggleBars() {
-        barsVisible = !barsVisible;
-        float target = barsVisible ? 1f : 0f;
+        setBarsVisible(!barsVisible);
+    }
+
+    private void setBarsVisible(boolean visible) {
+        if (barsVisible == visible) return;
+        barsVisible = visible;
+        float target = visible ? 1f : 0f;
+        if (visible) {
+            topBar.setVisibility(View.VISIBLE);
+            bottomBar.setVisibility(View.VISIBLE);
+        }
         topBar.animate().alpha(target).setDuration(200)
                 .setListener(new AnimatorListenerAdapter() {
                     @Override
@@ -295,29 +352,146 @@ public class PhotoViewerActivity extends AppCompatActivity {
                         bottomBar.setVisibility(barsVisible ? View.VISIBLE : View.GONE);
                     }
                 }).start();
+        applySystemBars();
     }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
+    private void applySystemBars() {
+        WindowInsetsControllerCompat ic = WindowCompat.getInsetsController(
+                getWindow(), getWindow().getDecorView());
+        if (ic == null) return;
+        ic.setSystemBarsBehavior(
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        if (barsVisible) {
+            ic.show(WindowInsetsCompat.Type.systemBars());
+            ic.setAppearanceLightStatusBars(false);
+            ic.setAppearanceLightNavigationBars(false);
+        } else {
+            ic.hide(WindowInsetsCompat.Type.systemBars());
+        }
     }
+
+    // ---------- Свайп вниз / вверх ----------
+
+    private final ZoomableImageView.DragListener dragListener =
+            new ZoomableImageView.DragListener() {
+                @Override
+                public void onDragStart(ZoomableImageView view) {
+                    if (dismissing) return;
+                    topBar.animate().cancel();
+                    bottomBar.animate().cancel();
+                }
+
+                @Override
+                public void onDrag(ZoomableImageView view, float dx, float dy) {
+                    if (dismissing) return;
+                    if (dy > 0f) {
+                        // Тянем вниз: картинка уменьшается и уезжает, фон растворяется
+                        float progress = Math.min(1f, dy / (root.getHeight() * 0.6f));
+                        float scale = 1f - 0.3f * progress;
+                        view.setTranslationX(dx * 0.6f);
+                        view.setTranslationY(dy);
+                        view.setScaleX(scale);
+                        view.setScaleY(scale);
+                        root.setBackgroundColor(scrim(1f - progress * 0.85f));
+                        float barsAlpha = Math.max(0f, 1f - progress * 2.5f);
+                        topBar.setAlpha(barsVisible ? barsAlpha : 0f);
+                        bottomBar.setAlpha(barsVisible ? barsAlpha : 0f);
+                    } else {
+                        // Тянем вверх: небольшое сопротивление, намёк на «свойства»
+                        view.setTranslationX(0f);
+                        view.setTranslationY(dy * 0.35f);
+                        view.setScaleX(1f);
+                        view.setScaleY(1f);
+                        root.setBackgroundColor(scrim(1f));
+                    }
+                }
+
+                @Override
+                public void onDragEnd(ZoomableImageView view, float dx, float dy,
+                                      float velocityY) {
+                    if (dismissing) return;
+                    float density = getResources().getDisplayMetrics().density;
+                    float dismissDist = 110f * density;
+                    float infoDist = 90f * density;
+                    if (dy > dismissDist || (dy > 24f * density && velocityY > 1800f)) {
+                        animateDismiss(view, dx, dy, velocityY);
+                    } else {
+                        boolean wantInfo = dy < -infoDist
+                                || (dy < -24f * density && velocityY < -1800f);
+                        animateBack(view);
+                        if (wantInfo) showInfo();
+                    }
+                }
+            };
+
+    private int scrim(float alpha) {
+        int a = Math.round(Math.max(0f, Math.min(1f, alpha)) * 255f);
+        return (a << 24);
+    }
+
+    private void animateBack(ZoomableImageView view) {
+        view.animate().cancel();
+        view.animate()
+                .translationX(0f).translationY(0f)
+                .scaleX(1f).scaleY(1f)
+                .setDuration(220)
+                .setInterpolator(new DecelerateInterpolator())
+                .withEndAction(() -> root.setBackgroundColor(scrim(1f)))
+                .start();
+        root.setBackgroundColor(scrim(1f));
+        if (barsVisible) {
+            topBar.animate().alpha(1f).setDuration(200).setListener(null).start();
+            bottomBar.animate().alpha(1f).setDuration(200).setListener(null).start();
+        }
+    }
+
+    /** «Улетание» картинки вниз и закрытие экрана без стандартной анимации. */
+    private void animateDismiss(ZoomableImageView view, float dx, float dy, float velocityY) {
+        dismissing = true;
+        float h = root.getHeight();
+        float targetY = h + view.getHeight() * 0.5f;
+        float targetX = view.getTranslationX() + (dx > 0 ? 1 : -1) * 40f
+                * getResources().getDisplayMetrics().density;
+        long duration = 260;
+        if (velocityY > 0f) {
+            duration = Math.max(140, Math.min(260,
+                    (long) ((targetY - view.getTranslationY()) / velocityY * 1000f)));
+        }
+        topBar.animate().alpha(0f).setDuration(duration).setListener(null).start();
+        bottomBar.animate().alpha(0f).setDuration(duration).setListener(null).start();
+        android.animation.ValueAnimator bg = android.animation.ValueAnimator.ofFloat(
+                alphaOf(root), 0f);
+        bg.setDuration(duration);
+        bg.addUpdateListener(a -> root.setBackgroundColor(scrim((float) a.getAnimatedValue())));
+        bg.start();
+        view.animate().cancel();
+        view.animate()
+                .translationY(targetY)
+                .translationX(targetX)
+                .scaleX(0.6f).scaleY(0.6f)
+                .alpha(0.6f)
+                .setDuration(duration)
+                .setInterpolator(new AccelerateInterpolator())
+                .withEndAction(() -> {
+                    finish();
+                    overridePendingTransition(0, 0);
+                })
+                .start();
+    }
+
+    private float alphaOf(View v) {
+        android.graphics.drawable.Drawable d = v.getBackground();
+        if (d instanceof android.graphics.drawable.ColorDrawable) {
+            return ((android.graphics.drawable.ColorDrawable) d).getAlpha() / 255f;
+        }
+        return 1f;
+    }
+
+    // ---------- Системные панели ----------
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) {
-            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-            androidx.core.view.WindowInsetsControllerCompat ic =
-                    androidx.core.view.WindowCompat.getInsetsController(
-                            getWindow(), getWindow().getDecorView());
-            if (ic != null) {
-                if (barsVisible) {
-                    ic.show(androidx.core.view.WindowInsetsCompat.Type.systemBars());
-                    ic.setAppearanceLightStatusBars(false);
-                } else {
-                    ic.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars());
-                }
-            }
-        }
+        if (hasFocus) applySystemBars();
     }
 }
