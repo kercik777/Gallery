@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#0F1018</color>
+    <color name="surface">#171926</color>
+    <color name="surfaceAlt">#212334</color>
+    <color name="surfaceHigh">#2A2C42</color>
+
+    <color name="primary">#9C8CFF</color>
+    <color name="primaryDark">#6C5CE7</color>
+    <color name="onPrimary">#FFFFFF</color>
+    <color name="primaryContainer">#352F7A</color>
+    <color name="onPrimaryContainer">#E4DEFF</color>
+
+    <color name="secondary">#4CDCC4</color>
+    <color name="secondaryContainer">#0E4A42</color>
+
+    <color name="gold">#FFC53D</color>
+    <color name="goldContainer">#4A3B0F</color>
+
+    <color name="danger">#FF6B61</color>
+    <color name="dangerContainer">#5C1E1B</color>
+
+    <color name="grad_start">#8378FF</color>
+    <color name="grad_end">#4E3FD6</color>
+
+    <color name="outline">#2B2D42</color>
+    <color name="stroke">#262838</color>
+
+    <color name="textPrimary">#EFEDF7</color>
+    <color name="textSecondary">#A8A5C0</color>
+    <color name="textTertiary">#6E6B88</color>
+
+    <color name="badgeDark">#B3000000</color>
+</resources>

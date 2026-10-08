@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet"
+    android:orientation="vertical"
+    android:paddingTop="@dimen/spacing_l">
+
+    <View
+        android:layout_width="36dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/bg_chip_active" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/spacing_xl"
+        android:paddingTop="@dimen/spacing_l"
+        android:paddingEnd="@dimen/spacing_xl"
+        android:paddingBottom="@dimen/spacing_s"
+        android:text="@string/theme_title"
+        android:textColor="@color/textPrimary"
+        android:textSize="17sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/spacing_l">
+
+        <LinearLayout
+            android:id="@+id/rowThemeSystem"
+            style="@style/SheetRow">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_icon_circle"
+                android:contentDescription="@string/settings_theme_system"
+                android:padding="9dp"
+                android:src="@drawable/ic_auto"
+                app:tint="@color/primary" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_m"
+                android:layout_weight="1"
+                android:text="@string/settings_theme_system"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/chkThemeSystem"
+                style="@style/SheetRowCheck" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowThemeLight"
+            style="@style/SheetRow">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_icon_circle"
+                android:contentDescription="@string/settings_theme_light"
+                android:padding="9dp"
+                android:src="@drawable/ic_light"
+                app:tint="@color/primary" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_m"
+                android:layout_weight="1"
+                android:text="@string/settings_theme_light"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/chkThemeLight"
+                style="@style/SheetRowCheck" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowThemeDark"
+            style="@style/SheetRow">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_icon_circle"
+                android:contentDescription="@string/settings_theme_dark"
+                android:padding="9dp"
+                android:src="@drawable/ic_dark"
+                app:tint="@color/primary" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_m"
+                android:layout_weight="1"
+                android:text="@string/settings_theme_dark"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/chkThemeDark"
+                style="@style/SheetRowCheck" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

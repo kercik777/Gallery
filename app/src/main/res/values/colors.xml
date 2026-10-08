@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#F5F4FA</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surfaceAlt">#EDEBF8</color>
+    <color name="surfaceHigh">#E4E1F3</color>
+
+    <color name="primary">#6C5CE7</color>
+    <color name="primaryDark">#4E3FD6</color>
+    <color name="onPrimary">#FFFFFF</color>
+    <color name="primaryContainer">#E4DEFF</color>
+    <color name="onPrimaryContainer">#2A1E77</color>
+
+    <color name="secondary">#00BFA6</color>
+    <color name="secondaryContainer">#CCF2EC</color>
+
+    <color name="gold">#FFB300</color>
+    <color name="goldContainer">#FFEFC4</color>
+
+    <color name="danger">#F0483E</color>
+    <color name="dangerContainer">#FFDAD6</color>
+
+    <color name="grad_start">#8378FF</color>
+    <color name="grad_end">#4E3FD6</color>
+
+    <color name="outline">#DDD9EC</color>
+    <color name="stroke">#E9E6F6</color>
+
+    <color name="textPrimary">#16152A</color>
+    <color name="textSecondary">#6A6784</color>
+    <color name="textTertiary">#A6A3BD</color>
+
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="scrim">#B3000000</color>
+    <color name="badgeDark">#B3000000</color>
+
+    <color name="launcher_bg_start">#7C6CF2</color>
+    <color name="launcher_bg_end">#4E3FD6</color>
+</resources>

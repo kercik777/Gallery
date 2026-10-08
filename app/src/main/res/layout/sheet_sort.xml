@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet"
+    android:orientation="vertical"
+    android:paddingTop="@dimen/spacing_l">
+
+    <View
+        android:layout_width="36dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/bg_chip_active" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/spacing_xl"
+        android:paddingTop="@dimen/spacing_l"
+        android:paddingEnd="@dimen/spacing_xl"
+        android:paddingBottom="@dimen/spacing_s"
+        android:text="@string/sort_title"
+        android:textColor="@color/textPrimary"
+        android:textSize="17sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/spacing_l">
+
+        <LinearLayout
+            android:id="@+id/rowSort0"
+            style="@style/SheetRow">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/sort_date_desc"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/chkSort0"
+                style="@style/SheetRowCheck" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowSort1"
+            style="@style/SheetRow">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/sort_date_asc"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/chkSort1"
+                style="@style/SheetRowCheck" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowSort2"
+            style="@style/SheetRow">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/sort_name_asc"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/chkSort2"
+                style="@style/SheetRowCheck" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowSort3"
+            style="@style/SheetRow">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/sort_name_desc"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/chkSort3"
+                style="@style/SheetRowCheck" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowSort4"
+            style="@style/SheetRow">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/sort_size_desc"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/chkSort4"
+                style="@style/SheetRowCheck" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowSort5"
+            style="@style/SheetRow">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/sort_size_asc"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/chkSort5"
+                style="@style/SheetRowCheck" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

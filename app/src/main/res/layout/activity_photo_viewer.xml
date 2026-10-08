@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black">
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:id="@+id/viewerTopBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_scrim_top"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingTop="@dimen/spacing_m"
+        android:paddingBottom="@dimen/spacing_m">
+
+        <ImageView
+            android:id="@+id/btnViewerBack"
+            android:layout_width="@dimen/icon_touch"
+            android:layout_height="@dimen/icon_touch"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/close"
+            android:padding="10dp"
+            android:src="@drawable/ic_back"
+            app:tint="@color/white" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_s"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtViewerTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtViewerSub"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="#B3FFFFFF"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/viewerBottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@drawable/bg_scrim_bottom"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="10dp">
+
+        <ImageView
+            android:id="@+id/btnVwFavorite"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/icon_touch"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/action_favorite"
+            android:padding="10dp"
+            android:src="@drawable/ic_star"
+            app:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/btnVwShare"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/icon_touch"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/action_share"
+            android:padding="10dp"
+            android:src="@drawable/ic_share"
+            app:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/btnVwInfo"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/icon_touch"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/action_info"
+            android:padding="10dp"
+            android:src="@drawable/ic_info"
+            app:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/btnVwMove"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/icon_touch"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/action_move"
+            android:padding="10dp"
+            android:src="@drawable/ic_move"
+            app:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/btnVwSafe"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/icon_touch"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/action_safe"
+            android:padding="10dp"
+            android:src="@drawable/ic_shield"
+            app:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/btnVwRestore"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/icon_touch"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/action_restore"
+            android:padding="10dp"
+            android:src="@drawable/ic_restore"
+            android:visibility="gone"
+            app:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/btnVwDelete"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/icon_touch"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/delete"
+            android:padding="10dp"
+            android:src="@drawable/ic_delete_forever"
+            app:tint="@color/danger" />
+    </LinearLayout>
+</FrameLayout>

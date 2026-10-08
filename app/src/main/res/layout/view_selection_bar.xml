@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Верхняя контекстная панель режима выделения: закрыть, счётчик, выбрать всё.
+     Точно совпадает по высоте с шапкой экрана (64dp), поэтому сетка не «прыгает». -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/header_h"
+    android:background="@color/bg"
+    android:elevation="8dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/spacing_s"
+    android:paddingEnd="@dimen/spacing_s">
+
+    <ImageView
+        android:id="@+id/btnSelClose"
+        android:layout_width="@dimen/icon_touch"
+        android:layout_height="@dimen/icon_touch"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/close"
+        android:padding="10dp"
+        android:src="@drawable/ic_close"
+        app:tint="@color/textPrimary" />
+
+    <TextView
+        android:id="@+id/txtSelCount"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/spacing_s"
+        android:layout_weight="1"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="-0.01"
+        android:textColor="@color/textPrimary"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/btnSelAll"
+        android:layout_width="@dimen/icon_touch"
+        android:layout_height="@dimen/icon_touch"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/select_all"
+        android:padding="10dp"
+        android:src="@drawable/ic_select_all"
+        app:tint="@color/primary" />
+</LinearLayout>

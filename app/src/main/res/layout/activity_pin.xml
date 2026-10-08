@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/spacing_xxxl"
+    android:paddingEnd="@dimen/spacing_xxxl">
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.8" />
+
+    <ImageView
+        android:id="@+id/imgPinIcon"
+        android:layout_width="88dp"
+        android:layout_height="88dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/bg_gate_circle"
+        android:contentDescription="@string/pin_title"
+        android:padding="24dp"
+        android:src="@drawable/ic_lock"
+        app:tint="@color/white" />
+
+    <TextView
+        android:id="@+id/txtPinTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/spacing_xl"
+        android:fontFamily="sans-serif-medium"
+        android:text="@string/pin_enter_title"
+        android:textColor="@color/textPrimary"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/txtPinSub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/spacing_xs"
+        android:text="@string/app_name"
+        android:textColor="@color/textSecondary"
+        android:textSize="14sp" />
+
+    <LinearLayout
+        android:id="@+id/layoutDots"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/spacing_xxl"
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/pinDot0"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/bg_dot" />
+
+        <View
+            android:id="@+id/pinDot1"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/bg_dot" />
+
+        <View
+            android:id="@+id/pinDot2"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/bg_dot" />
+
+        <View
+            android:id="@+id/pinDot3"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/bg_dot" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/txtPinError"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/spacing_l"
+        android:text="@string/pin_wrong"
+        android:textColor="@color/danger"
+        android:textSize="14sp"
+        android:visibility="invisible" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <GridLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="@dimen/spacing_xxxl"
+        android:alignmentMode="alignBounds"
+        android:columnCount="3"
+        android:rowCount="4">
+
+        <TextView
+            android:id="@+id/btnPin1"
+            style="@style/PinKey"
+            android:text="1" />
+
+        <TextView
+            android:id="@+id/btnPin2"
+            style="@style/PinKey"
+            android:text="2" />
+
+        <TextView
+            android:id="@+id/btnPin3"
+            style="@style/PinKey"
+            android:text="3" />
+
+        <TextView
+            android:id="@+id/btnPin4"
+            style="@style/PinKey"
+            android:text="4" />
+
+        <TextView
+            android:id="@+id/btnPin5"
+            style="@style/PinKey"
+            android:text="5" />
+
+        <TextView
+            android:id="@+id/btnPin6"
+            style="@style/PinKey"
+            android:text="6" />
+
+        <TextView
+            android:id="@+id/btnPin7"
+            style="@style/PinKey"
+            android:text="7" />
+
+        <TextView
+            android:id="@+id/btnPin8"
+            style="@style/PinKey"
+            android:text="8" />
+
+        <TextView
+            android:id="@+id/btnPin9"
+            style="@style/PinKey"
+            android:text="9" />
+
+        <Space />
+
+        <TextView
+            android:id="@+id/btnPin0"
+            style="@style/PinKey"
+            android:text="0" />
+
+        <ImageView
+            android:id="@+id/btnPinBack"
+            android:layout_width="@dimen/pin_key_size"
+            android:layout_height="@dimen/pin_key_size"
+            android:layout_margin="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/pin_title"
+            android:padding="20dp"
+            android:src="@drawable/ic_backspace"
+            app:tint="@color/textSecondary" />
+    </GridLayout>
+</LinearLayout>
