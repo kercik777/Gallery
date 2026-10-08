@@ -1,8 +1,5 @@
 package com.premiumlab.galleryx;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,7 +8,6 @@ import android.os.Looper;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.ProgressBar;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -51,12 +47,9 @@ public class MainActivity extends AppCompatActivity
     private View layoutReal, layoutPermission;
     private BottomNavigationView bottomNav;
     private View selectionTop, selectionActions;
-    private ProgressBar progressHold;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Runnable holdRunnable;
-    private ValueAnimator holdAnimator;
-    private boolean holdTriggered;
 
     private final String[] fragTags = {"gallery", "albums", "favorites", "settings"};
     private String currentTag = null;
@@ -77,7 +70,6 @@ public class MainActivity extends AppCompatActivity
         bottomNav = findViewById(R.id.bottomNav);
         selectionTop = findViewById(R.id.selectionTop);
         selectionActions = findViewById(R.id.selectionActions);
-        progressHold = findViewById(R.id.progressHold);
 
         findViewById(R.id.btnGrant).setOnClickListener(v -> requestPermissionsFlow());
 
@@ -281,33 +273,15 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
+    /**
+     * Удержание абсолютно незаметно: ни индикатора, ни вибрации — заголовок
+     * выглядит обычным текстом. Через 3 секунды открывается PIN (если он
+     * включён для маскировки) или скрытое содержимое показывается сразу.
+     */
     private void startHold(final View v) {
         cancelHold();
-        holdTriggered = false;
-        v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);
-        progressHold.setVisibility(View.VISIBLE);
-        progressHold.setProgress(0);
-
-        holdAnimator = ValueAnimator.ofInt(0, 100);
-        holdAnimator.setDuration(HOLD_MS);
-        holdAnimator.addUpdateListener(a ->
-                progressHold.setProgress((int) a.getAnimatedValue()));
-        holdAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationCancel(Animator a) {
-                if (!holdTriggered) {
-                    progressHold.setVisibility(View.GONE);
-                    progressHold.setProgress(0);
-                }
-            }
-        });
-        holdAnimator.start();
-
         holdRunnable = () -> {
-            holdTriggered = true;
-            progressHold.setVisibility(View.GONE);
-            progressHold.setProgress(0);
-            v.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS);
+            holdRunnable = null;
             attemptUnlock();
         };
         handler.postDelayed(holdRunnable, HOLD_MS);
@@ -318,18 +292,10 @@ public class MainActivity extends AppCompatActivity
             handler.removeCallbacks(holdRunnable);
             holdRunnable = null;
         }
-        if (holdAnimator != null) {
-            holdAnimator.cancel();
-            holdAnimator = null;
-        }
-        if (progressHold != null) {
-            progressHold.setVisibility(View.GONE);
-            progressHold.setProgress(0);
-        }
     }
 
     private void attemptUnlock() {
-        if (Prefs.pinSet()) {
+        if (Prefs.maskingPinRequired()) {
             Intent intent = new Intent(this, PinActivity.class);
             intent.putExtra("mode", PinActivity.MODE_UNLOCK);
             startActivityForResult(intent, REQ_PIN);

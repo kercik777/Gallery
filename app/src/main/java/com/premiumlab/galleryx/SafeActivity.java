@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -19,6 +20,7 @@ import com.premiumlab.galleryx.ui.SafeFragment;
 public class SafeActivity extends AppCompatActivity {
 
     private static final int REQ_PIN = 301;
+    private static final int REQ_PIN_CREATE = 302;
 
     private View gate, content;
     private boolean passed = false;
@@ -55,7 +57,18 @@ public class SafeActivity extends AppCompatActivity {
         content.setVisibility(needPin ? View.GONE : View.VISIBLE);
     }
 
+    /**
+     * Нажатие на замок в сейфе. Если PIN-код ещё не установлен — сразу
+     * предлагаем его создать; после создания сейф остаётся открытым.
+     */
     public void lockSafe() {
+        if (!Prefs.pinSet()) {
+            Toast.makeText(this, R.string.safe_pin_setup_hint, Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, PinActivity.class);
+            intent.putExtra("mode", PinActivity.MODE_CREATE);
+            startActivityForResult(intent, REQ_PIN_CREATE);
+            return;
+        }
         passed = false;
         updateGate();
     }
@@ -64,6 +77,13 @@ public class SafeActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQ_PIN && resultCode == RESULT_OK) {
+            passed = true;
+            updateGate();
+        } else if (requestCode == REQ_PIN_CREATE) {
+            if (resultCode == RESULT_OK) {
+                Toast.makeText(this, R.string.pin_saved, Toast.LENGTH_SHORT).show();
+            }
+            // Пользователь только что был внутри сейфа — не запираем его сразу
             passed = true;
             updateGate();
         }

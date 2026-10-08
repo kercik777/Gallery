@@ -10,6 +10,8 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.premiumlab.galleryx.R;
+import com.premiumlab.galleryx.RootPickerActivity;
+import com.premiumlab.galleryx.data.AppDirs;
 import com.premiumlab.galleryx.data.FavStore;
 import com.premiumlab.galleryx.data.MediaItem;
 import com.premiumlab.galleryx.ui.dialog.OpProgressDialog;
@@ -81,9 +83,26 @@ public final class Actions {
         if (done != null) done.run();
     }
 
+    /**
+     * Проверяет, выбрана ли корневая папка (в ней живут корзина и сейф).
+     * Если нет — показывает пояснение и открывает выбор папки; возвращает false.
+     */
+    public static boolean ensureRoot(FragmentActivity act) {
+        if (AppDirs.ready()) return true;
+        new MaterialAlertDialogBuilder(act)
+                .setTitle(R.string.root_required_title)
+                .setMessage(R.string.root_required_msg)
+                .setPositiveButton(R.string.root_required_btn, (d, w) ->
+                        act.startActivity(new Intent(act, RootPickerActivity.class)))
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+        return false;
+    }
+
     /** Подтверждение и перемещение в корзину. */
     public static void confirmTrash(FragmentActivity act, List<MediaItem> items, Runnable done) {
         if (items.isEmpty()) return;
+        if (!ensureRoot(act)) return;
         new MaterialAlertDialogBuilder(act)
                 .setTitle(R.string.delete_confirm_title)
                 .setMessage(R.string.delete_confirm_text)
@@ -105,6 +124,7 @@ public final class Actions {
     /** Подтверждение и перемещение в сейф. */
     public static void confirmSafe(FragmentActivity act, List<MediaItem> items, Runnable done) {
         if (items.isEmpty()) return;
+        if (!ensureRoot(act)) return;
         new MaterialAlertDialogBuilder(act)
                 .setTitle(R.string.safe_move_confirm_title)
                 .setMessage(R.string.safe_move_confirm_text)

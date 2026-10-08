@@ -17,6 +17,7 @@ import com.premiumlab.galleryx.FolderActivity;
 import com.premiumlab.galleryx.PhotoViewerActivity;
 import com.premiumlab.galleryx.R;
 import com.premiumlab.galleryx.VideoPlayerActivity;
+import com.premiumlab.galleryx.data.AppDirs;
 import com.premiumlab.galleryx.data.MediaEngine;
 import com.premiumlab.galleryx.data.MediaItem;
 import com.premiumlab.galleryx.data.Prefs;
@@ -102,6 +103,11 @@ public class FolderFragment extends BaseMediaFragment {
     }
 
     @Override
+    protected String destParentPath() {
+        return isUserFolder ? currentDir.getAbsolutePath() : null;
+    }
+
+    @Override
     protected void loadMedia() {
         showLoading(true);
         MediaEngine.loadFolder(currentDir, items -> {
@@ -160,11 +166,13 @@ public class FolderFragment extends BaseMediaFragment {
                 .show();
     }
 
+    /** Создаёт вложенную папку внутри текущей и сразу показывает её в чипах. */
     private void onCreateFolder() {
         FragmentActivity act = requireActivity();
-        CreateFolderDialog.show(act, () -> showRootNeeded(this::onCreateFolder),
-                folder -> Toast.makeText(act, R.string.folder_created,
-                        Toast.LENGTH_SHORT).show());
+        CreateFolderDialog.showIn(act, currentDir, folder -> {
+            if (!isAdded()) return;
+            buildSubdirChips();
+        });
     }
 
     private void onRenameFolder() {
@@ -202,8 +210,12 @@ public class FolderFragment extends BaseMediaFragment {
                 // Обновим корневую папку, если переименовали её
                 String rootPath = Prefs.rootPath();
                 if (rootPath != null && rootPath.equals(currentDir.getAbsolutePath())) {
-                    Prefs.setRootPath(target.getAbsolutePath());
+                    AppDirs.setRoot(target.getAbsolutePath());
+                } else {
+                    com.premiumlab.galleryx.data.FavStore.rewritePrefix(
+                            currentDir.getAbsolutePath(), target.getAbsolutePath());
                 }
+                MediaEngine.invalidateAll();
                 dialog.dismiss();
                 txtHeaderTitle.setText(name);
                 currentDir = target;
@@ -225,13 +237,17 @@ public class FolderFragment extends BaseMediaFragment {
     }
 
     private void deleteFolderRecursive(FragmentActivity act) {
+        File trashDir = com.premiumlab.galleryx.data.TrashStore.trashDir();
+        if (trashDir == null) {
+            showRootNeeded(() -> deleteFolderRecursive(act));
+            return;
+        }
         Toast.makeText(act, R.string.loading, Toast.LENGTH_SHORT).show();
         new Thread(() -> {
             // Все файлы — в корзину
             List<File> files = new ArrayList<>();
             collectFiles(currentDir, files);
             for (File f : files) {
-                File trashDir = com.premiumlab.galleryx.data.TrashStore.trashDir();
                 File target = new File(trashDir, "t" + System.nanoTime() + "_" + f.getName());
                 if (f.renameTo(target)) {
                     com.premiumlab.galleryx.data.TrashStore.get().add(

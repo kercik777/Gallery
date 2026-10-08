@@ -30,6 +30,7 @@
             android:layout_marginStart="@dimen/spacing_s"
             android:layout_weight="1"
             android:fontFamily="sans-serif-medium"
+            android:id="@+id/txtRootTitle"
             android:text="@string/root_title"
             android:textColor="@color/textPrimary"
             android:textSize="20sp"
@@ -43,6 +44,7 @@
         android:paddingStart="@dimen/spacing_l"
         android:paddingTop="@dimen/spacing_s"
         android:paddingEnd="@dimen/spacing_l"
+        android:id="@+id/txtRootDesc"
         android:text="@string/root_desc"
         android:textColor="@color/textSecondary"
         android:textSize="14sp" />

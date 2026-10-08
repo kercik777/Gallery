@@ -22,8 +22,9 @@ public class MaskingSettingsActivity extends AppCompatActivity {
     private static final int REQ_PIN_CREATE = 201;
     private static final int REQ_PIN_DISABLE = 202;
     private static final int REQ_PIN_CHANGE = 203;
+    private static final int REQ_PIN_FOR_MASKING = 204;
 
-    private MaterialSwitch switchMasking, switchPin, switchSecure;
+    private MaterialSwitch switchMasking, switchPin, switchPinMasking, switchSecure;
     private TextView txtHeroStatus;
     private View rowChangePin;
     private boolean guard = false;
@@ -40,6 +41,7 @@ public class MaskingSettingsActivity extends AppCompatActivity {
 
         switchMasking = findViewById(R.id.switchMasking);
         switchPin = findViewById(R.id.switchPin);
+        switchPinMasking = findViewById(R.id.switchPinMasking);
         switchSecure = findViewById(R.id.switchSecure);
         txtHeroStatus = findViewById(R.id.txtMaskingHeroStatus);
         rowChangePin = findViewById(R.id.rowChangePin);
@@ -86,7 +88,7 @@ public class MaskingSettingsActivity extends AppCompatActivity {
                         })
                         .show();
             } else {
-                if (Prefs.pinSet()) {
+                if (Prefs.maskingPinRequired()) {
                     guard = true;
                     switchMasking.setChecked(true);
                     guard = false;
@@ -149,6 +151,26 @@ public class MaskingSettingsActivity extends AppCompatActivity {
             intent.putExtra("mode", PinActivity.MODE_CREATE);
             startActivityForResult(intent, REQ_PIN_CHANGE);
         });
+
+        // PIN для маскировки — отдельный опциональный уровень защиты
+        switchPinMasking.setChecked(Prefs.maskingPinRequired());
+        switchPinMasking.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (guard) return;
+            if (isChecked) {
+                if (Prefs.pinSet()) {
+                    Prefs.setPinForMasking(true);
+                    refreshStatus();
+                } else {
+                    Toast.makeText(this, R.string.pin_masking_need_pin, Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(this, PinActivity.class);
+                    intent.putExtra("mode", PinActivity.MODE_CREATE);
+                    startActivityForResult(intent, REQ_PIN_FOR_MASKING);
+                }
+            } else {
+                Prefs.setPinForMasking(false);
+                refreshStatus();
+            }
+        });
     }
 
     // ---------- Автоскрытие ----------
@@ -161,9 +183,7 @@ public class MaskingSettingsActivity extends AppCompatActivity {
             autoRows[i].setOnClickListener(v -> {
                 Prefs.setAutoHide(mode);
                 // Если сменили режим при открытой галерее — перепланируем таймер
-                if (SessionManager.isUnlocked()) {
-                    SessionManager.unlock();
-                }
+                SessionManager.rescheduleIfUnlocked();
                 refreshStatus();
             });
         }
@@ -183,6 +203,7 @@ public class MaskingSettingsActivity extends AppCompatActivity {
         guard = true;
         switchMasking.setChecked(Prefs.masking());
         switchPin.setChecked(Prefs.pinSet());
+        switchPinMasking.setChecked(Prefs.maskingPinRequired());
         switchSecure.setChecked(Prefs.flagSecure());
         guard = false;
 
@@ -211,6 +232,12 @@ public class MaskingSettingsActivity extends AppCompatActivity {
             refreshStatus();
         } else if (requestCode == REQ_PIN_CHANGE) {
             if (resultCode == RESULT_OK) {
+                Toast.makeText(this, R.string.pin_saved, Toast.LENGTH_SHORT).show();
+            }
+            refreshStatus();
+        } else if (requestCode == REQ_PIN_FOR_MASKING) {
+            if (resultCode == RESULT_OK && Prefs.pinSet()) {
+                Prefs.setPinForMasking(true);
                 Toast.makeText(this, R.string.pin_saved, Toast.LENGTH_SHORT).show();
             }
             refreshStatus();

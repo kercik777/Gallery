@@ -19,7 +19,7 @@ import com.premiumlab.galleryx.util.Fmt;
 import java.io.File;
 
 /**
- * Диалог создания папки внутри корневой. Предпросмотр пути и валидация.
+ * Диалог создания папки (внутри корневой или любой выбранной). Предпросмотр пути и валидация.
  */
 public final class CreateFolderDialog {
 
@@ -39,6 +39,15 @@ public final class CreateFolderDialog {
             if (onNeedRoot != null) onNeedRoot.run();
             return;
         }
+        showIn(ctx, new File(rootPath), callback);
+    }
+
+    /**
+     * Показывает диалог создания папки внутри произвольной родительской папки
+     * (вложенные папки любой глубины).
+     */
+    public static void showIn(Context ctx, File parent, Callback callback) {
+        final String rootPath = parent.getAbsolutePath();
 
         View v = LayoutInflater.from(ctx).inflate(R.layout.dialog_create_folder, null, false);
         EditText edit = v.findViewById(R.id.editFolderName);

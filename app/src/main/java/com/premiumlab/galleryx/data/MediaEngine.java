@@ -63,9 +63,9 @@ public final class MediaEngine {
         return name.substring(dot + 1).toLowerCase(Locale.US);
     }
 
-    /** Скрытая служебная директория приложения. */
+    /** Скрытая служебная директория приложения (внутри корня) или null без корня. */
     public static File hiddenRoot() {
-        return new File(Environment.getExternalStorageDirectory(), ".GalleryX");
+        return AppDirs.hiddenRoot();
     }
 
     // ---------- Загрузка всей галереи (MediaStore) ----------
@@ -139,8 +139,8 @@ public final class MediaEngine {
                 File f = new File(path);
                 String parent = f.getParent();
                 if (parent == null) continue;
-                // Исключаем служебные скрытые каталоги
-                if (parent.startsWith(hiddenRoot().getAbsolutePath())) continue;
+                // Исключаем служебные скрытые каталоги (корзина, сейф)
+                if (AppDirs.isServicePath(parent)) continue;
                 if (f.getName().startsWith(".")) continue;
                 MediaItem item = new MediaItem();
                 item.path = path;
@@ -250,9 +250,8 @@ public final class MediaEngine {
         if (rootPath != null && !rootHidden) {
             File root = new File(rootPath);
             if (root.exists()) {
-                List<File> dirs = new ArrayList<>();
-                dirs.add(root);
-                dirs.addAll(userFoldersRecursive(root));
+                // Сам корень альбомом не считается — только папки внутри него
+                List<File> dirs = new ArrayList<>(userFoldersRecursive(root));
                 for (File d : dirs) {
                     List<MediaItem> direct = directMedia(d);
                     int count = direct.size();
@@ -269,7 +268,7 @@ public final class MediaEngine {
         List<Album> device = new ArrayList<>();
         for (String folder : byFolder.keySet()) {
             if (rootPath != null && isUnder(folder, rootPath)) continue;
-            if (folder.startsWith(hiddenRoot().getAbsolutePath())) continue;
+            if (AppDirs.isServicePath(folder)) continue;
             if (folder.startsWith(new File(Environment.getExternalStorageDirectory(), "Android")
                     .getAbsolutePath())) continue;
             List<MediaItem> l = byFolder.get(folder);
@@ -289,6 +288,25 @@ public final class MediaEngine {
             rows.addAll(device);
         }
         return rows;
+    }
+
+    /** Папки устройства (не из корня и не служебные) — для выбора назначения. */
+    public static List<File> deviceFolders(Context ctx) {
+        List<File> out = new ArrayList<>();
+        java.util.HashSet<String> seen = new java.util.HashSet<>();
+        String rootPath = Prefs.rootPath();
+        String androidDir = new File(Environment.getExternalStorageDirectory(), "Android")
+                .getAbsolutePath();
+        for (MediaItem it : queryAll(ctx)) {
+            String folder = it.folderPath;
+            if (folder == null || !seen.add(folder)) continue;
+            if (rootPath != null && isUnder(folder, rootPath)) continue;
+            if (AppDirs.isServicePath(folder) || folder.startsWith(androidDir)) continue;
+            out.add(new File(folder));
+        }
+        Collections.sort(out, (a, b) -> a.getName().toLowerCase(Locale.US)
+                .compareTo(b.getName().toLowerCase(Locale.US)));
+        return out;
     }
 
     public static void loadAlbums(Context ctx, Callback<List<Object>> cb) {

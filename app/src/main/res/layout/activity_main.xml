@@ -51,23 +51,6 @@
         android:layout_height="@dimen/header_h"
         android:visibility="gone" />
 
-    <!-- Индикатор удержания заголовка «Галерея» (3 секунды) для открытия
-         скрытого содержимого при включённой маскировке. Лежит поверх шапки. -->
-    <ProgressBar
-        android:id="@+id/progressHold"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="4dp"
-        android:layout_gravity="top"
-        android:layout_marginStart="@dimen/spacing_l"
-        android:layout_marginTop="@dimen/header_h"
-        android:layout_marginEnd="@dimen/spacing_l"
-        android:elevation="12dp"
-        android:max="100"
-        android:progress="0"
-        android:progressDrawable="@drawable/pb_hold"
-        android:visibility="gone" />
-
     <!-- ЭКРАН РАЗРЕШЕНИЙ -->
     <LinearLayout
         android:id="@+id/layoutPermission"

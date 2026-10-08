@@ -15,34 +15,70 @@ import com.premiumlab.galleryx.data.Prefs;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
- * Список папок-назначений для копирования/перемещения.
- * Первая строка — «Новая папка…», затем корневая папка и все подпапки.
+ * Список назначений для копирования/перемещения.
+ * Строки: действия («Новая папка…», «Корневая папка», «Другая папка на устройстве…»),
+ * заголовки секций и папки.
  */
 public class DestAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    private static final int TYPE_NEW = 0;
-    private static final int TYPE_ROOT = 1;
+    public static final int ACTION_NEW = 1;
+    public static final int ACTION_ROOT = 2;
+    public static final int ACTION_BROWSE = 3;
+
+    private static final int TYPE_ACTION = 0;
+    private static final int TYPE_SECTION = 1;
     private static final int TYPE_FOLDER = 2;
 
     public interface Listener {
-        void onNewFolder();
+        void onAction(int action);
 
         void onDestPicked(File dir);
     }
 
+    /** Строка списка. */
+    public static final class Row {
+        final int type;
+        final int action;
+        final CharSequence title;
+        final CharSequence subtitle;
+        final int icon;
+        final File dir;
+
+        private Row(int type, int action, CharSequence title, CharSequence subtitle,
+                    int icon, File dir) {
+            this.type = type;
+            this.action = action;
+            this.title = title;
+            this.subtitle = subtitle;
+            this.icon = icon;
+            this.dir = dir;
+        }
+
+        public static Row action(int action, CharSequence title, CharSequence subtitle, int icon) {
+            return new Row(TYPE_ACTION, action, title, subtitle, icon, null);
+        }
+
+        public static Row section(CharSequence title) {
+            return new Row(TYPE_SECTION, 0, title, null, 0, null);
+        }
+
+        public static Row folder(File dir, CharSequence subtitle) {
+            return new Row(TYPE_FOLDER, 0, dir.getName(), subtitle, R.drawable.ic_folder, dir);
+        }
+    }
+
     private final Listener listener;
-    private final List<File> folders = new ArrayList<>();
+    private final List<Row> rows = new ArrayList<>();
 
     public DestAdapter(Listener listener) {
         this.listener = listener;
     }
 
-    public void submit(List<File> list) {
-        folders.clear();
-        folders.addAll(list);
+    public void submit(List<Row> list) {
+        rows.clear();
+        rows.addAll(list);
         notifyDataSetChanged();
     }
 
@@ -50,94 +86,89 @@ public class DestAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inf = LayoutInflater.from(parent.getContext());
-        if (viewType == TYPE_NEW) {
-            return new ActionVH(inf.inflate(R.layout.item_dest_row, parent, false), TYPE_NEW);
+        if (viewType == TYPE_SECTION) {
+            return new SectionVH(inf.inflate(R.layout.item_section, parent, false));
         }
-        if (viewType == TYPE_ROOT) {
-            return new ActionVH(inf.inflate(R.layout.item_dest_row, parent, false), TYPE_ROOT);
-        }
-        return new VH(inf.inflate(R.layout.item_dest_row, parent, false));
+        return new RowVH(inf.inflate(R.layout.item_dest_row, parent, false));
     }
 
     @Override
     public int getItemViewType(int position) {
-        if (position == 0) return TYPE_NEW;
-        if (position == 1) return TYPE_ROOT;
-        return TYPE_FOLDER;
+        return rows.get(position).type;
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        if (holder instanceof ActionVH) {
-            ((ActionVH) holder).bind();
+        Row r = rows.get(position);
+        if (holder instanceof SectionVH) {
+            ((SectionVH) holder).bind(r);
         } else {
-            VH vh = (VH) holder;
-            File f = folders.get(position - 2);
-            vh.bind(f);
+            ((RowVH) holder).bind(r);
         }
     }
 
     @Override
     public int getItemCount() {
-        return folders.size() + 2;
+        return rows.size();
     }
 
-    class ActionVH extends RecyclerView.ViewHolder {
-        final int type;
+    /** Относительный путь папки для подписи: «…/подпапка» внутри корня. */
+    public static String subtitleFor(File f) {
+        String rp = Prefs.rootPath();
+        String parent = f.getParent();
+        if (parent == null) return "";
+        if (rp != null && (parent.equals(rp) || parent.startsWith(rp + "/"))) {
+            return "…" + parent.substring(rp.length());
+        }
+        return parent;
+    }
+
+    static class SectionVH extends RecyclerView.ViewHolder {
+        final TextView title;
+
+        SectionVH(@NonNull View itemView) {
+            super(itemView);
+            title = itemView.findViewById(R.id.txtSectionTitle);
+            View divider = itemView.findViewById(R.id.viewDivider);
+            if (divider != null) divider.setVisibility(View.GONE);
+            itemView.setPadding(itemView.getPaddingLeft(),
+                    itemView.getPaddingBottom() * 2,
+                    itemView.getPaddingRight(),
+                    itemView.getPaddingBottom() / 2);
+        }
+
+        void bind(Row r) {
+            title.setText(r.title);
+        }
+    }
+
+    class RowVH extends RecyclerView.ViewHolder {
         final ImageView icon;
         final TextView name, path;
 
-        ActionVH(@NonNull View itemView, int type) {
+        RowVH(@NonNull View itemView) {
             super(itemView);
-            this.type = type;
             icon = itemView.findViewById(R.id.imgDestIcon);
-            name = itemView.findViewById(R.id.txtDestName);
-            path = itemView.findViewById(R.id.txtDestPath);
-            itemView.setOnClickListener(v -> {
-                if (listener == null) return;
-                if (type == TYPE_NEW) listener.onNewFolder();
-                else if (type == TYPE_ROOT && Prefs.rootPath() != null) {
-                    listener.onDestPicked(new File(Prefs.rootPath()));
-                }
-            });
-        }
-
-        void bind() {
-            if (type == TYPE_NEW) {
-                icon.setImageResource(R.drawable.ic_folder_plus);
-                name.setText(R.string.dest_new_folder);
-                path.setText(R.string.create_folder);
-            } else {
-                icon.setImageResource(R.drawable.ic_sd);
-                name.setText(R.string.dest_root_folder);
-                String rp = Prefs.rootPath();
-                path.setText(rp == null ? path.getContext().getString(R.string.root_not_set) : rp);
-            }
-        }
-    }
-
-    class VH extends RecyclerView.ViewHolder {
-        final TextView name, path;
-
-        VH(@NonNull View itemView) {
-            super(itemView);
             name = itemView.findViewById(R.id.txtDestName);
             path = itemView.findViewById(R.id.txtDestPath);
             itemView.setOnClickListener(v -> {
                 int pos = getBindingAdapterPosition();
                 if (pos == RecyclerView.NO_POSITION || listener == null) return;
-                listener.onDestPicked(folders.get(pos - 2));
+                Row r = rows.get(pos);
+                if (r.type == TYPE_ACTION) listener.onAction(r.action);
+                else if (r.dir != null) listener.onDestPicked(r.dir);
             });
         }
 
-        void bind(File f) {
-            name.setText(f.getName());
-            String rp = Prefs.rootPath();
-            String rel = f.getParent();
-            if (rp != null && rel != null && rel.startsWith(rp)) {
-                rel = "…" + rel.substring(rp.length());
+        void bind(Row r) {
+            icon.setImageResource(r.icon);
+            name.setText(r.title);
+            if (r.subtitle == null || r.subtitle.length() == 0) {
+                path.setVisibility(View.GONE);
+            } else {
+                path.setVisibility(View.VISIBLE);
+                path.setText(r.subtitle);
             }
-            path.setText(rel == null ? "" : rel.toLowerCase(Locale.getDefault()));
         }
     }
 }

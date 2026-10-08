@@ -41,6 +41,20 @@ public final class FavStore {
         Prefs.saveFavorites(list);
     }
 
+    /** Переписывает пути после переименования/перемещения папки. */
+    public static void rewritePrefix(String from, String to) {
+        List<String> list = Prefs.favorites();
+        boolean changed = false;
+        for (int i = 0; i < list.size(); i++) {
+            String p = list.get(i);
+            if (p.equals(from) || p.startsWith(from + "/")) {
+                list.set(i, to + p.substring(from.length()));
+                changed = true;
+            }
+        }
+        if (changed) Prefs.saveFavorites(list);
+    }
+
     public static List<MediaItem> items() {
         List<MediaItem> out = new ArrayList<>();
         for (String p : Prefs.favorites()) {

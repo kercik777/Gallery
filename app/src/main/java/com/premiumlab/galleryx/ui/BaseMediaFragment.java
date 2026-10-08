@@ -349,6 +349,8 @@ public abstract class BaseMediaFragment extends Fragment
         }
         View restore = selActions.findViewById(R.id.btnSelRestore);
         if (restore != null) restore.setVisibility(View.GONE);
+        View rename = selActions.findViewById(R.id.btnSelRename);
+        if (rename != null) rename.setVisibility(View.GONE);
     }
 
     protected boolean isAllSelected() {
@@ -569,20 +571,14 @@ public abstract class BaseMediaFragment extends Fragment
             return;
         }
 
-        DestSheet sheet = DestSheet.newInstance(copy);
-        sheet.setListener(new DestSheet.Listener() {
-            @Override
-            public void onDestPicked(File dir) {
-                runCopyMove(copy, sel, dir);
-            }
-
-            @Override
-            public void onNewFolderRequested() {
-                CreateFolderDialog.show(act, null, folder ->
-                        runCopyMove(copy, sel, folder));
-            }
-        });
+        DestSheet sheet = DestSheet.newInstance(copy, destParentPath());
+        sheet.setListener(dir -> runCopyMove(copy, sel, dir));
         sheet.show(getParentFragmentManager(), "dest");
+    }
+
+    /** Папка, в которой «Новая папка…» листа назначений создаёт подпапку (null — корень). */
+    protected String destParentPath() {
+        return null;
     }
 
     protected void runCopyMove(boolean copy, List<MediaItem> items, File dir) {

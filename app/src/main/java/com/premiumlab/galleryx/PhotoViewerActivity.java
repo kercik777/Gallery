@@ -241,21 +241,8 @@ public class PhotoViewerActivity extends AppCompatActivity {
             showRootNeeded();
             return;
         }
-        DestSheet sheet = DestSheet.newInstance(false);
-        sheet.setListener(new DestSheet.Listener() {
-            @Override
-            public void onDestPicked(File dir) {
-                runCopyMove(Collections.singletonList(current()), dir);
-            }
-
-            @Override
-            public void onNewFolderRequested() {
-                pendingMoveItem = Collections.singletonList(current());
-                com.premiumlab.galleryx.ui.dialog.CreateFolderDialog.show(
-                        PhotoViewerActivity.this, null,
-                        folder -> runCopyMove(pendingMoveItem, folder));
-            }
-        });
+        DestSheet sheet = DestSheet.newInstance(false, it.folderPath);
+        sheet.setListener(dir -> runCopyMove(Collections.singletonList(current()), dir));
         sheet.show(getSupportFragmentManager(), "dest");
     }
 

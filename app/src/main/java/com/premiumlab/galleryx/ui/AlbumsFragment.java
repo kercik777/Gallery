@@ -136,8 +136,10 @@ public class AlbumsFragment extends Fragment
             setActionVisible(R.id.btnSelCopy, canDest);
             setActionVisible(R.id.btnSelMove, canDest);
             setActionVisible(R.id.btnSelDelete, true);
+            setActionVisible(R.id.btnSelRename, false);
             selActions.findViewById(R.id.btnSelCopy).setOnClickListener(x -> destFlow(true));
             selActions.findViewById(R.id.btnSelMove).setOnClickListener(x -> destFlow(false));
+            selActions.findViewById(R.id.btnSelRename).setOnClickListener(x -> onRenameSelected());
             selActions.findViewById(R.id.btnSelDelete)
                     .setOnClickListener(x -> onDeleteSelected());
         }
@@ -227,6 +229,14 @@ public class AlbumsFragment extends Fragment
         }
         if (selActions != null) {
             selActions.setVisibility(active ? View.VISIBLE : View.GONE);
+            // Переименование доступно только для одной пользовательской папки
+            boolean canRename = false;
+            if (count == 1 && !MaskGuard.hidden() && Prefs.rootPath() != null) {
+                List<Album> sel = adapter.selectedAlbums();
+                canRename = !sel.isEmpty()
+                        && MediaEngine.isUnder(sel.get(0).path, Prefs.rootPath());
+            }
+            setActionVisible(R.id.btnSelRename, canRename);
         }
         if (getActivity() instanceof SelectionHost) {
             ((SelectionHost) getActivity()).onSelectionChanged(count);
@@ -272,17 +282,7 @@ public class AlbumsFragment extends Fragment
         }
 
         DestSheet sheet = DestSheet.newInstance(copy);
-        sheet.setListener(new DestSheet.Listener() {
-            @Override
-            public void onDestPicked(File dir) {
-                runCopyMove(copy, dirs, dir);
-            }
-
-            @Override
-            public void onNewFolderRequested() {
-                CreateFolderDialog.show(act, null, folder -> runCopyMove(copy, dirs, folder));
-            }
-        });
+        sheet.setListener(dir -> runCopyMove(copy, dirs, dir));
         sheet.show(getParentFragmentManager(), "dest");
     }
 
@@ -320,11 +320,67 @@ public class AlbumsFragment extends Fragment
         }
     }
 
+    // ---------- Переименование папки ----------
+
+    private void onRenameSelected() {
+        List<Album> sel = adapter.selectedAlbums();
+        if (sel.size() != 1) return;
+        File dir = new File(sel.get(0).path);
+        FragmentActivity act = requireActivity();
+        View v = LayoutInflater.from(act).inflate(R.layout.dialog_create_folder, null, false);
+        android.widget.EditText edit = v.findViewById(R.id.editFolderName);
+        TextView txtTitle = v.findViewById(R.id.txtDialogTitle);
+        v.findViewById(R.id.txtFolderPreview).setVisibility(View.GONE);
+        txtTitle.setText(R.string.rename_folder_title);
+        edit.setText(dir.getName());
+        edit.setSelection(edit.getText().length());
+
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(act)
+                .setTitle(R.string.rename)
+                .setView(v)
+                .setPositiveButton(R.string.save, null)
+                .setNegativeButton(R.string.cancel, null)
+                .create();
+        dialog.show();
+        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
+                .setOnClickListener(btn -> {
+                    String name = edit.getText().toString().trim();
+                    if (!Fmt.isValidName(name)) {
+                        Toast.makeText(act, R.string.invalid_folder_name, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (name.equals(dir.getName())) {
+                        dialog.dismiss();
+                        return;
+                    }
+                    File parent = dir.getParentFile();
+                    if (parent == null) return;
+                    File target = new File(parent, name);
+                    if (target.exists()) {
+                        Toast.makeText(act, R.string.folder_exists, Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (dir.renameTo(target)) {
+                        com.premiumlab.galleryx.data.FavStore.rewritePrefix(
+                                dir.getAbsolutePath(), target.getAbsolutePath());
+                        com.premiumlab.galleryx.util.Scan.files(act,
+                                dir.getAbsolutePath(), target.getAbsolutePath());
+                        MediaEngine.invalidateAll();
+                        dialog.dismiss();
+                        exitSelection();
+                        loadAlbums();
+                    } else {
+                        Toast.makeText(act, R.string.error_generic, Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
     // ---------- Удаление папок ----------
 
     private void onDeleteSelected() {
         List<File> dirs = selectedDirs();
         if (dirs.isEmpty()) return;
+        if (!Actions.ensureRoot(requireActivity())) return;
         new MaterialAlertDialogBuilder(requireActivity())
                 .setTitle(R.string.delete_folder)
                 .setMessage(R.string.delete_selected_folders_confirm)

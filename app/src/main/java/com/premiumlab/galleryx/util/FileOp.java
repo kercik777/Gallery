@@ -94,11 +94,8 @@ public class FileOp {
                     continue;
                 }
                 File target = Fmt.uniqueFile(destDir, it.name);
-                if (src.renameTo(target)) {
-                    ok++;
-                } else if (copyFile(src, target, -1, -1, null, 0, 0, null) >= 0) {
-                    //noinspection ResultOfMethodCallIgnored
-                    src.delete();
+                if (moveFile(src, target)) {
+                    FavStore.rewritePrefix(src.getAbsolutePath(), target.getAbsolutePath());
                     ok++;
                 } else {
                     fail++;
@@ -116,6 +113,10 @@ public class FileOp {
         exec.execute(() -> {
             int ok = 0, fail = 0;
             File dir = TrashStore.trashDir();
+            if (dir == null) {
+                failAll(p, d, items.size());
+                return;
+            }
             for (int i = 0; i < items.size(); i++) {
                 if (cancelled) break;
                 MediaItem it = items.get(i);
@@ -126,7 +127,7 @@ public class FileOp {
                     continue;
                 }
                 File target = new File(dir, "t" + System.nanoTime() + "_" + it.name);
-                if (src.renameTo(target)) {
+                if (moveFile(src, target)) {
                     TrashStore.get().add(src.getAbsolutePath(), target, it.name, it.size, it.isVideo);
                     FavStore.remove(it.path);
                     ok++;
@@ -145,6 +146,10 @@ public class FileOp {
         exec.execute(() -> {
             int ok = 0, fail = 0;
             File dir = SafeStore.safeDir();
+            if (dir == null) {
+                failAll(p, d, items.size());
+                return;
+            }
             for (int i = 0; i < items.size(); i++) {
                 if (cancelled) break;
                 MediaItem it = items.get(i);
@@ -155,7 +160,7 @@ public class FileOp {
                     continue;
                 }
                 File target = new File(dir, "s" + System.nanoTime() + ".bin");
-                if (src.renameTo(target)) {
+                if (moveFile(src, target)) {
                     SafeStore.get().add(src.getAbsolutePath(), target, it.name, it.size, it.isVideo);
                     FavStore.remove(it.path);
                     ok++;
@@ -207,7 +212,7 @@ public class FileOp {
                     //noinspection ResultOfMethodCallIgnored
                     destDir.mkdirs();
                     File target = Fmt.uniqueFile(destDir, origName);
-                    if (src.renameTo(target)) {
+                    if (moveFile(src, target)) {
                         ok++;
                         TrashStore.get().remove(e);
                         Scan.files(ctx, target.getAbsolutePath());
@@ -238,7 +243,7 @@ public class FileOp {
                     //noinspection ResultOfMethodCallIgnored
                     destDir.mkdirs();
                     File target = Fmt.uniqueFile(destDir, e.name);
-                    if (src.renameTo(target)) {
+                    if (moveFile(src, target)) {
                         ok++;
                         SafeStore.get().remove(e);
                         Scan.files(ctx, target.getAbsolutePath());
@@ -338,7 +343,7 @@ public class FileOp {
                     for (File f : files) {
                         scan.add(new File(target, relativePath(dir, f)).getAbsolutePath());
                     }
-                    FavStore.remove(dir.getAbsolutePath());
+                    FavStore.rewritePrefix(dir.getAbsolutePath(), target.getAbsolutePath());
                     ok++;
                     continue;
                 }
@@ -380,6 +385,10 @@ public class FileOp {
         exec.execute(() -> {
             int ok = 0, fail = 0;
             File trashDir = TrashStore.trashDir();
+            if (trashDir == null) {
+                failAll(p, d, dirs.size());
+                return;
+            }
             List<String> scan = new ArrayList<>();
             for (int i = 0; i < dirs.size(); i++) {
                 if (cancelled) break;
@@ -394,7 +403,7 @@ public class FileOp {
                 boolean allOk = true;
                 for (File f : files) {
                     File target = new File(trashDir, "t" + System.nanoTime() + "_" + f.getName());
-                    if (f.renameTo(target)) {
+                    if (moveFile(f, target)) {
                         TrashStore.get().add(f.getAbsolutePath(), target, f.getName(),
                                 target.length(), com.premiumlab.galleryx.data.MediaEngine
                                         .isVideoName(f.getName()));
@@ -512,6 +521,22 @@ public class FileOp {
             } catch (IOException ignored) {
             }
         }
+    }
+
+    /** Перемещает файл: сначала rename, при неудаче (другой том) — копирование и удаление. */
+    private boolean moveFile(File src, File target) {
+        if (src.renameTo(target)) return true;
+        if (copyFile(src, target, -1, -1, null, 0, 0, null) >= 0) {
+            //noinspection ResultOfMethodCallIgnored
+            src.delete();
+            return true;
+        }
+        return false;
+    }
+
+    /** Завершает операцию с ошибкой «корневая папка не выбрана». */
+    private void failAll(Progress p, Done d, int total) {
+        finish(p, d, 0, total, total);
     }
 
     private static int percentOf(long part, long total) {

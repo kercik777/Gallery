@@ -4,7 +4,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -38,21 +37,22 @@ public class SafeStore {
     private SafeStore() {
     }
 
+    /** Папка сейфа внутри корневой папки; null, если корень ещё не выбран. */
     public static File safeDir() {
-        File dir = new File(MediaEngine.hiddenRoot(), "safe");
-        if (!dir.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            dir.mkdirs();
-            File noMedia = new File(dir, ".nomedia");
-            if (!noMedia.exists()) {
-                try {
-                    //noinspection ResultOfMethodCallIgnored
-                    noMedia.createNewFile();
-                } catch (IOException ignored) {
-                }
+        return AppDirs.safeDir();
+    }
+
+    /** Переписывает пути записей после переезда служебной папки. */
+    public synchronized void rewritePrefix(String from, String to) {
+        List<Entry> list = load();
+        boolean changed = false;
+        for (Entry e : list) {
+            if (e.path.startsWith(from + "/")) {
+                e.path = to + e.path.substring(from.length());
+                changed = true;
             }
         }
-        return dir;
+        if (changed) save(list);
     }
 
     private synchronized List<Entry> load() {

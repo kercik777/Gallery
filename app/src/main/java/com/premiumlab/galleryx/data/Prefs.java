@@ -78,7 +78,21 @@ public class Prefs {
     }
 
     public static void clearPin() {
-        sp.edit().remove("pin_hash").remove("pin_salt").apply();
+        sp.edit().remove("pin_hash").remove("pin_salt").remove("pin_for_masking").apply();
+    }
+
+    /** PIN-код требуется также для открытия скрытых папок (маскировка). */
+    public static boolean pinForMasking() {
+        return sp.getBoolean("pin_for_masking", false);
+    }
+
+    public static void setPinForMasking(boolean v) {
+        sp.edit().putBoolean("pin_for_masking", v).apply();
+    }
+
+    /** Нужно ли запрашивать PIN при снятии маскировки. */
+    public static boolean maskingPinRequired() {
+        return pinSet() && pinForMasking();
     }
 
     public static int autoHide() {

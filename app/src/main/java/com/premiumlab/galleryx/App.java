@@ -24,6 +24,7 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         Prefs.init(this);
+        SessionManager.init();
         applyTheme();
         registerLifecycle();
         // Очистка корзины старше 30 дней — в фоне

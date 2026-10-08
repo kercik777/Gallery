@@ -24,7 +24,6 @@ import com.premiumlab.galleryx.data.Prefs;
 import com.premiumlab.galleryx.data.SafeStore;
 import com.premiumlab.galleryx.data.TrashStore;
 import com.premiumlab.galleryx.ui.dialog.AboutDialog;
-import com.premiumlab.galleryx.ui.dialog.CreateFolderDialog;
 import com.premiumlab.galleryx.ui.sheet.GridSheet;
 import com.premiumlab.galleryx.ui.sheet.ThemeSheet;
 import com.premiumlab.galleryx.util.Perms;
@@ -38,7 +37,7 @@ public class SettingsFragment extends Fragment {
 
     private TextView txtMaskingStatus, txtThemeCurrent, txtGridCurrent;
     private TextView txtRootCurrent, txtTrashCount, txtSafeCount, txtPermsStatus, txtVersion;
-    private View rowSafe, rowMasking, sectionMasking;
+    private View rowSafe, rowMasking, sectionMasking, sectionFolders, cardFolders;
     private Runnable pendingAfterRoot;
 
     @Nullable
@@ -62,6 +61,8 @@ public class SettingsFragment extends Fragment {
         rowSafe = v.findViewById(R.id.rowSafe);
         rowMasking = v.findViewById(R.id.rowMasking);
         sectionMasking = v.findViewById(R.id.sectionMasking);
+        sectionFolders = v.findViewById(R.id.sectionFolders);
+        cardFolders = v.findViewById(R.id.cardFolders);
 
         v.findViewById(R.id.rowMaskingInner).setOnClickListener(x ->
                 startActivity(new Intent(requireContext(), MaskingSettingsActivity.class)));
@@ -81,24 +82,6 @@ public class SettingsFragment extends Fragment {
         v.findViewById(R.id.rowRoot).setOnClickListener(x ->
                 startActivityForResult(new Intent(requireContext(), RootPickerActivity.class),
                         REQ_ROOT));
-
-        v.findViewById(R.id.rowNewFolder).setOnClickListener(x ->
-                CreateFolderDialog.show(requireActivity(), () -> {
-                    pendingAfterRoot = () ->
-                            Toast.makeText(requireContext(), R.string.root_selected,
-                                    Toast.LENGTH_SHORT).show();
-                    new com.google.android.material.dialog.MaterialAlertDialogBuilder(
-                            requireActivity())
-                            .setTitle(R.string.root_needed_title)
-                            .setMessage(R.string.root_needed_desc)
-                            .setPositiveButton(R.string.continue_btn, (d, w) ->
-                                    startActivityForResult(
-                                            new Intent(requireContext(),
-                                                    RootPickerActivity.class), REQ_ROOT))
-                            .setNegativeButton(R.string.cancel, null)
-                            .show();
-                }, folder -> {
-                }));
 
         v.findViewById(R.id.rowTrash).setOnClickListener(x ->
                 startActivity(new Intent(requireContext(), TrashActivity.class)));
@@ -125,14 +108,19 @@ public class SettingsFragment extends Fragment {
         txtMaskingStatus.setText(Prefs.masking()
                 ? R.string.masking_status_on : R.string.masking_status_off);
 
-        // Пока галерея «закрыта» маскировкой — пункты «Режим маскировки»
-        // и «Сейф» из настроек исчезают. После удержания заголовка возвращаются.
+        // Пока галерея «закрыта» маскировкой — пункты «Режим маскировки»,
+        // «Сейф» и «Корневая папка» из настроек исчезают. После удержания заголовка возвращаются.
         boolean hidden = MaskGuard.hidden();
         if (rowSafe != null) rowSafe.setVisibility(hidden ? View.GONE : View.VISIBLE);
         if (rowMasking != null) rowMasking.setVisibility(hidden ? View.GONE : View.VISIBLE);
         if (sectionMasking != null) {
             sectionMasking.setVisibility(hidden ? View.GONE : View.VISIBLE);
         }
+        // Корневая папка тоже выдаёт «секрет» — прячем вместе с остальным
+        if (sectionFolders != null) {
+            sectionFolders.setVisibility(hidden ? View.GONE : View.VISIBLE);
+        }
+        if (cardFolders != null) cardFolders.setVisibility(hidden ? View.GONE : View.VISIBLE);
 
         int theme = Prefs.theme();
         txtThemeCurrent.setText(theme == Prefs.THEME_LIGHT

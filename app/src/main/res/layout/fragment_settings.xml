@@ -227,6 +227,7 @@
             </LinearLayout>
 
             <TextView
+                android:id="@+id/sectionFolders"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
@@ -238,6 +239,7 @@
                 android:textSize="12sp" />
 
             <LinearLayout
+                android:id="@+id/cardFolders"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_card"
@@ -294,35 +296,6 @@
                         android:contentDescription="@string/settings_root"
                         android:src="@drawable/ic_chevron"
                         app:tint="@color/textTertiary" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/rowNewFolder"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:padding="@dimen/spacing_l">
-
-                    <ImageView
-                        android:layout_width="46dp"
-                        android:layout_height="46dp"
-                        android:background="@drawable/bg_icon_rounded"
-                        android:contentDescription="@string/create_folder"
-                        android:padding="11dp"
-                        android:src="@drawable/ic_folder_plus"
-                        app:tint="@color/primary" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/spacing_l"
-                        android:layout_weight="1"
-                        android:fontFamily="sans-serif-medium"
-                        android:text="@string/create_folder"
-                        android:textColor="@color/textPrimary"
-                        android:textSize="16sp" />
                 </LinearLayout>
             </LinearLayout>
 
