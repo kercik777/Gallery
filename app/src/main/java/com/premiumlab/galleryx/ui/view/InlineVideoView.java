@@ -37,6 +37,7 @@ public class InlineVideoView extends TextureView implements TextureView.SurfaceT
     private boolean prepared = false;
     private boolean playWhenReady = false;
     private boolean released = true;
+    private boolean muted = true;
     private int videoW, videoH;
 
     public InlineVideoView(Context context) {
@@ -80,6 +81,7 @@ public class InlineVideoView extends TextureView implements TextureView.SurfaceT
             });
             player.setOnPreparedListener(mp -> {
                 prepared = true;
+                applyVolume();
                 videoW = mp.getVideoWidth();
                 videoH = mp.getVideoHeight();
                 applyTransform();
@@ -114,6 +116,25 @@ public class InlineVideoView extends TextureView implements TextureView.SurfaceT
             if (listener != null) listener.onPlayStateChanged(true);
         } else if (player == null) {
             openIfPossible();
+        }
+    }
+
+    /** Без звука (по умолчанию) / со звуком. Применяется сразу и к следующим файлам. */
+    public void setMuted(boolean muted) {
+        this.muted = muted;
+        applyVolume();
+    }
+
+    public boolean isMuted() {
+        return muted;
+    }
+
+    private void applyVolume() {
+        if (player == null || !prepared) return;
+        try {
+            float v = muted ? 0f : 1f;
+            player.setVolume(v, v);
+        } catch (IllegalStateException ignored) {
         }
     }
 

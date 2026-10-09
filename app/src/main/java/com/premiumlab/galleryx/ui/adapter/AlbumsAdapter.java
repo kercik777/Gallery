@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.premiumlab.galleryx.R;
 import com.premiumlab.galleryx.data.Album;
+import com.premiumlab.galleryx.data.LockStore;
 import com.premiumlab.galleryx.data.Prefs;
 import com.premiumlab.galleryx.util.Fmt;
 
@@ -177,6 +178,7 @@ public class AlbumsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         final TextView txtName, txtCount, txtBadge;
         final ImageView imgCheck;
         final ImageView imgFolderArt;
+        final ImageView imgLock;
         final View card;
         int appliedCols = -1;
 
@@ -184,6 +186,7 @@ public class AlbumsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             super(itemView);
             imgCover = itemView.findViewById(R.id.imgCover);
             imgFolderArt = itemView.findViewById(R.id.imgFolderArt);
+            imgLock = itemView.findViewById(R.id.imgLockBadge);
             layoutCoverArt = itemView.findViewById(R.id.layoutCoverArt);
             txtName = itemView.findViewById(R.id.txtAlbumName);
             txtCount = itemView.findViewById(R.id.txtAlbumCount);
@@ -226,7 +229,15 @@ public class AlbumsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             imgCheck.setVisibility(sel ? View.VISIBLE : View.GONE);
             imgCover.setAlpha(sel ? 0.55f : 1f);
 
-            if (album.coverPath != null) {
+            boolean locked = LockStore.isLocked(album.path);
+            imgLock.setVisibility(locked ? View.VISIBLE : View.GONE);
+            ViewGroup.LayoutParams llp = imgLock.getLayoutParams();
+            llp.width = dp(appliedCols >= 3 ? 22 : 26);
+            llp.height = llp.width;
+            imgLock.setLayoutParams(llp);
+
+            // Обложку заблокированной папки не показываем — только значок папки с замком
+            if (album.coverPath != null && !locked) {
                 layoutCoverArt.setVisibility(View.GONE);
                 int cols = Math.max(1, Prefs.albumColumns());
                 int size = Math.max(160, ctx.getResources().getDisplayMetrics().widthPixels / cols);

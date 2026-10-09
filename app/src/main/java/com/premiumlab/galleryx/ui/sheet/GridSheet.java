@@ -15,7 +15,7 @@ import com.premiumlab.galleryx.R;
 import com.premiumlab.galleryx.data.Prefs;
 
 /**
- * Нижний лист настройки размера сетки: медиа (2–6 колонок) или альбомы (1–4).
+ * Нижний лист настройки размера сетки: медиа (2–5 колонок) или альбомы (1–3).
  */
 public class GridSheet extends BottomSheetDialogFragment {
 
@@ -29,7 +29,7 @@ public class GridSheet extends BottomSheetDialogFragment {
         this.listener = listener;
     }
 
-    /** Лист для сетки альбомов (1–4 колонки). */
+    /** Лист для сетки альбомов (1–3 колонки). */
     public static GridSheet forAlbums() {
         GridSheet sheet = new GridSheet();
         Bundle args = new Bundle();
@@ -53,7 +53,7 @@ public class GridSheet extends BottomSheetDialogFragment {
         if (albums) {
             txtTitle.setText(R.string.settings_grid_albums);
             slider.setValueFrom(1f);
-            slider.setValueTo(4f);
+            slider.setValueTo(3f);
             slider.setValue(Prefs.albumColumns());
         } else {
             slider.setValue(Prefs.columns());

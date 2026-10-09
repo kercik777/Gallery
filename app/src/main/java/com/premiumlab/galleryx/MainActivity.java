@@ -2,9 +2,12 @@ package com.premiumlab.galleryx;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.database.ContentObserver;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.MediaStore;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -16,6 +19,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.premiumlab.galleryx.data.MaskGuard;
+import com.premiumlab.galleryx.data.MediaEngine;
 import com.premiumlab.galleryx.data.Prefs;
 import com.premiumlab.galleryx.data.SessionManager;
 import com.premiumlab.galleryx.ui.AlbumsFragment;
@@ -56,6 +60,25 @@ public class MainActivity extends AppCompatActivity
     private boolean fragmentsAdded = false;
     /** Состояние маскировки на момент последнего показа — чтобы обновить вкладки. */
     private boolean lastMaskHidden;
+    private boolean wasStopped = false;
+
+    /**
+     * Слежение за MediaStore: новое фото/видео (камера, загрузка, другой
+     * проводник) появляется в сетке само, без перезапуска приложения.
+     */
+    private final ContentObserver mediaObserver =
+            new ContentObserver(new Handler(Looper.getMainLooper())) {
+                @Override
+                public void onChange(boolean selfChange, Uri uri) {
+                    scheduleMediaRefresh();
+                }
+
+                @Override
+                public void onChange(boolean selfChange) {
+                    scheduleMediaRefresh();
+                }
+            };
+    private final Runnable mediaRefresh = this::refreshMediaFragments;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,10 +125,49 @@ public class MainActivity extends AppCompatActivity
     // ---------- Состояние экранов ----------
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        try {
+            getContentResolver().registerContentObserver(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI, true, mediaObserver);
+            getContentResolver().registerContentObserver(
+                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI, true, mediaObserver);
+        } catch (Exception ignored) {
+        }
+        if (wasStopped) {
+            // Вернулись из другого приложения (например, камеры) — кэш списка
+            // устарел, вкладки перечитают MediaStore при onResume
+            wasStopped = false;
+            MediaEngine.invalidateAll();
+        }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         SessionManager.setListener(this);
         evaluateScreenState();
+    }
+
+    private void scheduleMediaRefresh() {
+        handler.removeCallbacks(mediaRefresh);
+        handler.postDelayed(mediaRefresh, 800);
+    }
+
+    /** Перечитывает медиа на видимой вкладке (данные на диске изменились). */
+    private void refreshMediaFragments() {
+        if (isFinishing() || !fragmentsAdded) return;
+        MediaEngine.invalidateAll();
+        androidx.fragment.app.FragmentManager fm = getSupportFragmentManager();
+        for (String tag : fragTags) {
+            Fragment f = fm.findFragmentByTag(tag);
+            if (f == null || !f.isAdded() || f.isHidden()) continue;
+            if (f instanceof BaseMediaFragment) {
+                ((BaseMediaFragment) f).refreshData();
+            } else if (f instanceof AlbumsFragment) {
+                ((AlbumsFragment) f).refreshData();
+            }
+        }
     }
 
     @Override
@@ -118,6 +180,12 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStop() {
         super.onStop();
+        wasStopped = true;
+        handler.removeCallbacks(mediaRefresh);
+        try {
+            getContentResolver().unregisterContentObserver(mediaObserver);
+        } catch (Exception ignored) {
+        }
         if (!App.isForeground()
                 && Prefs.masking()
                 && SessionManager.isUnlocked()

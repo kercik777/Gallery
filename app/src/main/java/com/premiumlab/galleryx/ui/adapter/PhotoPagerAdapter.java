@@ -51,6 +51,8 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
     private final int previewSize;
     /** Явный список путей-видео (сейф хранит файлы под именами .bin). */
     private java.util.Set<String> videoPaths;
+    /** Видео стартуют без звука, пока пользователь не включит его кнопкой. */
+    private boolean muted = true;
 
     public PhotoPagerAdapter(Context ctx, ZoomableImageView.TapListener tapListener,
                              ZoomableImageView.DragListener dragListener,
@@ -64,6 +66,14 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
 
     public void setVideoPaths(java.util.Set<String> paths) {
         this.videoPaths = paths;
+    }
+
+    public void setMuted(boolean muted) {
+        this.muted = muted;
+    }
+
+    public boolean isMuted() {
+        return muted;
     }
 
     public boolean isVideo(String path) {
@@ -242,6 +252,7 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
             // TextureView получает поверхность только будучи видимой;
             // до первого кадра она прозрачна — под ней остаётся кадр-превью
             video.setVisibility(View.VISIBLE);
+            video.setMuted(muted);
             video.setSource(path);
             video.play();
         }

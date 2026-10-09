@@ -23,9 +23,11 @@ import androidx.recyclerview.widget.SimpleItemAnimator;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.premiumlab.galleryx.FolderActivity;
 import com.premiumlab.galleryx.MainActivity;
+import com.premiumlab.galleryx.PinActivity;
 import com.premiumlab.galleryx.R;
 import com.premiumlab.galleryx.RootPickerActivity;
 import com.premiumlab.galleryx.data.Album;
+import com.premiumlab.galleryx.data.LockStore;
 import com.premiumlab.galleryx.data.MaskGuard;
 import com.premiumlab.galleryx.data.MediaEngine;
 import com.premiumlab.galleryx.data.MediaItem;
@@ -53,6 +55,10 @@ public class AlbumsFragment extends Fragment
         implements AlbumsAdapter.Listener, BackHandler {
 
     private static final int REQ_ROOT = 502;
+    private static final int REQ_PIN_OPEN = 503;
+    private static final int REQ_PIN_UNLOCK = 504;
+
+    private Album pendingOpen;
 
     private RecyclerView recycler;
     private AlbumsAdapter adapter;
@@ -143,6 +149,8 @@ public class AlbumsFragment extends Fragment
             setActionVisible(R.id.btnSelMove, true);
             setActionVisible(R.id.btnSelDelete, true);
             setActionVisible(R.id.btnSelRename, false);
+            setActionVisible(R.id.btnSelLock, true);
+            selActions.findViewById(R.id.btnSelLock).setOnClickListener(x -> onLockSelected());
             selActions.findViewById(R.id.btnSelCopy).setOnClickListener(x -> destFlow(true));
             selActions.findViewById(R.id.btnSelMove).setOnClickListener(x -> destFlow(false));
             selActions.findViewById(R.id.btnSelRename).setOnClickListener(x -> onRenameSelected());
@@ -194,7 +202,7 @@ public class AlbumsFragment extends Fragment
         }
     }
 
-    /** Щипок по сетке альбомов — 1–4 колонки. */
+    /** Щипок по сетке альбомов — 1–3 колонки. */
     @SuppressLint("ClickableViewAccessibility")
     private void setupPinchZoom() {
         ScaleGestureDetector detector = new ScaleGestureDetector(requireContext(),
@@ -213,7 +221,7 @@ public class AlbumsFragment extends Fragment
                         int oldSpan = layoutManager.getSpanCount();
                         int newSpan = factor > 1.25f ? oldSpan - 1
                                 : factor < 0.8f ? oldSpan + 1 : oldSpan;
-                        newSpan = Math.max(1, Math.min(4, newSpan));
+                        newSpan = Math.max(1, Math.min(3, newSpan));
                         if (newSpan != oldSpan) {
                             Prefs.setAlbumColumns(newSpan);
                             layoutManager.setSpanCount(newSpan);
@@ -236,6 +244,12 @@ public class AlbumsFragment extends Fragment
         });
     }
 
+    /** Тихое обновление (изменился MediaStore); в режиме выделения не трогаем список. */
+    public void refreshData() {
+        if (!isAdded() || adapter == null || adapter.isSelection()) return;
+        loadAlbums();
+    }
+
     /** Перезагрузка списка (после смены состояния маскировки). */
     public void reload() {
         if (!isAdded() || adapter == null) return;
@@ -254,10 +268,85 @@ public class AlbumsFragment extends Fragment
             updateSelBar();
             return;
         }
+        if (LockStore.isLocked(album.path)) {
+            // Заблокированная папка открывается только после PIN
+            pendingOpen = album;
+            Intent intent = new Intent(requireContext(), PinActivity.class);
+            intent.putExtra("mode", PinActivity.MODE_UNLOCK);
+            startActivityForResult(intent, REQ_PIN_OPEN);
+            return;
+        }
+        openAlbum(album);
+    }
+
+    private void openAlbum(Album album) {
         Intent intent = new Intent(requireContext(), FolderActivity.class);
         intent.putExtra("path", album.path);
         intent.putExtra("name", album.name);
         startActivity(intent);
+    }
+
+    // ---------- Блокировка папок ----------
+
+    /** Все выбранные папки уже заблокированы → действие «Разблокировать». */
+    private boolean selectionAllLocked() {
+        List<Album> sel = adapter.selectedAlbums();
+        if (sel.isEmpty()) return false;
+        for (Album a : sel) if (!LockStore.isLocked(a.path)) return false;
+        return true;
+    }
+
+    private void updateLockButton() {
+        if (selActions == null || adapter == null) return;
+        boolean unlock = selectionAllLocked();
+        ImageView img = selActions.findViewById(R.id.imgSelLock);
+        TextView txt = selActions.findViewById(R.id.txtSelLock);
+        if (img != null) img.setImageResource(unlock ? R.drawable.ic_lock_open : R.drawable.ic_lock);
+        if (txt != null) txt.setText(unlock ? R.string.unlock_folder : R.string.lock_folder);
+    }
+
+    private void onLockSelected() {
+        List<Album> sel = adapter.selectedAlbums();
+        if (sel.isEmpty()) return;
+        FragmentActivity act = requireActivity();
+        if (!Prefs.pinSet()) {
+            // Без PIN блокировка бессмысленна — отправляем создать код
+            new MaterialAlertDialogBuilder(act)
+                    .setTitle(R.string.pin_required_title)
+                    .setMessage(R.string.pin_required_lock_msg)
+                    .setPositiveButton(R.string.pin_required_btn, (d, w) -> {
+                        Intent intent = new Intent(act, PinActivity.class);
+                        intent.putExtra("mode", PinActivity.MODE_CREATE);
+                        startActivity(intent);
+                    })
+                    .setNegativeButton(R.string.cancel, null)
+                    .show();
+            return;
+        }
+        if (selectionAllLocked()) {
+            // Снятие блокировки — только после ввода PIN
+            Intent intent = new Intent(act, PinActivity.class);
+            intent.putExtra("mode", PinActivity.MODE_UNLOCK);
+            startActivityForResult(intent, REQ_PIN_UNLOCK);
+            return;
+        }
+        List<String> paths = new ArrayList<>();
+        for (Album a : sel) paths.add(a.path);
+        LockStore.lock(paths);
+        MediaEngine.invalidateAll();
+        Toast.makeText(act, R.string.lock_done, Toast.LENGTH_SHORT).show();
+        exitSelection();
+        loadAlbums();
+    }
+
+    private void unlockSelected() {
+        List<String> paths = new ArrayList<>();
+        for (Album a : adapter.selectedAlbums()) paths.add(a.path);
+        LockStore.unlock(paths);
+        MediaEngine.invalidateAll();
+        if (isAdded()) Toast.makeText(requireContext(), R.string.unlock_done, Toast.LENGTH_SHORT).show();
+        exitSelection();
+        loadAlbums();
     }
 
     @Override
@@ -296,6 +385,7 @@ public class AlbumsFragment extends Fragment
                         && MediaEngine.isUnder(sel.get(0).path, Prefs.rootPath());
             }
             setActionVisible(R.id.btnSelRename, canRename);
+            updateLockButton();
         }
         if (getActivity() instanceof SelectionHost) {
             ((SelectionHost) getActivity()).onSelectionChanged(count);
@@ -433,6 +523,7 @@ public class AlbumsFragment extends Fragment
                     if (dir.renameTo(target)) {
                         com.premiumlab.galleryx.data.FavStore.rewritePrefix(
                                 dir.getAbsolutePath(), target.getAbsolutePath());
+                        LockStore.rewritePrefix(dir.getAbsolutePath(), target.getAbsolutePath());
                         com.premiumlab.galleryx.util.Scan.files(act,
                                 dir.getAbsolutePath(), target.getAbsolutePath());
                         MediaEngine.invalidateAll();
@@ -466,6 +557,7 @@ public class AlbumsFragment extends Fragment
                 act.getString(R.string.op_trash), op::cancel);
         op.trashDirs(dirs, dlg, (ok, fail, cancelled) -> {
             dlg.dismiss();
+            for (File d : dirs) if (!d.exists()) LockStore.removeUnder(d.getAbsolutePath());
             if (!isAdded()) return;
             Toast.makeText(act, Fmt.plural(act, R.plurals.result_albums_deleted, ok),
                     Toast.LENGTH_SHORT).show();
@@ -502,6 +594,12 @@ public class AlbumsFragment extends Fragment
             Runnable r = pendingAfterRoot;
             pendingAfterRoot = null;
             if (r != null) r.run();
+        } else if (requestCode == REQ_PIN_OPEN) {
+            Album a = pendingOpen;
+            pendingOpen = null;
+            if (resultCode == FragmentActivity.RESULT_OK && a != null) openAlbum(a);
+        } else if (requestCode == REQ_PIN_UNLOCK) {
+            if (resultCode == FragmentActivity.RESULT_OK && adapter != null) unlockSelected();
         }
     }
 

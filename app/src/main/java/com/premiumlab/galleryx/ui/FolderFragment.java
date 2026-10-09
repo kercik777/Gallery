@@ -14,9 +14,11 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.premiumlab.galleryx.FolderActivity;
+import com.premiumlab.galleryx.PinActivity;
 import com.premiumlab.galleryx.R;
 import com.premiumlab.galleryx.data.Album;
 import com.premiumlab.galleryx.data.AppDirs;
+import com.premiumlab.galleryx.data.LockStore;
 import com.premiumlab.galleryx.data.MediaEngine;
 import com.premiumlab.galleryx.data.MediaItem;
 import com.premiumlab.galleryx.data.Prefs;
@@ -79,7 +81,24 @@ public class FolderFragment extends BaseMediaFragment {
 
     @Override
     public void onFolderOpen(Album folder) {
+        if (LockStore.isLocked(folder.path)) {
+            // Заблокированная подпапка — сначала PIN
+            pendingLocked = new File(folder.path);
+            Intent intent = new Intent(requireContext(), PinActivity.class);
+            intent.putExtra("mode", PinActivity.MODE_UNLOCK);
+            startActivityForResult(intent, REQ_PIN_LOCKED);
+            return;
+        }
         navigateTo(new File(folder.path));
+    }
+
+    private static final int REQ_PIN_LOCKED = 731;
+    private File pendingLocked;
+
+    /** Внутри папки файлы видны — пользователь уже прошёл PIN при входе. */
+    @Override
+    protected boolean hidesLockedFolders() {
+        return false;
     }
 
     private void navigateTo(File dir) {
@@ -309,6 +328,11 @@ public class FolderFragment extends BaseMediaFragment {
             isUserFolder = Prefs.rootPath() != null
                     && MediaEngine.isUnder(currentDir.getAbsolutePath(), Prefs.rootPath());
             btnHeaderExtra.setVisibility(isUserFolder ? View.VISIBLE : View.GONE);
+        } else if (requestCode == REQ_PIN_LOCKED) {
+            if (resultCode == FragmentActivity.RESULT_OK && pendingLocked != null) {
+                navigateTo(pendingLocked);
+            }
+            pendingLocked = null;
         }
     }
 }

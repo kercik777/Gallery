@@ -68,7 +68,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
 
     /** Управление видео на текущей странице. */
     private View layoutVideoCtl;
-    private ImageView btnVwPlay;
+    private ImageView btnVwPlay, btnVwMute;
     private TextView txtVwCur, txtVwDur;
     private SeekBar seekVw;
     private PhotoPagerAdapter.VH currentPage;
@@ -121,7 +121,6 @@ public class PhotoViewerActivity extends AppCompatActivity {
         txtVwCur = findViewById(R.id.txtVwCur);
         txtVwDur = findViewById(R.id.txtVwDur);
         seekVw = findViewById(R.id.seekVw);
-        setupVideoControls();
 
         topBarPadTop = topBar.getPaddingTop();
         bottomBarPadBottom = bottomBar.getPaddingBottom();
@@ -131,6 +130,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
         findViewById(R.id.btnViewerBack).setOnClickListener(v -> finish());
 
         adapter = new PhotoPagerAdapter(this, this::toggleBars, dragListener, videoListener);
+        setupVideoControls();
         if (mode == MODE_SAFE) {
             java.util.HashSet<String> videos = new java.util.HashSet<>();
             for (SafeStore.Entry e : SafeStore.get().entries()) {
@@ -295,15 +295,14 @@ public class PhotoViewerActivity extends AppCompatActivity {
         btnVwPlay.setOnClickListener(v -> {
             if (currentPage != null) currentPage.togglePlay();
         });
-        findViewById(R.id.btnVwFullscreen).setOnClickListener(v -> {
-            String p = adapter.getPath(pager.getCurrentItem());
-            if (p == null) return;
-            if (currentPage != null) currentPage.pauseVideo();
-            Intent intent = new Intent(this, VideoPlayerActivity.class);
-            intent.putExtra("path", p);
-            intent.putExtra("name", decorateName(MediaItem.fromFile(new File(p))).name);
-            intent.putExtra("mode", mode);
-            startActivity(intent);
+        btnVwMute = findViewById(R.id.btnVwMute);
+        updateMuteIcon();
+        btnVwMute.setOnClickListener(v -> {
+            // Видео стартует без звука; одно нажатие включает звук, второе — выключает.
+            // Выбор действует на все видео, пока открыт просмотрщик.
+            adapter.setMuted(!adapter.isMuted());
+            if (currentPage != null) currentPage.video.setMuted(adapter.isMuted());
+            updateMuteIcon();
         });
         seekVw.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -322,6 +321,12 @@ public class PhotoViewerActivity extends AppCompatActivity {
                 if (currentPage != null) currentPage.video.seekTo(sb.getProgress());
             }
         });
+    }
+
+    private void updateMuteIcon() {
+        btnVwMute.setImageResource(adapter.isMuted()
+                ? R.drawable.ic_volume_off : R.drawable.ic_volume_on);
+        btnVwMute.setAlpha(adapter.isMuted() ? 0.75f : 1f);
     }
 
     private void updateVideoProgress() {

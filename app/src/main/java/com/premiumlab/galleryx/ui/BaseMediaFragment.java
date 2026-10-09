@@ -29,6 +29,7 @@ import com.premiumlab.galleryx.MainActivity;
 import com.premiumlab.galleryx.PhotoViewerActivity;
 import com.premiumlab.galleryx.R;
 import com.premiumlab.galleryx.RootPickerActivity;
+import com.premiumlab.galleryx.data.LockStore;
 import com.premiumlab.galleryx.data.MaskGuard;
 import com.premiumlab.galleryx.data.MediaItem;
 import com.premiumlab.galleryx.data.Prefs;
@@ -374,6 +375,8 @@ public abstract class BaseMediaFragment extends Fragment
         if (restore != null) restore.setVisibility(View.GONE);
         View rename = selActions.findViewById(R.id.btnSelRename);
         if (rename != null) rename.setVisibility(View.GONE);
+        View lock = selActions.findViewById(R.id.btnSelLock);
+        if (lock != null) lock.setVisibility(View.GONE);
     }
 
     protected boolean isAllSelected() {
@@ -405,7 +408,7 @@ public abstract class BaseMediaFragment extends Fragment
                         int oldSpan = layoutManager.getSpanCount();
                         int newSpan = factor > 1.25f ? oldSpan - 1
                                 : factor < 0.8f ? oldSpan + 1 : oldSpan;
-                        newSpan = Math.max(2, Math.min(6, newSpan));
+                        newSpan = Math.max(2, Math.min(5, newSpan));
                         if (newSpan != oldSpan) {
                             Prefs.setColumns(newSpan);
                             layoutManager.setSpanCount(newSpan);
@@ -440,9 +443,12 @@ public abstract class BaseMediaFragment extends Fragment
         List<MediaItem> filtered = new ArrayList<>();
         String q = query;
         boolean maskHidden = MaskGuard.hidden();
+        boolean lockHidden = hidesLockedFolders() && LockStore.any();
         for (MediaItem it : extraFilter(allItems)) {
             // Содержимое корневой папки скрыто, пока маскировка «закрыта»
             if (maskHidden && MaskGuard.isHiddenPath(it.path)) continue;
+            // Файлы из заблокированных папок в общих разделах не показываются никогда
+            if (lockHidden && LockStore.isUnderLocked(it.path)) continue;
             if (q.isEmpty() || it.name.toLowerCase(Locale.getDefault()).contains(q)) {
                 filtered.add(it);
             }
@@ -456,6 +462,14 @@ public abstract class BaseMediaFragment extends Fragment
             adapter.submitRows(rows);
         }
         updateEmptyState();
+    }
+
+    /**
+     * Прятать ли файлы из заблокированных папок. В общих разделах — да;
+     * внутри самой папки (после ввода PIN) — нет.
+     */
+    protected boolean hidesLockedFolders() {
+        return true;
     }
 
     /** Дополнительные строки над сеткой (например, блок вложенных папок). */
@@ -489,6 +503,12 @@ public abstract class BaseMediaFragment extends Fragment
 
     protected void reload() {
         exitSelection();
+        loadMedia();
+    }
+
+    /** Тихое обновление данных (изменился MediaStore): без сброса выделения и чипов. */
+    public void refreshData() {
+        if (!isAdded() || adapter == null) return;
         loadMedia();
     }
 

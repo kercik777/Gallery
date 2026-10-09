@@ -22,10 +22,13 @@ public class MaskingSettingsActivity extends AppCompatActivity {
     private static final int REQ_PIN_CREATE = 201;
     private static final int REQ_PIN_DISABLE = 202;
     private static final int REQ_PIN_CHANGE = 203;
+    private static final int REQ_PIN_OFF = 204;
+    private static final int REQ_PIN_BEFORE_CHANGE = 205;
+    private static final int REQ_PIN_MASK_OFF = 206;
 
-    private MaterialSwitch switchMasking, switchPin, switchSecure;
+    private MaterialSwitch switchMasking, switchPin, switchSecure, switchMaskPin;
     private TextView txtHeroStatus;
-    private View rowChangePin;
+    private View rowChangePin, rowMaskPin;
     private boolean guard = false;
 
     private final View[] autoRows = new View[4];
@@ -43,6 +46,8 @@ public class MaskingSettingsActivity extends AppCompatActivity {
         switchSecure = findViewById(R.id.switchSecure);
         txtHeroStatus = findViewById(R.id.txtMaskingHeroStatus);
         rowChangePin = findViewById(R.id.rowChangePin);
+        rowMaskPin = findViewById(R.id.rowMaskPin);
+        switchMaskPin = findViewById(R.id.switchMaskPin);
 
         autoRows[0] = findViewById(R.id.rowAutoMinimize);
         autoRows[1] = findViewById(R.id.rowAuto1);
@@ -128,27 +133,51 @@ public class MaskingSettingsActivity extends AppCompatActivity {
                 intent.putExtra("mode", PinActivity.MODE_CREATE);
                 startActivityForResult(intent, REQ_PIN_CREATE);
             } else {
-                new MaterialAlertDialogBuilder(this)
-                        .setTitle(R.string.pin_disabled_confirm_title)
-                        .setMessage(R.string.pin_disabled_confirm_msg)
-                        .setPositiveButton(R.string.ok, (d, w) -> {
-                            Prefs.clearPin();
-                            refreshStatus();
-                        })
-                        .setNegativeButton(R.string.cancel, (d, w) -> {
-                            guard = true;
-                            switchPin.setChecked(true);
-                            guard = false;
-                        })
-                        .show();
+                // Отключить PIN можно только зная его: сначала ввод, потом подтверждение
+                guard = true;
+                switchPin.setChecked(true);
+                guard = false;
+                Intent intent = new Intent(this, PinActivity.class);
+                intent.putExtra("mode", PinActivity.MODE_UNLOCK);
+                startActivityForResult(intent, REQ_PIN_OFF);
             }
         });
 
         rowChangePin.setOnClickListener(v -> {
+            // Смена PIN — тоже после ввода текущего
             Intent intent = new Intent(this, PinActivity.class);
-            intent.putExtra("mode", PinActivity.MODE_CREATE);
-            startActivityForResult(intent, REQ_PIN_CHANGE);
+            intent.putExtra("mode", PinActivity.MODE_UNLOCK);
+            startActivityForResult(intent, REQ_PIN_BEFORE_CHANGE);
         });
+
+        switchMaskPin.setChecked(Prefs.maskingUsesPin());
+        switchMaskPin.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (guard) return;
+            if (isChecked) {
+                Prefs.setMaskingUsesPin(true);
+                refreshStatus();
+            } else {
+                // Снять защиту маскировки — только после ввода PIN
+                guard = true;
+                switchMaskPin.setChecked(true);
+                guard = false;
+                Intent intent = new Intent(this, PinActivity.class);
+                intent.putExtra("mode", PinActivity.MODE_UNLOCK);
+                startActivityForResult(intent, REQ_PIN_MASK_OFF);
+            }
+        });
+    }
+
+    private void confirmPinOff() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.pin_disabled_confirm_title)
+                .setMessage(R.string.pin_disabled_confirm_msg)
+                .setPositiveButton(R.string.ok, (d, w) -> {
+                    Prefs.clearPin();
+                    refreshStatus();
+                })
+                .setNegativeButton(R.string.cancel, (d, w) -> refreshStatus())
+                .show();
     }
 
     // ---------- Автоскрытие ----------
@@ -182,11 +211,13 @@ public class MaskingSettingsActivity extends AppCompatActivity {
         switchMasking.setChecked(Prefs.masking());
         switchPin.setChecked(Prefs.pinSet());
         switchSecure.setChecked(Prefs.flagSecure());
+        switchMaskPin.setChecked(Prefs.maskingUsesPin());
         guard = false;
 
         txtHeroStatus.setText(Prefs.masking()
                 ? R.string.masking_status_on : R.string.masking_status_off);
         rowChangePin.setVisibility(Prefs.pinSet() ? View.VISIBLE : View.GONE);
+        rowMaskPin.setVisibility(Prefs.pinSet() ? View.VISIBLE : View.GONE);
 
         int current = Prefs.autoHide();
         int[] modes = {Prefs.AUTOHIDE_MINIMIZE, Prefs.AUTOHIDE_1MIN,
@@ -214,6 +245,16 @@ public class MaskingSettingsActivity extends AppCompatActivity {
             refreshStatus();
         } else if (requestCode == REQ_PIN_DISABLE && resultCode == RESULT_OK) {
             confirmDisable();
+        } else if (requestCode == REQ_PIN_OFF) {
+            if (resultCode == RESULT_OK) confirmPinOff();
+            else refreshStatus();
+        } else if (requestCode == REQ_PIN_BEFORE_CHANGE && resultCode == RESULT_OK) {
+            Intent intent = new Intent(this, PinActivity.class);
+            intent.putExtra("mode", PinActivity.MODE_CREATE);
+            startActivityForResult(intent, REQ_PIN_CHANGE);
+        } else if (requestCode == REQ_PIN_MASK_OFF) {
+            if (resultCode == RESULT_OK) Prefs.setMaskingUsesPin(false);
+            refreshStatus();
         }
     }
 

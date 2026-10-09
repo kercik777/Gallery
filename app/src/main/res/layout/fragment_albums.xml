@@ -14,6 +14,17 @@
         android:paddingStart="@dimen/spacing_m"
         android:paddingEnd="@dimen/spacing_m">
 
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="-0.02"
+            android:text="@string/albums_title"
+            android:textColor="@color/textPrimary"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
         <ImageView
             android:id="@+id/btnHideNowAlbums"
             android:layout_width="@dimen/icon_touch"
@@ -22,20 +33,9 @@
             android:contentDescription="@string/hide_now"
             android:padding="10dp"
             android:src="@drawable/ic_hide"
+            android:layout_marginEnd="@dimen/spacing_s"
             android:visibility="gone"
             app:tint="@color/primary" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/spacing_s"
-            android:layout_weight="1"
-            android:fontFamily="sans-serif-medium"
-            android:letterSpacing="-0.02"
-            android:text="@string/albums_title"
-            android:textColor="@color/textPrimary"
-            android:textSize="26sp"
-            android:textStyle="bold" />
 
         <ImageView
             android:id="@+id/btnNewFolder"

@@ -120,14 +120,14 @@
                 android:textSize="12sp" />
 
             <ImageView
-                android:id="@+id/btnVwFullscreen"
+                android:id="@+id/btnVwMute"
                 android:layout_width="38dp"
                 android:layout_height="38dp"
                 android:layout_marginStart="4dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/filter_video"
+                android:contentDescription="@string/video_sound"
                 android:padding="7dp"
-                android:src="@drawable/ic_fullscreen"
+                android:src="@drawable/ic_volume_off"
                 app:tint="@color/white" />
         </LinearLayout>
 

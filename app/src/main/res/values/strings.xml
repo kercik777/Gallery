@@ -168,6 +168,15 @@
     <string name="select_all">Выбрать все</string>
     <string name="deselect_all">Снять выделение</string>
     <string name="album_dest_inside_itself">Нельзя переместить папку в саму себя</string>
+    <string name="video_sound">Звук</string>
+    <string name="lock_folder">Заблокировать</string>
+    <string name="unlock_folder">Разблокировать</string>
+    <string name="locked_folder">Заблокированная папка</string>
+    <string name="pin_required_lock_msg">Блокировка папок работает только с PIN-кодом. Создайте код — он же защищает сейф.</string>
+    <string name="lock_done">Папки заблокированы: файлы скрыты из общих разделов</string>
+    <string name="unlock_done">Блокировка снята</string>
+    <string name="mask_pin_title">PIN-код для маскировки</string>
+    <string name="mask_pin_desc">Спрашивать PIN при открытии скрытого (удержание заголовка 3 с). Выключено — открывается сразу, PIN защищает только сейф и заблокированные папки</string>
     <string name="album_no_files">В выбранных папках нет файлов</string>
     <string name="action_copy">Копировать</string>
     <string name="action_move">Переместить</string>

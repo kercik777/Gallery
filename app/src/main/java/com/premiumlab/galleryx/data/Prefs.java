@@ -81,9 +81,18 @@ public class Prefs {
         sp.edit().remove("pin_hash").remove("pin_salt").apply();
     }
 
-    /** PIN один на всё: если установлен — защищает и сейф, и снятие маскировки. */
+    /** Применять ли PIN к маскировке (сейф и блокировка папок защищены всегда). */
+    public static boolean maskingUsesPin() {
+        return sp.getBoolean("masking_use_pin", true);
+    }
+
+    public static void setMaskingUsesPin(boolean v) {
+        sp.edit().putBoolean("masking_use_pin", v).apply();
+    }
+
+    /** PIN один на всё; для маскировки — только если включён пункт «PIN для маскировки». */
     public static boolean maskingPinRequired() {
-        return pinSet();
+        return pinSet() && maskingUsesPin();
     }
 
     public static int autoHide() {
@@ -112,21 +121,22 @@ public class Prefs {
         sp.edit().putInt("theme_mode", mode).apply();
     }
 
+    /** Колонок в сетке медиа (2–5). */
     public static int columns() {
-        return sp.getInt("grid_columns", 3);
+        return Math.max(2, Math.min(5, sp.getInt("grid_columns", 3)));
     }
 
     public static void setColumns(int c) {
-        sp.edit().putInt("grid_columns", Math.max(2, Math.min(6, c))).apply();
+        sp.edit().putInt("grid_columns", Math.max(2, Math.min(5, c))).apply();
     }
 
-    /** Колонок в сетке альбомов (1–4). */
+    /** Колонок в сетке альбомов (1–3). */
     public static int albumColumns() {
-        return sp.getInt("album_columns", 2);
+        return Math.max(1, Math.min(3, sp.getInt("album_columns", 2)));
     }
 
     public static void setAlbumColumns(int c) {
-        sp.edit().putInt("album_columns", Math.max(1, Math.min(4, c))).apply();
+        sp.edit().putInt("album_columns", Math.max(1, Math.min(3, c))).apply();
     }
 
     /** Последняя открытая вкладка главного экрана (0 — галерея … 3 — настройки). */
