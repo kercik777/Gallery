@@ -64,6 +64,7 @@
     <!-- Альбомы -->
     <string name="albums_title">Альбомы</string>
     <string name="my_folders">Мои папки</string>
+    <string name="my_folders_short">Моя</string>
     <string name="device_folders">Папки устройства</string>
     <string name="subfolders">Подпапки</string>
     <string name="open">Открыть</string>
@@ -167,6 +168,7 @@
     <string name="select_all">Выбрать все</string>
     <string name="deselect_all">Снять выделение</string>
     <string name="album_dest_inside_itself">Нельзя переместить папку в саму себя</string>
+    <string name="album_no_files">В выбранных папках нет файлов</string>
     <string name="action_copy">Копировать</string>
     <string name="action_move">Переместить</string>
     <string name="action_favorite">В избранное</string>

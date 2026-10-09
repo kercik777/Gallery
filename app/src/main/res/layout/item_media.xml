@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:padding="3dp">
 
-    <androidx.cardview.widget.CardView
+    <com.premiumlab.galleryx.ui.view.SquareCardView
         android:id="@+id/cardMedia"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -18,13 +18,12 @@
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent">
 
             <ImageView
                 android:id="@+id/imgMedia"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:adjustViewBounds="true"
+                android:layout_height="match_parent"
                 android:background="@drawable/placeholder_media"
                 android:contentDescription="@string/nav_gallery"
                 android:scaleType="centerCrop" />
@@ -79,6 +78,7 @@
                 android:paddingBottom="3dp">
 
                 <ImageView
+                    android:id="@+id/imgPlayBadge"
                     android:layout_width="13dp"
                     android:layout_height="13dp"
                     android:contentDescription="@string/filter_video"
@@ -107,5 +107,5 @@
                 android:visibility="gone"
                 app:tint="@color/primary" />
         </FrameLayout>
-    </androidx.cardview.widget.CardView>
+    </com.premiumlab.galleryx.ui.view.SquareCardView>
 </FrameLayout>

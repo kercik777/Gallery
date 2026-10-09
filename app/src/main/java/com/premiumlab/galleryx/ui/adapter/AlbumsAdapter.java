@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.premiumlab.galleryx.R;
 import com.premiumlab.galleryx.data.Album;
+import com.premiumlab.galleryx.data.Prefs;
 import com.premiumlab.galleryx.util.Fmt;
 
 import java.io.File;
@@ -175,11 +176,14 @@ public class AlbumsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         final View layoutCoverArt;
         final TextView txtName, txtCount, txtBadge;
         final ImageView imgCheck;
+        final ImageView imgFolderArt;
         final View card;
+        int appliedCols = -1;
 
         AlbumVH(@NonNull View itemView) {
             super(itemView);
             imgCover = itemView.findViewById(R.id.imgCover);
+            imgFolderArt = itemView.findViewById(R.id.imgFolderArt);
             layoutCoverArt = itemView.findViewById(R.id.layoutCoverArt);
             txtName = itemView.findViewById(R.id.txtAlbumName);
             txtCount = itemView.findViewById(R.id.txtAlbumCount);
@@ -212,6 +216,7 @@ public class AlbumsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         }
 
         void bind(Album album) {
+            applyDensity(Math.max(1, Prefs.albumColumns()));
             txtName.setText(album.name);
             txtCount.setText(Fmt.plural(ctx, R.plurals.items_count, album.count)
                     .toLowerCase(Locale.getDefault()));
@@ -223,8 +228,11 @@ public class AlbumsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
             if (album.coverPath != null) {
                 layoutCoverArt.setVisibility(View.GONE);
+                int cols = Math.max(1, Prefs.albumColumns());
+                int size = Math.max(160, ctx.getResources().getDisplayMetrics().widthPixels / cols);
                 Glide.with(ctx)
                         .load(new File(album.coverPath))
+                        .override(size, size)
                         .centerCrop()
                         .placeholder(R.drawable.placeholder_media)
                         .into(imgCover);
@@ -232,6 +240,55 @@ public class AlbumsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 layoutCoverArt.setVisibility(View.VISIBLE);
                 imgCover.setImageDrawable(null);
             }
+        }
+
+        /** Компактнее бейдж, подписи и иконка папки при 3–4 колонках. */
+        void applyDensity(int cols) {
+            if (cols == appliedCols) return;
+            appliedCols = cols;
+            float cellDp = ctx.getResources().getDisplayMetrics().widthPixels
+                    / ctx.getResources().getDisplayMetrics().density / cols;
+            float nameSp, countSp, badgeSp;
+            int badgePadH, badgePadV, badgeMargin, art, check;
+            CharSequence badgeText;
+            if (cellDp >= 150f) {          // 1–2 колонки
+                nameSp = 14f; countSp = 12f; badgeSp = 11f;
+                badgePadH = 10; badgePadV = 3; badgeMargin = 10; art = 44; check = 30;
+                badgeText = ctx.getString(R.string.my_folders);
+            } else if (cellDp >= 115f) {   // 3 колонки
+                nameSp = 13f; countSp = 11f; badgeSp = 10f;
+                badgePadH = 8; badgePadV = 2; badgeMargin = 8; art = 36; check = 26;
+                badgeText = ctx.getString(R.string.my_folders);
+            } else {                       // 4 колонки — короткая метка
+                nameSp = 12f; countSp = 10f; badgeSp = 9f;
+                badgePadH = 6; badgePadV = 2; badgeMargin = 6; art = 30; check = 24;
+                badgeText = ctx.getString(R.string.my_folders_short);
+            }
+            txtName.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, nameSp);
+            txtCount.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, countSp);
+            txtBadge.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, badgeSp);
+            txtBadge.setText(badgeText);
+            txtBadge.setPadding(dp(badgePadH), dp(badgePadV), dp(badgePadH), dp(badgePadV));
+            ViewGroup.LayoutParams blp = txtBadge.getLayoutParams();
+            if (blp instanceof ViewGroup.MarginLayoutParams) {
+                int m = dp(badgeMargin);
+                ((ViewGroup.MarginLayoutParams) blp).setMargins(m, m, m, m);
+                txtBadge.setLayoutParams(blp);
+            }
+            ViewGroup.LayoutParams ap = imgFolderArt.getLayoutParams();
+            ap.width = dp(art);
+            ap.height = dp(art);
+            imgFolderArt.setLayoutParams(ap);
+            ViewGroup.LayoutParams cp = imgCheck.getLayoutParams();
+            cp.width = dp(check);
+            cp.height = dp(check);
+            imgCheck.setLayoutParams(cp);
+            int chkPad = dp(check) / 5;
+            imgCheck.setPadding(chkPad, chkPad, chkPad, chkPad);
+        }
+
+        private int dp(float v) {
+            return Math.round(v * ctx.getResources().getDisplayMetrics().density);
         }
     }
 }

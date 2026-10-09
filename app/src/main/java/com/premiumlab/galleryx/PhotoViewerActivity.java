@@ -4,11 +4,14 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,6 +21,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.premiumlab.galleryx.data.FavStore;
@@ -62,6 +66,23 @@ public class PhotoViewerActivity extends AppCompatActivity {
     private boolean barsVisible = true;
     private boolean dismissing = false;
 
+    /** Управление видео на текущей странице. */
+    private View layoutVideoCtl;
+    private ImageView btnVwPlay;
+    private TextView txtVwCur, txtVwDur;
+    private SeekBar seekVw;
+    private PhotoPagerAdapter.VH currentPage;
+    private boolean seeking = false;
+    private boolean resumePlayback = false;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Runnable progressTick = new Runnable() {
+        @Override
+        public void run() {
+            updateVideoProgress();
+            handler.postDelayed(this, 400);
+        }
+    };
+
     /** Исходные отступы панелей (к ним прибавляются системные insets). */
     private int topBarPadTop, bottomBarPadBottom, bottomBarPadSide;
 
@@ -95,6 +116,12 @@ public class PhotoViewerActivity extends AppCompatActivity {
         btnSafe = findViewById(R.id.btnVwSafe);
         btnRestore = findViewById(R.id.btnVwRestore);
         btnDelete = findViewById(R.id.btnVwDelete);
+        layoutVideoCtl = findViewById(R.id.layoutVideoCtl);
+        btnVwPlay = findViewById(R.id.btnVwPlay);
+        txtVwCur = findViewById(R.id.txtVwCur);
+        txtVwDur = findViewById(R.id.txtVwDur);
+        seekVw = findViewById(R.id.seekVw);
+        setupVideoControls();
 
         topBarPadTop = topBar.getPaddingTop();
         bottomBarPadBottom = bottomBar.getPaddingBottom();
@@ -103,7 +130,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
 
         findViewById(R.id.btnViewerBack).setOnClickListener(v -> finish());
 
-        adapter = new PhotoPagerAdapter(this, this::toggleBars, dragListener, this::playVideo);
+        adapter = new PhotoPagerAdapter(this, this::toggleBars, dragListener, videoListener);
         if (mode == MODE_SAFE) {
             java.util.HashSet<String> videos = new java.util.HashSet<>();
             for (SafeStore.Entry e : SafeStore.get().entries()) {
@@ -120,18 +147,16 @@ public class PhotoViewerActivity extends AppCompatActivity {
         adapter.submit(paths);
         pager.setAdapter(adapter);
         pager.setCurrentItem(Math.min(index, paths.size() - 1), false);
-        // Открыли видео из сетки — сразу запускаем плеер; назад вернёт
-        // в просмотрщик, где можно листать дальше (фото и видео по порядку)
-        if (getIntent().getBooleanExtra("autoplay", false) && savedInstanceState == null) {
-            String p = adapter.getPath(pager.getCurrentItem());
-            if (p != null && adapter.isVideo(p)) playVideo(p);
-        }
+        pager.setOffscreenPageLimit(1);
         pager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
                 updateToolbar(position);
+                // Видео на новой странице стартует само; предыдущее — останавливается
+                pager.post(() -> attachPage(position));
             }
         });
+        pager.post(() -> attachPage(pager.getCurrentItem()));
 
         setupActions();
         updateToolbar(pager.getCurrentItem());
@@ -201,14 +226,138 @@ public class PhotoViewerActivity extends AppCompatActivity {
         findViewById(R.id.btnVwInfo).setOnClickListener(v -> showInfo());
     }
 
-    /** Запускает полноценный плеер для видео со страницы просмотрщика. */
-    private void playVideo(String path) {
-        Intent intent = new Intent(this, VideoPlayerActivity.class);
-        intent.putExtra("path", path);
-        intent.putExtra("name", decorateName(MediaItem.fromFile(new File(path))).name);
-        intent.putExtra("mode", mode);
-        startActivity(intent);
-        overridePendingTransition(0, 0);
+    // ---------- Видео на странице ----------
+
+    private final PhotoPagerAdapter.VideoListener videoListener =
+            new PhotoPagerAdapter.VideoListener() {
+                @Override
+                public void onVideoPrepared(PhotoPagerAdapter.VH page, int durationMs) {
+                    if (page != currentPage) return;
+                    seekVw.setMax(Math.max(1, durationMs));
+                    txtVwDur.setText(Fmt.duration(durationMs));
+                    updateVideoProgress();
+                }
+
+                @Override
+                public void onVideoPlayState(PhotoPagerAdapter.VH page, boolean playing) {
+                    if (page != currentPage) return;
+                    btnVwPlay.setImageResource(playing ? R.drawable.ic_pause : R.drawable.ic_play);
+                    handler.removeCallbacks(progressTick);
+                    if (playing) handler.post(progressTick);
+                }
+
+                @Override
+                public void onVideoCompleted(PhotoPagerAdapter.VH page) {
+                    if (page != currentPage) return;
+                    btnVwPlay.setImageResource(R.drawable.ic_play);
+                    handler.removeCallbacks(progressTick);
+                    updateVideoProgress();
+                    setBarsVisible(true);
+                }
+            };
+
+    private PhotoPagerAdapter.VH pageAt(int position) {
+        View child = pager.getChildAt(0);
+        if (!(child instanceof RecyclerView)) return null;
+        RecyclerView.ViewHolder vh = ((RecyclerView) child)
+                .findViewHolderForAdapterPosition(position);
+        return vh instanceof PhotoPagerAdapter.VH ? (PhotoPagerAdapter.VH) vh : null;
+    }
+
+    /** Делает страницу текущей: останавливает прежнее видео, запускает новое. */
+    private void attachPage(int position) {
+        PhotoPagerAdapter.VH page = pageAt(position);
+        if (page == null) {
+            // Страница ещё не разложена — пробуем на следующем кадре
+            pager.postDelayed(() -> {
+                if (pager.getCurrentItem() == position && pageAt(position) != null) {
+                    attachPage(position);
+                }
+            }, 50);
+            return;
+        }
+        if (currentPage != null && currentPage != page) currentPage.stopVideo();
+        currentPage = page;
+        handler.removeCallbacks(progressTick);
+        boolean video = page.isVideoPage();
+        layoutVideoCtl.setVisibility(video ? View.VISIBLE : View.GONE);
+        if (video) {
+            seekVw.setProgress(0);
+            txtVwCur.setText(Fmt.duration(0));
+            txtVwDur.setText("");
+            btnVwPlay.setImageResource(R.drawable.ic_pause);
+            page.setOverlayVisible(barsVisible);
+            page.startVideo();
+        }
+    }
+
+    private void setupVideoControls() {
+        btnVwPlay.setOnClickListener(v -> {
+            if (currentPage != null) currentPage.togglePlay();
+        });
+        findViewById(R.id.btnVwFullscreen).setOnClickListener(v -> {
+            String p = adapter.getPath(pager.getCurrentItem());
+            if (p == null) return;
+            if (currentPage != null) currentPage.pauseVideo();
+            Intent intent = new Intent(this, VideoPlayerActivity.class);
+            intent.putExtra("path", p);
+            intent.putExtra("name", decorateName(MediaItem.fromFile(new File(p))).name);
+            intent.putExtra("mode", mode);
+            startActivity(intent);
+        });
+        seekVw.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
+                if (fromUser) txtVwCur.setText(Fmt.duration(progress));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar sb) {
+                seeking = true;
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar sb) {
+                seeking = false;
+                if (currentPage != null) currentPage.video.seekTo(sb.getProgress());
+            }
+        });
+    }
+
+    private void updateVideoProgress() {
+        if (currentPage == null || !currentPage.isVideoPage() || seeking) return;
+        int pos = currentPage.video.getPosition();
+        int dur = currentPage.video.getDuration();
+        if (dur > 0 && seekVw.getMax() != dur) seekVw.setMax(dur);
+        seekVw.setProgress(pos);
+        txtVwCur.setText(Fmt.duration(pos));
+        if (dur > 0) txtVwDur.setText(Fmt.duration(dur));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        handler.removeCallbacks(progressTick);
+        if (currentPage != null && currentPage.isVideoPage()) {
+            resumePlayback = currentPage.video.isPlaying();
+            currentPage.pauseVideo();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (resumePlayback && currentPage != null) {
+            resumePlayback = false;
+            currentPage.resumeVideo();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        handler.removeCallbacks(progressTick);
+        if (currentPage != null) currentPage.stopVideo();
+        super.onDestroy();
     }
 
     private void showInfo() {
@@ -319,6 +468,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
     private void setBarsVisible(boolean visible) {
         if (barsVisible == visible) return;
         barsVisible = visible;
+        if (currentPage != null) currentPage.setOverlayVisible(visible);
         float target = visible ? 1f : 0f;
         if (visible) {
             topBar.setVisibility(View.VISIBLE);
@@ -368,8 +518,9 @@ public class PhotoViewerActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onDrag(ZoomableImageView view, float dx, float dy) {
+                public void onDrag(ZoomableImageView image, float dx, float dy) {
                     if (dismissing) return;
+                    View view = pageOf(image);
                     if (dy > 0f) {
                         // Тянем вниз: картинка уменьшается и уезжает, фон растворяется
                         float progress = Math.min(1f, dy / (root.getHeight() * 0.6f));
@@ -393,9 +544,10 @@ public class PhotoViewerActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onDragEnd(ZoomableImageView view, float dx, float dy,
+                public void onDragEnd(ZoomableImageView image, float dx, float dy,
                                       float velocityY) {
                     if (dismissing) return;
+                    View view = pageOf(image);
                     float density = getResources().getDisplayMetrics().density;
                     float dismissDist = 110f * density;
                     float infoDist = 90f * density;
@@ -410,12 +562,17 @@ public class PhotoViewerActivity extends AppCompatActivity {
                 }
             };
 
+    /** Тянем/анимируем всю страницу (фото + видео), а не только картинку. */
+    private View pageOf(ZoomableImageView image) {
+        return image.getParent() instanceof View ? (View) image.getParent() : image;
+    }
+
     private int scrim(float alpha) {
         int a = Math.round(Math.max(0f, Math.min(1f, alpha)) * 255f);
         return (a << 24);
     }
 
-    private void animateBack(ZoomableImageView view) {
+    private void animateBack(View view) {
         view.animate().cancel();
         view.animate()
                 .translationX(0f).translationY(0f)
@@ -432,7 +589,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
     }
 
     /** «Улетание» картинки вниз и закрытие экрана без стандартной анимации. */
-    private void animateDismiss(ZoomableImageView view, float dx, float dy, float velocityY) {
+    private void animateDismiss(View view, float dx, float dy, float velocityY) {
         dismissing = true;
         float h = root.getHeight();
         float targetY = h + view.getHeight() * 0.5f;

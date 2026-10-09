@@ -28,6 +28,7 @@ import com.premiumlab.galleryx.RootPickerActivity;
 import com.premiumlab.galleryx.data.Album;
 import com.premiumlab.galleryx.data.MaskGuard;
 import com.premiumlab.galleryx.data.MediaEngine;
+import com.premiumlab.galleryx.data.MediaItem;
 import com.premiumlab.galleryx.data.Prefs;
 import com.premiumlab.galleryx.data.SessionManager;
 import com.premiumlab.galleryx.ui.adapter.AlbumsAdapter;
@@ -339,36 +340,54 @@ public class AlbumsFragment extends Fragment
 
     private void runCopyMove(boolean copy, List<File> dirs, File dest) {
         FragmentActivity act = requireActivity();
-        // Нельзя переносить папку саму в себя или в свою подпапку
-        List<File> safeDirs = new ArrayList<>();
+        // Переносим ТОЛЬКО файлы из выбранных папок (включая вложенные),
+        // сама папка никуда не копируется и остаётся на месте.
+        // Папку в саму себя — пропускаем, в её подпапку — тоже.
+        String tp = dest.getAbsolutePath();
+        List<MediaItem> items = new ArrayList<>();
+        int skipped = 0;
         for (File d : dirs) {
             String dp = d.getAbsolutePath();
-            String tp = dest.getAbsolutePath();
-            if (!(tp.equals(dp) || tp.startsWith(dp + "/"))) safeDirs.add(d);
+            if (tp.equals(dp) || tp.startsWith(dp + "/")) {
+                skipped++;
+                continue;
+            }
+            items.addAll(collectFiles(d, 0));
         }
-        if (safeDirs.isEmpty()) {
-            Toast.makeText(act, R.string.album_dest_inside_itself, Toast.LENGTH_SHORT).show();
+        if (items.isEmpty()) {
+            Toast.makeText(act, skipped == dirs.size()
+                    ? R.string.album_dest_inside_itself
+                    : R.string.album_no_files, Toast.LENGTH_SHORT).show();
             return;
         }
         FileOp op = new FileOp(act);
         OpProgressDialog dlg = OpProgressDialog.show(act,
                 act.getString(copy ? R.string.op_copy : R.string.op_move), op::cancel);
-        FileOp.Done done = (albumsOk, fail, cancelled) -> {
+        FileOp.Done done = (ok, fail, cancelled) -> {
             dlg.dismiss();
             if (!isAdded()) return;
             Toast.makeText(act, cancelled ? act.getString(R.string.op_cancelled)
-                    : Fmt.plural(act, copy ? R.plurals.result_albums_copied
-                    : R.plurals.result_albums_moved, albumsOk), Toast.LENGTH_SHORT).show();
+                    : Fmt.plural(act, copy ? R.plurals.result_copied
+                    : R.plurals.result_moved, ok), Toast.LENGTH_SHORT).show();
             exitSelection();
+            MediaEngine.invalidateAll();
             loadAlbums();
         };
         if (copy) {
-            // copyDirs считает файлы — для сообщения пользователю считаем альбомы
-            op.copyDirs(safeDirs, dest, dlg, (ok, fail, cancelled) ->
-                    done.onDone(cancelled ? 0 : safeDirs.size(), fail, cancelled));
+            op.copy(items, dest, dlg, done);
         } else {
-            op.moveDirs(safeDirs, dest, dlg, done);
+            op.move(items, dest, dlg, done);
         }
+    }
+
+    /** Все медиафайлы папки и её подпапок (плоским списком), без скрытых. */
+    private static List<MediaItem> collectFiles(File dir, int depth) {
+        List<MediaItem> out = new ArrayList<>(MediaEngine.listFolder(dir));
+        if (depth >= 6) return out;
+        for (File sub : MediaEngine.listSubdirs(dir)) {
+            out.addAll(collectFiles(sub, depth + 1));
+        }
+        return out;
     }
 
     // ---------- Переименование папки ----------

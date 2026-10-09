@@ -275,9 +275,11 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         final TextView txtBadge;
         final TextView txtDuration;
         final LinearLayout layoutVideo;
+        final ImageView imgPlayBadge;
         final View card;
 
         String boundPath;
+        int appliedCols = -1;
 
         MediaVH(@NonNull View itemView) {
             super(itemView);
@@ -288,6 +290,7 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             txtBadge = itemView.findViewById(R.id.txtMediaBadge);
             txtDuration = itemView.findViewById(R.id.txtDuration);
             layoutVideo = itemView.findViewById(R.id.layoutVideoBadge);
+            imgPlayBadge = itemView.findViewById(R.id.imgPlayBadge);
             // CardView в разметке помечен clickable — слушатели вешаем на него,
             // иначе карточка перехватывает касания и клики по элементу не срабатывают.
             card = itemView.findViewById(R.id.cardMedia);
@@ -320,6 +323,7 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             // Размер миниатюры под текущее число колонок: меньше декод — быстрее сетка
             int cols = Math.max(2, com.premiumlab.galleryx.data.Prefs.columns());
             int size = Math.max(120, ctx.getResources().getDisplayMetrics().widthPixels / cols);
+            applyDensity(cols);
             Glide.with(ctx)
                     .load(new File(item.path))
                     .override(size, size)
@@ -347,6 +351,76 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                 txtBadge.setText(item.badge);
             } else {
                 txtBadge.setVisibility(View.GONE);
+            }
+        }
+
+        /**
+         * Подгоняет бейджи под размер ячейки: чем больше колонок, тем компактнее
+         * значки, отступы и шрифт, чтобы ничего не обрезалось.
+         */
+        void applyDensity(int cols) {
+            if (cols == appliedCols) return;
+            appliedCols = cols;
+            float cellDp = ctx.getResources().getDisplayMetrics().widthPixels
+                    / ctx.getResources().getDisplayMetrics().density / cols;
+            int margin, padH, padV, icon, badgeSize;
+            float textSp;
+            boolean showDuration;
+            if (cellDp >= 110f) {          // 2–3 колонки
+                margin = 8; padH = 8; padV = 3; icon = 13; textSp = 11f; badgeSize = 24;
+                showDuration = true;
+            } else if (cellDp >= 85f) {    // 4 колонки
+                margin = 6; padH = 6; padV = 2; icon = 12; textSp = 10f; badgeSize = 22;
+                showDuration = true;
+            } else if (cellDp >= 68f) {    // 5 колонок
+                margin = 4; padH = 5; padV = 2; icon = 11; textSp = 9f; badgeSize = 20;
+                showDuration = true;
+            } else {                       // 6 колонок — только значок
+                margin = 4; padH = 4; padV = 4; icon = 10; textSp = 9f; badgeSize = 18;
+                showDuration = false;
+            }
+            int m = dp(margin), ph = dp(padH), pv = dp(padV), ic = dp(icon), bs = dp(badgeSize);
+
+            setMargins(layoutVideo, m);
+            layoutVideo.setPadding(ph, pv, ph, pv);
+            ViewGroup.LayoutParams ip = imgPlayBadge.getLayoutParams();
+            ip.width = ic;
+            ip.height = ic;
+            imgPlayBadge.setLayoutParams(ip);
+            txtDuration.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, textSp);
+            txtDuration.setVisibility(showDuration ? View.VISIBLE : View.GONE);
+
+            setMargins(txtBadge, m);
+            txtBadge.setPadding(ph + dp(2), pv, ph + dp(2), pv);
+            txtBadge.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, textSp);
+
+            setMargins(imgFav, m);
+            ViewGroup.LayoutParams fp = imgFav.getLayoutParams();
+            fp.width = bs;
+            fp.height = bs;
+            imgFav.setLayoutParams(fp);
+            int favPad = Math.max(dp(3), bs / 6);
+            imgFav.setPadding(favPad, favPad, favPad, favPad);
+
+            setMargins(imgCheck, m);
+            int cs = dp(cellDp >= 85f ? 30 : 24);
+            ViewGroup.LayoutParams cp = imgCheck.getLayoutParams();
+            cp.width = cs;
+            cp.height = cs;
+            imgCheck.setLayoutParams(cp);
+            int chkPad = cs / 5;
+            imgCheck.setPadding(chkPad, chkPad, chkPad, chkPad);
+        }
+
+        private int dp(float v) {
+            return Math.round(v * ctx.getResources().getDisplayMetrics().density);
+        }
+
+        private void setMargins(View v, int m) {
+            ViewGroup.LayoutParams lp = v.getLayoutParams();
+            if (lp instanceof ViewGroup.MarginLayoutParams) {
+                ((ViewGroup.MarginLayoutParams) lp).setMargins(m, m, m, m);
+                v.setLayoutParams(lp);
             }
         }
 
