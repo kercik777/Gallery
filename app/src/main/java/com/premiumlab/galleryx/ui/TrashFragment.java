@@ -1,12 +1,9 @@
 package com.premiumlab.galleryx.ui;
 
-import android.content.Intent;
 import android.view.View;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.premiumlab.galleryx.PhotoViewerActivity;
 import com.premiumlab.galleryx.R;
-import com.premiumlab.galleryx.VideoPlayerActivity;
 import com.premiumlab.galleryx.data.MediaItem;
 import com.premiumlab.galleryx.data.TrashStore;
 import com.premiumlab.galleryx.ui.dialog.OpProgressDialog;
@@ -74,27 +71,7 @@ public class TrashFragment extends BaseMediaFragment {
 
     @Override
     protected void onItemOpen(MediaItem item) {
-        if (item.isVideo) {
-            Intent intent = new Intent(requireContext(), VideoPlayerActivity.class);
-            intent.putExtra("path", item.path);
-            intent.putExtra("name", item.name);
-            intent.putExtra("mode", 1);
-            startActivity(intent);
-        } else {
-            ArrayList<String> photos = new ArrayList<>();
-            int index = 0;
-            for (MediaItem it : shownItems) {
-                if (!it.isVideo) {
-                    if (it.path.equals(item.path)) index = photos.size();
-                    photos.add(it.path);
-                }
-            }
-            Intent intent = new Intent(requireContext(), PhotoViewerActivity.class);
-            intent.putStringArrayListExtra("paths", photos);
-            intent.putExtra("index", index);
-            intent.putExtra("mode", 1);
-            startActivity(intent);
-        }
+        openViewer(item, 1);
     }
 
     @Override

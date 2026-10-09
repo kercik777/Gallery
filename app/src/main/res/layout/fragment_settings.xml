@@ -224,6 +224,57 @@
                         android:src="@drawable/ic_chevron"
                         app:tint="@color/textTertiary" />
                 </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/rowGridAlbums"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/spacing_l">
+
+                    <ImageView
+                        android:layout_width="46dp"
+                        android:layout_height="46dp"
+                        android:background="@drawable/bg_icon_rounded"
+                        android:contentDescription="@string/settings_grid_albums"
+                        android:padding="11dp"
+                        android:src="@drawable/ic_folder"
+                        app:tint="@color/primary" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/spacing_l"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="@string/settings_grid_albums"
+                            android:textColor="@color/textPrimary"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/txtGridAlbumsCurrent"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/settings_grid_albums"
+                            android:textColor="@color/textSecondary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="@string/settings_grid_albums"
+                        android:src="@drawable/ic_chevron"
+                        app:tint="@color/textTertiary" />
+                </LinearLayout>
             </LinearLayout>
 
             <TextView

@@ -78,21 +78,12 @@ public class Prefs {
     }
 
     public static void clearPin() {
-        sp.edit().remove("pin_hash").remove("pin_salt").remove("pin_for_masking").apply();
+        sp.edit().remove("pin_hash").remove("pin_salt").apply();
     }
 
-    /** PIN-код требуется также для открытия скрытых папок (маскировка). */
-    public static boolean pinForMasking() {
-        return sp.getBoolean("pin_for_masking", false);
-    }
-
-    public static void setPinForMasking(boolean v) {
-        sp.edit().putBoolean("pin_for_masking", v).apply();
-    }
-
-    /** Нужно ли запрашивать PIN при снятии маскировки. */
+    /** PIN один на всё: если установлен — защищает и сейф, и снятие маскировки. */
     public static boolean maskingPinRequired() {
-        return pinSet() && pinForMasking();
+        return pinSet();
     }
 
     public static int autoHide() {
@@ -127,6 +118,24 @@ public class Prefs {
 
     public static void setColumns(int c) {
         sp.edit().putInt("grid_columns", Math.max(2, Math.min(6, c))).apply();
+    }
+
+    /** Колонок в сетке альбомов (1–4). */
+    public static int albumColumns() {
+        return sp.getInt("album_columns", 2);
+    }
+
+    public static void setAlbumColumns(int c) {
+        sp.edit().putInt("album_columns", Math.max(1, Math.min(4, c))).apply();
+    }
+
+    /** Последняя открытая вкладка главного экрана (0 — галерея … 3 — настройки). */
+    public static int lastTab() {
+        return sp.getInt("last_tab", 0);
+    }
+
+    public static void setLastTab(int index) {
+        sp.edit().putInt("last_tab", index).apply();
     }
 
     public static int sortMode() {

@@ -147,7 +147,14 @@ public class MainActivity extends AppCompatActivity
     private boolean ensureFragments() {
         if (fragmentsAdded) return false;
         fragmentsAdded = true;
-        showFragment(0);
+        // Открываем вкладку, на которой пользователь был в прошлый раз
+        int last = Math.max(0, Math.min(3, Prefs.lastTab()));
+        int[] navIds = {R.id.nav_gallery, R.id.nav_albums, R.id.nav_favorites, R.id.nav_settings};
+        if (bottomNav.getSelectedItemId() != navIds[last]) {
+            bottomNav.setSelectedItemId(navIds[last]); // вызовет showFragment(last)
+        } else {
+            showFragment(last);
+        }
         return true;
     }
 
@@ -185,6 +192,7 @@ public class MainActivity extends AppCompatActivity
         }
         tx.commitAllowingStateLoss();
         currentTag = fragTags[index];
+        Prefs.setLastTab(index);
     }
 
     /** Обновляет все созданные вкладки после открытия/закрытия скрытого содержимого. */

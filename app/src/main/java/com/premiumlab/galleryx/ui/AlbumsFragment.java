@@ -1,8 +1,11 @@
 package com.premiumlab.galleryx.ui;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -52,6 +55,8 @@ public class AlbumsFragment extends Fragment
 
     private RecyclerView recycler;
     private AlbumsAdapter adapter;
+    private GridLayoutManager layoutManager;
+    private boolean resumedOnce = false;
     private View layoutEmpty, layoutLoading, btnHideNow;
     private View selTop, selActions;
     private TextView txtSelCount;
@@ -74,15 +79,16 @@ public class AlbumsFragment extends Fragment
         btnHideNow = v.findViewById(R.id.btnHideNowAlbums);
 
         adapter = new AlbumsAdapter(requireContext(), this);
-        GridLayoutManager lm = new GridLayoutManager(requireContext(), 2);
-        lm.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+        layoutManager = new GridLayoutManager(requireContext(), Prefs.albumColumns());
+        layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
                 return adapter.getItemViewType(position) == AlbumsAdapter.itemTypeSection()
-                        ? 2 : 1;
+                        ? layoutManager.getSpanCount() : 1;
             }
         });
-        recycler.setLayoutManager(lm);
+        recycler.setLayoutManager(layoutManager);
+        setupPinchZoom();
         recycler.setAdapter(adapter);
         recycler.setHasFixedSize(true);
         RecyclerView.ItemAnimator an = recycler.getItemAnimator();
@@ -132,9 +138,8 @@ public class AlbumsFragment extends Fragment
             setActionVisible(R.id.btnSelShare, false);
             setActionVisible(R.id.btnSelSafe, false);
             setActionVisible(R.id.btnSelRestore, false);
-            boolean canDest = !MaskGuard.hidden();
-            setActionVisible(R.id.btnSelCopy, canDest);
-            setActionVisible(R.id.btnSelMove, canDest);
+            setActionVisible(R.id.btnSelCopy, true);
+            setActionVisible(R.id.btnSelMove, true);
             setActionVisible(R.id.btnSelDelete, true);
             setActionVisible(R.id.btnSelRename, false);
             selActions.findViewById(R.id.btnSelCopy).setOnClickListener(x -> destFlow(true));
@@ -165,7 +170,10 @@ public class AlbumsFragment extends Fragment
     }
 
     private void loadAlbums() {
-        layoutLoading.setVisibility(View.VISIBLE);
+        // Если список уже показан — обновляем тихо, без мигания индикатора
+        if (adapter == null || adapter.getItemCount() == 0) {
+            layoutLoading.setVisibility(View.VISIBLE);
+        }
         layoutEmpty.setVisibility(View.GONE);
         MediaEngine.loadAlbums(requireContext(), rows -> {
             if (!isAdded()) return;
@@ -174,6 +182,56 @@ public class AlbumsFragment extends Fragment
             boolean empty = rows.isEmpty();
             layoutEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
             updateSelBar();
+        });
+    }
+
+    /** Применяет размер сетки альбомов без перезапуска. */
+    private void applyColumns() {
+        if (layoutManager != null && layoutManager.getSpanCount() != Prefs.albumColumns()) {
+            layoutManager.setSpanCount(Prefs.albumColumns());
+            if (adapter != null) adapter.notifyDataSetChanged();
+        }
+    }
+
+    /** Щипок по сетке альбомов — 1–4 колонки. */
+    @SuppressLint("ClickableViewAccessibility")
+    private void setupPinchZoom() {
+        ScaleGestureDetector detector = new ScaleGestureDetector(requireContext(),
+                new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                    float beginSpan;
+
+                    @Override
+                    public boolean onScaleBegin(@NonNull ScaleGestureDetector d) {
+                        beginSpan = Math.max(1f, d.getCurrentSpan());
+                        return true;
+                    }
+
+                    @Override
+                    public void onScaleEnd(@NonNull ScaleGestureDetector d) {
+                        float factor = d.getCurrentSpan() / Math.max(1f, beginSpan);
+                        int oldSpan = layoutManager.getSpanCount();
+                        int newSpan = factor > 1.25f ? oldSpan - 1
+                                : factor < 0.8f ? oldSpan + 1 : oldSpan;
+                        newSpan = Math.max(1, Math.min(4, newSpan));
+                        if (newSpan != oldSpan) {
+                            Prefs.setAlbumColumns(newSpan);
+                            layoutManager.setSpanCount(newSpan);
+                            adapter.notifyDataSetChanged();
+                        }
+                    }
+                });
+        recycler.addOnItemTouchListener(new RecyclerView.SimpleOnItemTouchListener() {
+            @Override
+            public boolean onInterceptTouchEvent(@NonNull RecyclerView rv,
+                                                 @NonNull MotionEvent e) {
+                detector.onTouchEvent(e);
+                return detector.isInProgress();
+            }
+
+            @Override
+            public void onTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
+                detector.onTouchEvent(e);
+            }
         });
     }
 
@@ -274,13 +332,6 @@ public class AlbumsFragment extends Fragment
     private void destFlow(boolean copy) {
         List<File> dirs = selectedDirs();
         if (dirs.isEmpty()) return;
-        FragmentActivity act = requireActivity();
-
-        if (Prefs.rootPath() == null) {
-            showRootNeeded(() -> destFlow(copy));
-            return;
-        }
-
         DestSheet sheet = DestSheet.newInstance(copy);
         sheet.setListener(dir -> runCopyMove(copy, dirs, dir));
         sheet.show(getParentFragmentManager(), "dest");
@@ -445,6 +496,7 @@ public class AlbumsFragment extends Fragment
         } else {
             setupSelectionChrome();
             updateHideNow();
+            applyColumns();
             loadAlbums();
         }
     }
@@ -453,5 +505,11 @@ public class AlbumsFragment extends Fragment
     public void onResume() {
         super.onResume();
         updateHideNow();
+        applyColumns();
+        if (resumedOnce && !isHidden()) {
+            // Вернулись из папки/просмотрщика — обложки и счётчики могли измениться
+            loadAlbums();
+        }
+        resumedOnce = true;
     }
 }

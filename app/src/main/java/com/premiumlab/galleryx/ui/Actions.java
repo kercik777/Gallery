@@ -10,7 +10,9 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.premiumlab.galleryx.R;
+import com.premiumlab.galleryx.PinActivity;
 import com.premiumlab.galleryx.RootPickerActivity;
+import com.premiumlab.galleryx.data.Prefs;
 import com.premiumlab.galleryx.data.AppDirs;
 import com.premiumlab.galleryx.data.FavStore;
 import com.premiumlab.galleryx.data.MediaItem;
@@ -122,8 +124,28 @@ public final class Actions {
     }
 
     /** Подтверждение и перемещение в сейф. */
+    /**
+     * Сейф работает только с PIN-кодом. Если кода нет — предлагаем создать
+     * его прямо сейчас (после создания действие нужно повторить).
+     */
+    public static boolean ensurePin(FragmentActivity act) {
+        if (Prefs.pinSet()) return true;
+        new MaterialAlertDialogBuilder(act)
+                .setTitle(R.string.pin_required_title)
+                .setMessage(R.string.pin_required_safe_msg)
+                .setPositiveButton(R.string.pin_required_btn, (d, w) -> {
+                    Intent intent = new Intent(act, PinActivity.class);
+                    intent.putExtra("mode", PinActivity.MODE_CREATE);
+                    act.startActivity(intent);
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+        return false;
+    }
+
     public static void confirmSafe(FragmentActivity act, List<MediaItem> items, Runnable done) {
         if (items.isEmpty()) return;
+        if (!ensurePin(act)) return;
         if (!ensureRoot(act)) return;
         new MaterialAlertDialogBuilder(act)
                 .setTitle(R.string.safe_move_confirm_title)

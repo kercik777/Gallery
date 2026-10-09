@@ -19,6 +19,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.premiumlab.galleryx.R;
 import com.premiumlab.galleryx.RootPickerActivity;
+import com.premiumlab.galleryx.data.MaskGuard;
 import com.premiumlab.galleryx.data.MediaEngine;
 import com.premiumlab.galleryx.data.Prefs;
 import com.premiumlab.galleryx.ui.adapter.DestAdapter;
@@ -58,8 +59,12 @@ public class DestSheet extends BottomSheetDialogFragment {
                 .inflate(R.layout.sheet_dest, null, false);
         dialog.setContentView(v);
 
-        String rootPath = Prefs.rootPath();
+        // Пока маскировка «закрыта», корневой папки как будто нет
+        String rootPath = MaskGuard.hidden() ? null : Prefs.rootPath();
         String ctxPath = requireArguments().getString("parent");
+        if (ctxPath != null && MaskGuard.hidden() && MaskGuard.isHiddenPath(ctxPath)) {
+            ctxPath = null;
+        }
         newFolderParent = ctxPath != null && new File(ctxPath).isDirectory()
                 ? new File(ctxPath)
                 : (rootPath != null ? new File(rootPath) : null);
@@ -98,7 +103,9 @@ public class DestSheet extends BottomSheetDialogFragment {
                 CreateFolderDialog.showIn(act, newFolderParent, this::deliver);
                 break;
             case DestAdapter.ACTION_ROOT:
-                if (Prefs.rootPath() != null) deliver(new File(Prefs.rootPath()));
+                if (Prefs.rootPath() != null && !MaskGuard.hidden()) {
+                    deliver(new File(Prefs.rootPath()));
+                }
                 break;
             case DestAdapter.ACTION_BROWSE:
                 Intent i = new Intent(act, RootPickerActivity.class);
@@ -131,7 +138,7 @@ public class DestSheet extends BottomSheetDialogFragment {
         Context ctx = getContext();
         if (ctx == null) return;
         List<DestAdapter.Row> rows = new ArrayList<>();
-        String rootPath = Prefs.rootPath();
+        String rootPath = MaskGuard.hidden() ? null : Prefs.rootPath();
 
         if (newFolderParent != null) {
             rows.add(DestAdapter.Row.action(DestAdapter.ACTION_NEW,

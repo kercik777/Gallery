@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.SimpleItemAnimator;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.premiumlab.galleryx.MainActivity;
+import com.premiumlab.galleryx.PhotoViewerActivity;
 import com.premiumlab.galleryx.R;
 import com.premiumlab.galleryx.RootPickerActivity;
 import com.premiumlab.galleryx.data.MaskGuard;
@@ -82,6 +83,7 @@ public abstract class BaseMediaFragment extends Fragment
     /** Отложенная операция копирования/перемещения. */
     protected List<MediaItem> pendingDestItems;
     protected boolean pendingDestCopy;
+    private boolean resumedOnce = false;
 
     // ---------- Контракт подклассов ----------
 
@@ -109,6 +111,26 @@ public abstract class BaseMediaFragment extends Fragment
     }
 
     protected void onItemOpen(MediaItem item) {
+    }
+
+    /**
+     * Открывает единый просмотрщик со ВСЕМИ показанными элементами (фото и
+     * видео вперемешку, в текущем порядке сортировки). Если открыли видео —
+     * оно сразу запускается в плеере, а после возврата можно листать дальше.
+     */
+    protected void openViewer(MediaItem item, int mode) {
+        ArrayList<String> paths = new ArrayList<>();
+        int index = 0;
+        for (MediaItem it : shownItems) {
+            if (it.path.equals(item.path)) index = paths.size();
+            paths.add(it.path);
+        }
+        Intent intent = new Intent(requireContext(), PhotoViewerActivity.class);
+        intent.putStringArrayListExtra("paths", paths);
+        intent.putExtra("index", index);
+        intent.putExtra("mode", mode);
+        intent.putExtra("autoplay", item.isVideo);
+        startActivity(intent);
     }
 
     protected void onDeleteSelected(List<MediaItem> selected) {
@@ -174,8 +196,8 @@ public abstract class BaseMediaFragment extends Fragment
         layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
-                return adapter.getItemViewType(position) == MediaAdapter.getItemTypeHeader()
-                        ? layoutManager.getSpanCount() : 1;
+                return adapter.getItemViewType(position) == MediaAdapter.getItemTypeMedia()
+                        ? 1 : layoutManager.getSpanCount();
             }
         });
         recycler.setLayoutManager(layoutManager);
@@ -247,7 +269,9 @@ public abstract class BaseMediaFragment extends Fragment
 
     protected void updateHideNowButton() {
         if (btnHideNow == null) return;
-        boolean show = Prefs.masking() && Prefs.autoHide() == Prefs.AUTOHIDE_MANUAL
+        // «Глаз» живёт только на главных вкладках (Галерея / Альбомы / Избранное)
+        boolean show = getActivity() instanceof MainActivity
+                && Prefs.masking() && Prefs.autoHide() == Prefs.AUTOHIDE_MANUAL
                 && SessionManager.isUnlocked();
         btnHideNow.setVisibility(show ? View.VISIBLE : View.GONE);
     }
@@ -329,11 +353,10 @@ public abstract class BaseMediaFragment extends Fragment
         }
 
         configureSelectionBar();
-        // Пока галерея «закрыта» маскировкой — сейф и корневые папки не показываем
+        // Пока галерея «закрыта» маскировкой — сейф не показываем
+        // (копирование и перемещение в папки устройства остаются доступны)
         if (MaskGuard.hidden() && selActions != null) {
             selActions.findViewById(R.id.btnSelSafe).setVisibility(View.GONE);
-            selActions.findViewById(R.id.btnSelCopy).setVisibility(View.GONE);
-            selActions.findViewById(R.id.btnSelMove).setVisibility(View.GONE);
         }
         updateSelBar();
     }
@@ -366,7 +389,7 @@ public abstract class BaseMediaFragment extends Fragment
 
                     @Override
                     public boolean onScaleBegin(@NonNull ScaleGestureDetector d) {
-                        beginSpan = Math.max(1f, d.getScaleFactor());
+                        beginSpan = Math.max(1f, d.getCurrentSpan());
                         return true;
                     }
 
@@ -377,13 +400,16 @@ public abstract class BaseMediaFragment extends Fragment
 
                     @Override
                     public void onScaleEnd(@NonNull ScaleGestureDetector d) {
+                        // Развели пальцы — крупнее (меньше колонок), свели — мельче
                         float factor = d.getCurrentSpan() / Math.max(1f, beginSpan);
                         int oldSpan = layoutManager.getSpanCount();
-                        int newSpan = Math.round(oldSpan / factor);
+                        int newSpan = factor > 1.25f ? oldSpan - 1
+                                : factor < 0.8f ? oldSpan + 1 : oldSpan;
                         newSpan = Math.max(2, Math.min(6, newSpan));
                         if (newSpan != oldSpan) {
                             Prefs.setColumns(newSpan);
                             layoutManager.setSpanCount(newSpan);
+                            adapter.notifyDataSetChanged();
                         }
                     }
                 });
@@ -425,9 +451,16 @@ public abstract class BaseMediaFragment extends Fragment
         shownItems.addAll(filtered);
         MediaEngine_sort(shownItems);
         if (adapter != null) {
-            adapter.submitRows(MediaAdapter.buildRows(requireContext(), shownItems));
+            List<MediaAdapter.Row> rows = new ArrayList<>(topRows());
+            rows.addAll(MediaAdapter.buildRows(requireContext(), shownItems));
+            adapter.submitRows(rows);
         }
         updateEmptyState();
+    }
+
+    /** Дополнительные строки над сеткой (например, блок вложенных папок). */
+    protected List<MediaAdapter.Row> topRows() {
+        return new ArrayList<>();
     }
 
     private void MediaEngine_sort(List<MediaItem> list) {
@@ -437,7 +470,8 @@ public abstract class BaseMediaFragment extends Fragment
     protected void updateEmptyState() {
         if (layoutLoading != null) layoutLoading.setVisibility(View.GONE);
         if (layoutEmpty != null) {
-            boolean empty = shownItems.isEmpty();
+            // Если над сеткой есть блок папок — экран не пустой
+            boolean empty = shownItems.isEmpty() && topRows().isEmpty();
             layoutEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
             if (!query.isEmpty() && empty) {
                 txtEmptyTitle.setText(R.string.search_no_results_title);
@@ -447,6 +481,8 @@ public abstract class BaseMediaFragment extends Fragment
     }
 
     protected void showLoading(boolean show) {
+        // Если на экране уже есть данные — тихо обновляем без мигания индикатора
+        if (show && !allItems.isEmpty()) return;
         if (layoutLoading != null) layoutLoading.setVisibility(show ? View.VISIBLE : View.GONE);
         if (show && layoutEmpty != null) layoutEmpty.setVisibility(View.GONE);
     }
@@ -564,13 +600,6 @@ public abstract class BaseMediaFragment extends Fragment
         if (sel.isEmpty()) return;
         FragmentActivity act = requireActivity();
 
-        if (Prefs.rootPath() == null) {
-            pendingDestItems = sel;
-            pendingDestCopy = copy;
-            showRootNeeded(() -> destFlow(copy));
-            return;
-        }
-
         DestSheet sheet = DestSheet.newInstance(copy, destParentPath());
         sheet.setListener(dir -> runCopyMove(copy, sel, dir));
         sheet.show(getParentFragmentManager(), "dest");
@@ -587,15 +616,20 @@ public abstract class BaseMediaFragment extends Fragment
         OpProgressDialog dlg = OpProgressDialog.show(act,
                 act.getString(copy ? R.string.op_copy : R.string.op_move), op::cancel);
         if (copy) {
-            op.copy(items, dir, dlg, (ok, fail, cancelled) ->
-                    onCopyMoveDone(act, ok, cancelled, true));
+            op.copy(items, dir, dlg, (ok, fail, cancelled) -> {
+                dlg.dismiss();
+                onCopyMoveDone(act, ok, cancelled, true);
+            });
         } else {
-            op.move(items, dir, dlg, (ok, fail, cancelled) ->
-                    onCopyMoveDone(act, ok, cancelled, false));
+            op.move(items, dir, dlg, (ok, fail, cancelled) -> {
+                dlg.dismiss();
+                onCopyMoveDone(act, ok, cancelled, false);
+            });
         }
     }
 
     private void onCopyMoveDone(FragmentActivity act, int ok, boolean cancelled, boolean copy) {
+        if (!isAdded()) return;
         Toast.makeText(act, cancelled ? act.getString(R.string.op_cancelled)
                 : com.premiumlab.galleryx.util.Fmt.plural(act,
                 copy ? R.plurals.result_copied : R.plurals.result_moved, ok),
@@ -637,6 +671,8 @@ public abstract class BaseMediaFragment extends Fragment
         } else {
             // Видимая вкладка заново владеет панелями выделения
             setupSelectionChrome();
+            updateHideNowButton();
+            applyColumns();
             reload();
         }
     }
@@ -645,5 +681,19 @@ public abstract class BaseMediaFragment extends Fragment
     public void onResume() {
         super.onResume();
         updateHideNowButton();
+        applyColumns();
+        if (resumedOnce && !isHidden()) {
+            // Вернулись из просмотрщика/другого экрана — данные могли измениться
+            loadMedia();
+        }
+        resumedOnce = true;
+    }
+
+    /** Применяет текущий размер сетки без перезапуска. */
+    protected void applyColumns() {
+        if (layoutManager != null && layoutManager.getSpanCount() != Prefs.columns()) {
+            layoutManager.setSpanCount(Prefs.columns());
+            if (adapter != null) adapter.notifyDataSetChanged();
+        }
     }
 }

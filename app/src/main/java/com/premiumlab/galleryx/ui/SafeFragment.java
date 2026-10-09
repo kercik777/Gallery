@@ -1,11 +1,8 @@
 package com.premiumlab.galleryx.ui;
 
-import android.content.Intent;
 import android.view.View;
 
-import com.premiumlab.galleryx.PhotoViewerActivity;
 import com.premiumlab.galleryx.R;
-import com.premiumlab.galleryx.VideoPlayerActivity;
 import com.premiumlab.galleryx.data.MediaItem;
 import com.premiumlab.galleryx.data.SafeStore;
 import com.premiumlab.galleryx.ui.dialog.OpProgressDialog;
@@ -25,6 +22,12 @@ public class SafeFragment extends BaseMediaFragment {
     @Override
     protected int layoutRes() {
         return R.layout.fragment_safe;
+    }
+
+    @Override
+    protected void onViewsReady(@androidx.annotation.NonNull View root) {
+        // Замок в шапке убран: сейф запирается автоматически при выходе
+        if (btnHeaderExtra != null) btnHeaderExtra.setVisibility(View.GONE);
     }
 
     @Override
@@ -67,27 +70,7 @@ public class SafeFragment extends BaseMediaFragment {
 
     @Override
     protected void onItemOpen(MediaItem item) {
-        if (item.isVideo) {
-            Intent intent = new Intent(requireContext(), VideoPlayerActivity.class);
-            intent.putExtra("path", item.path);
-            intent.putExtra("name", item.name);
-            intent.putExtra("mode", 2);
-            startActivity(intent);
-        } else {
-            ArrayList<String> photos = new ArrayList<>();
-            int index = 0;
-            for (MediaItem it : shownItems) {
-                if (!it.isVideo) {
-                    if (it.path.equals(item.path)) index = photos.size();
-                    photos.add(it.path);
-                }
-            }
-            Intent intent = new Intent(requireContext(), PhotoViewerActivity.class);
-            intent.putStringArrayListExtra("paths", photos);
-            intent.putExtra("index", index);
-            intent.putExtra("mode", 2);
-            startActivity(intent);
-        }
+        openViewer(item, 2);
     }
 
     @Override
@@ -124,9 +107,7 @@ public class SafeFragment extends BaseMediaFragment {
 
     @Override
     protected void onHeaderExtraClick() {
-        if (getActivity() instanceof com.premiumlab.galleryx.SafeActivity) {
-            ((com.premiumlab.galleryx.SafeActivity) getActivity()).lockSafe();
-        }
+        // Сейф запирается сам при выходе — отдельная кнопка не нужна
     }
 
     @Override

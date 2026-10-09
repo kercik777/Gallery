@@ -98,6 +98,8 @@
     <string name="dest_create_here_btn">Создать здесь и выбрать</string>
     <string name="dest_pick_current_btn">Выбрать текущую папку</string>
     <string name="dest_other_folder">Другая папка на устройстве…</string>
+    <string name="play">Воспроизвести</string>
+    <string name="subfolders_title">Папки</string>
     <string name="dest_pick_desc_short">Выбрать любую папку в памяти телефона</string>
     <string name="dest_section_mine">Мои папки</string>
     <string name="dest_section_device">Папки устройства</string>
@@ -123,17 +125,17 @@
     <string name="masking_disable_title">Выключить режим маскировки?</string>
     <string name="masking_disable_msg">Корневая папка и сейф будут видны всегда.</string>
     <string name="masking_hint_title">Как открыть скрытую галерею</string>
-    <string name="masking_hint_steps">1. Откройте приложение — это обычная галерея без корневой папки и сейфа.\n2. Удерживайте заголовок «Галерея» 3 секунды.\n3. Если включён «PIN для маскировки» — введите PIN-код.\n4. Появятся ваши папки, сейф и настройки маскировки.</string>
+    <string name="masking_hint_steps">1. Откройте приложение — это обычная галерея без корневой папки и сейфа.\n2. Удерживайте заголовок «Галерея» 3 секунды.\n3. Если установлен PIN-код — введите его.\n4. Появятся ваши папки, сейф и настройки маскировки.</string>
     <string name="masking_suggest_pin">Рекомендуется установить PIN-код</string>
     <string name="masking_active_now">Маскировка активна</string>
 
     <!-- PIN-код -->
     <string name="pin_title">PIN-код</string>
-    <string name="pin_switch_desc">Защищает сейф. Для маскировки — отдельный переключатель ниже</string>
-    <string name="pin_masking_title">PIN для маскировки</string>
-    <string name="pin_masking_desc">Запрашивать PIN-код после удержания заголовка «Галерея»</string>
-    <string name="pin_masking_need_pin">Сначала установите PIN-код</string>
-    <string name="safe_pin_setup_hint">PIN-код не установлен — создайте его, чтобы запирать сейф</string>
+    <string name="pin_switch_desc">Один код для сейфа и для открытия скрытых папок</string>
+    <string name="pin_required_title">Сначала установите PIN-код</string>
+    <string name="pin_required_safe_msg">Сейф защищён PIN-кодом. Создайте его — и файлы можно будет прятать.</string>
+    <string name="pin_required_btn">Создать PIN</string>
+    <string name="safe_pin_setup_hint">Сначала установите PIN-код для сейфа</string>
     <string name="pin_change">Сменить PIN-код</string>
     <string name="pin_enter_title">Введите PIN-код</string>
     <string name="pin_create_title">Придумайте PIN-код</string>
@@ -246,6 +248,7 @@
     <string name="settings_theme_light">Светлая</string>
     <string name="settings_theme_dark">Тёмная</string>
     <string name="settings_grid">Размер сетки</string>
+    <string name="settings_grid_albums">Размер сетки альбомов</string>
     <string name="grid_value">Колонок: %1$d</string>
     <string name="grid_hint">Меняется также щипком по сетке</string>
     <string name="settings_folders_section">Папки</string>

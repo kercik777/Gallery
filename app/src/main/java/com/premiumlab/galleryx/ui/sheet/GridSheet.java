@@ -15,7 +15,7 @@ import com.premiumlab.galleryx.R;
 import com.premiumlab.galleryx.data.Prefs;
 
 /**
- * Нижний лист настройки размера сетки (2–6 колонок).
+ * Нижний лист настройки размера сетки: медиа (2–6 колонок) или альбомы (1–4).
  */
 public class GridSheet extends BottomSheetDialogFragment {
 
@@ -29,6 +29,15 @@ public class GridSheet extends BottomSheetDialogFragment {
         this.listener = listener;
     }
 
+    /** Лист для сетки альбомов (1–4 колонки). */
+    public static GridSheet forAlbums() {
+        GridSheet sheet = new GridSheet();
+        Bundle args = new Bundle();
+        args.putBoolean("albums", true);
+        sheet.setArguments(args);
+        return sheet;
+    }
+
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -36,9 +45,19 @@ public class GridSheet extends BottomSheetDialogFragment {
         View v = LayoutInflater.from(getContext()).inflate(R.layout.sheet_grid, null, false);
         dialog.setContentView(v);
 
+        final boolean albums = getArguments() != null
+                && getArguments().getBoolean("albums", false);
+        TextView txtTitle = v.findViewById(R.id.txtGridTitle);
         TextView txtValue = v.findViewById(R.id.txtGridValue);
         Slider slider = v.findViewById(R.id.sliderColumns);
-        slider.setValue(Prefs.columns());
+        if (albums) {
+            txtTitle.setText(R.string.settings_grid_albums);
+            slider.setValueFrom(1f);
+            slider.setValueTo(4f);
+            slider.setValue(Prefs.albumColumns());
+        } else {
+            slider.setValue(Prefs.columns());
+        }
         txtValue.setText(getString(R.string.grid_value, (int) slider.getValue()));
         slider.addOnChangeListener((s, value, fromUser) ->
                 txtValue.setText(getString(R.string.grid_value, (int) value)));
@@ -50,7 +69,8 @@ public class GridSheet extends BottomSheetDialogFragment {
             @Override
             public void onStopTrackingTouch(@NonNull Slider slider) {
                 int columns = (int) slider.getValue();
-                Prefs.setColumns(columns);
+                if (albums) Prefs.setAlbumColumns(columns);
+                else Prefs.setColumns(columns);
                 if (listener != null) listener.onColumnsPicked(columns);
             }
         });

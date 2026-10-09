@@ -13,12 +13,15 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.premiumlab.galleryx.R;
+import com.premiumlab.galleryx.data.Album;
 import com.premiumlab.galleryx.data.FavStore;
 import com.premiumlab.galleryx.data.MediaItem;
+import com.premiumlab.galleryx.data.Prefs;
 import com.premiumlab.galleryx.util.Fmt;
 
 import java.io.File;
@@ -36,24 +39,42 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_ITEM = 1;
+    private static final int TYPE_FOLDERS = 2;
 
     /** Возвращает тип «заголовок даты» для SpanSizeLookup. */
     public static int getItemTypeHeader() {
         return TYPE_HEADER;
     }
 
-    /** Строка сетки: либо заголовок даты, либо медиафайл. */
+    /** Тип «медиафайл» — единственный, занимающий одну ячейку сетки. */
+    public static int getItemTypeMedia() {
+        return TYPE_ITEM;
+    }
+
+    /** Строка сетки: заголовок даты, медиафайл или блок вложенных папок. */
     public static class Row {
         public final boolean header;
         public final String title;
         public final String countLabel;
         public final MediaItem item;
+        public final List<Album> folders;
 
         Row(boolean header, String title, String countLabel, MediaItem item) {
+            this(header, title, countLabel, item, null);
+        }
+
+        Row(boolean header, String title, String countLabel, MediaItem item,
+            List<Album> folders) {
             this.header = header;
             this.title = title;
             this.countLabel = countLabel;
             this.item = item;
+            this.folders = folders;
+        }
+
+        /** Блок вложенных папок (карточки как в «Альбомах») на всю ширину. */
+        public static Row folders(String title, List<Album> folders) {
+            return new Row(false, title, null, null, folders);
         }
     }
 
@@ -61,6 +82,10 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         void onMediaClick(MediaItem item, int position);
 
         void onMediaLongClick(MediaItem item, int position);
+
+        /** Нажатие на карточку вложенной папки. */
+        default void onFolderOpen(Album folder) {
+        }
     }
 
     private final Context ctx;
@@ -138,7 +163,9 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     @Override
     public int getItemViewType(int position) {
-        return rows.get(position).header ? TYPE_HEADER : TYPE_ITEM;
+        Row r = rows.get(position);
+        if (r.folders != null) return TYPE_FOLDERS;
+        return r.header ? TYPE_HEADER : TYPE_ITEM;
     }
 
     @NonNull
@@ -148,6 +175,9 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         if (viewType == TYPE_HEADER) {
             return new HeaderVH(inf.inflate(R.layout.item_date_header, parent, false));
         }
+        if (viewType == TYPE_FOLDERS) {
+            return new FoldersVH(inf.inflate(R.layout.item_subfolders, parent, false));
+        }
         return new MediaVH(inf.inflate(R.layout.item_media, parent, false));
     }
 
@@ -156,6 +186,8 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         Row row = rows.get(position);
         if (holder instanceof HeaderVH) {
             ((HeaderVH) holder).bind(row);
+        } else if (holder instanceof FoldersVH) {
+            ((FoldersVH) holder).bind(row);
         } else if (holder instanceof MediaVH) {
             ((MediaVH) holder).bind(row.item);
         }
@@ -164,10 +196,11 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position,
                                  @NonNull List<Object> payloads) {
-        if (!payloads.isEmpty() && "sel".equals(payloads.get(0))
-                && holder instanceof MediaVH) {
-            ((MediaVH) holder).bindSelection(rows.get(position).item);
-            return;
+        if (!payloads.isEmpty() && "sel".equals(payloads.get(0))) {
+            if (holder instanceof MediaVH) {
+                ((MediaVH) holder).bindSelection(rows.get(position).item);
+            }
+            return; // заголовки и блок папок от выделения не зависят
         }
         super.onBindViewHolder(holder, position, payloads);
     }
@@ -191,6 +224,44 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         void bind(Row row) {
             txtDate.setText(row.title);
             txtCount.setText(row.countLabel == null ? "" : row.countLabel);
+        }
+    }
+
+    // ---------- Вложенные папки ----------
+
+    class FoldersVH extends RecyclerView.ViewHolder {
+        final TextView txtTitle;
+        final RecyclerView grid;
+        final AlbumsAdapter albumsAdapter;
+        final GridLayoutManager lm;
+
+        FoldersVH(@NonNull View itemView) {
+            super(itemView);
+            txtTitle = itemView.findViewById(R.id.txtSubfoldersTitle);
+            grid = itemView.findViewById(R.id.recyclerSubfolders);
+            albumsAdapter = new AlbumsAdapter(ctx, new AlbumsAdapter.Listener() {
+                @Override
+                public void onAlbumClick(Album album, int position) {
+                    if (listener != null) listener.onFolderOpen(album);
+                }
+
+                @Override
+                public void onAlbumLongClick(Album album, int position) {
+                    if (listener != null) listener.onFolderOpen(album);
+                }
+            });
+            lm = new GridLayoutManager(ctx, Prefs.albumColumns());
+            grid.setLayoutManager(lm);
+            grid.setAdapter(albumsAdapter);
+            grid.setNestedScrollingEnabled(false);
+        }
+
+        void bind(Row row) {
+            txtTitle.setText(row.title);
+            if (lm.getSpanCount() != Prefs.albumColumns()) {
+                lm.setSpanCount(Prefs.albumColumns());
+            }
+            albumsAdapter.submit(new ArrayList<>(row.folders));
         }
     }
 

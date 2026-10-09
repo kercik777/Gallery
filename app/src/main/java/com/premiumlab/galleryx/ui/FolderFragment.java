@@ -14,13 +14,13 @@ import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.premiumlab.galleryx.FolderActivity;
-import com.premiumlab.galleryx.PhotoViewerActivity;
 import com.premiumlab.galleryx.R;
-import com.premiumlab.galleryx.VideoPlayerActivity;
+import com.premiumlab.galleryx.data.Album;
 import com.premiumlab.galleryx.data.AppDirs;
 import com.premiumlab.galleryx.data.MediaEngine;
 import com.premiumlab.galleryx.data.MediaItem;
 import com.premiumlab.galleryx.data.Prefs;
+import com.premiumlab.galleryx.ui.adapter.MediaAdapter;
 import com.premiumlab.galleryx.ui.dialog.CreateFolderDialog;
 import com.premiumlab.galleryx.util.Fmt;
 import com.premiumlab.galleryx.util.Scan;
@@ -36,6 +36,7 @@ public class FolderFragment extends BaseMediaFragment {
 
     private File currentDir;
     private boolean isUserFolder;
+    private final List<Album> subfolders = new ArrayList<>();
 
     @Override
     protected int layoutRes() {
@@ -60,26 +61,32 @@ public class FolderFragment extends BaseMediaFragment {
         buildSubdirChips();
     }
 
+    /**
+     * Вложенные папки показываются карточками (как в «Альбомах») в начале
+     * сетки, а не мелкими чипами. Список строится в фоне вместе с медиа.
+     */
     private void buildSubdirChips() {
-        if (chipContainer == null) return;
-        List<File> subdirs = MediaEngine.listSubdirs(currentDir);
-        if (subdirs.isEmpty()) {
-            chipRow.setVisibility(View.GONE);
-            return;
-        }
-        chipRow.setVisibility(View.VISIBLE);
-        chipContainer.removeAllViews();
-        for (File d : subdirs) {
-            TextView chip = (TextView) LayoutInflater.from(requireContext())
-                    .inflate(R.layout.item_chip_subdir, chipContainer, false);
-            chip.setText(d.getName());
-            chip.setOnClickListener(v -> navigateTo(d));
-            chipContainer.addView(chip);
-        }
+        if (chipRow != null) chipRow.setVisibility(View.GONE);
+    }
+
+    @Override
+    protected List<MediaAdapter.Row> topRows() {
+        if (subfolders.isEmpty()) return new ArrayList<>();
+        List<MediaAdapter.Row> rows = new ArrayList<>();
+        rows.add(MediaAdapter.Row.folders(getString(R.string.subfolders_title), subfolders));
+        return rows;
+    }
+
+    @Override
+    public void onFolderOpen(Album folder) {
+        navigateTo(new File(folder.path));
     }
 
     private void navigateTo(File dir) {
+        exitSelection();
         currentDir = dir;
+        subfolders.clear();
+        allItems.clear();
         isUserFolder = Prefs.rootPath() != null
                 && MediaEngine.isUnder(currentDir.getAbsolutePath(), Prefs.rootPath());
         txtHeaderTitle.setText(dir.getName());
@@ -110,8 +117,23 @@ public class FolderFragment extends BaseMediaFragment {
     @Override
     protected void loadMedia() {
         showLoading(true);
+        final File dir = currentDir;
+        final boolean user = isUserFolder;
+        // Карточки подпапок — только внутри своих папок (в корневой);
+        // папки устройства показываются в «Альбомах» каждая отдельно
+        new Thread(() -> {
+            List<Album> subs = user ? MediaEngine.subfolderAlbums(dir, true)
+                    : new ArrayList<>();
+            if (getActivity() == null) return;
+            getActivity().runOnUiThread(() -> {
+                if (!isAdded() || !dir.equals(currentDir)) return;
+                subfolders.clear();
+                subfolders.addAll(subs);
+                applyFilter();
+            });
+        }).start();
         MediaEngine.loadFolder(currentDir, items -> {
-            if (!isAdded()) return;
+            if (!isAdded() || !dir.equals(currentDir)) return;
             showLoading(false);
             setData(items);
             if (shownItems.isEmpty() && query.isEmpty()) {
@@ -123,27 +145,7 @@ public class FolderFragment extends BaseMediaFragment {
 
     @Override
     protected void onItemOpen(MediaItem item) {
-        if (item.isVideo) {
-            Intent intent = new Intent(requireContext(), VideoPlayerActivity.class);
-            intent.putExtra("path", item.path);
-            intent.putExtra("name", item.name);
-            intent.putExtra("mode", 0);
-            startActivity(intent);
-        } else {
-            ArrayList<String> photos = new ArrayList<>();
-            int index = 0;
-            for (MediaItem it : shownItems) {
-                if (!it.isVideo) {
-                    if (it.path.equals(item.path)) index = photos.size();
-                    photos.add(it.path);
-                }
-            }
-            Intent intent = new Intent(requireContext(), PhotoViewerActivity.class);
-            intent.putStringArrayListExtra("paths", photos);
-            intent.putExtra("index", index);
-            intent.putExtra("mode", 0);
-            startActivity(intent);
-        }
+        openViewer(item, 0);
     }
 
     @Override
@@ -166,12 +168,12 @@ public class FolderFragment extends BaseMediaFragment {
                 .show();
     }
 
-    /** Создаёт вложенную папку внутри текущей и сразу показывает её в чипах. */
+    /** Создаёт вложенную папку внутри текущей и сразу показывает её карточкой. */
     private void onCreateFolder() {
         FragmentActivity act = requireActivity();
         CreateFolderDialog.showIn(act, currentDir, folder -> {
             if (!isAdded()) return;
-            buildSubdirChips();
+            loadMedia();
         });
     }
 

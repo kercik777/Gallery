@@ -13,6 +13,7 @@
         android:background="@drawable/bg_chip_active" />
 
     <TextView
+        android:id="@+id/txtGridTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingStart="@dimen/spacing_xl"

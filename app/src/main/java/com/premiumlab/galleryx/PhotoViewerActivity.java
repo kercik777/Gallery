@@ -40,7 +40,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Полноэкранный просмотрщик фотографий с зумом.
+ * Полноэкранный просмотрщик фото и видео (видео — кадр с кнопкой «play»).
  * Режимы: 0 — обычный, 1 — корзина, 2 — сейф.
  *
  * Жесты: тап — показать/скрыть панели, двойной тап — зум,
@@ -52,8 +52,6 @@ public class PhotoViewerActivity extends AppCompatActivity {
     public static final int MODE_TRASH = 1;
     public static final int MODE_SAFE = 2;
 
-    private static final int REQ_ROOT = 601;
-
     private View root;
     private ViewPager2 pager;
     private PhotoPagerAdapter adapter;
@@ -63,7 +61,6 @@ public class PhotoViewerActivity extends AppCompatActivity {
     private int mode = MODE_NORMAL;
     private boolean barsVisible = true;
     private boolean dismissing = false;
-    private List<MediaItem> pendingMoveItem;
 
     /** Исходные отступы панелей (к ним прибавляются системные insets). */
     private int topBarPadTop, bottomBarPadBottom, bottomBarPadSide;
@@ -106,10 +103,29 @@ public class PhotoViewerActivity extends AppCompatActivity {
 
         findViewById(R.id.btnViewerBack).setOnClickListener(v -> finish());
 
-        adapter = new PhotoPagerAdapter(this, this::toggleBars, dragListener);
+        adapter = new PhotoPagerAdapter(this, this::toggleBars, dragListener, this::playVideo);
+        if (mode == MODE_SAFE) {
+            java.util.HashSet<String> videos = new java.util.HashSet<>();
+            for (SafeStore.Entry e : SafeStore.get().entries()) {
+                if (e.video) videos.add(e.path);
+            }
+            adapter.setVideoPaths(videos);
+        } else if (mode == MODE_TRASH) {
+            java.util.HashSet<String> videos = new java.util.HashSet<>();
+            for (TrashStore.Entry e : TrashStore.get().entries()) {
+                if (e.video) videos.add(e.path);
+            }
+            adapter.setVideoPaths(videos);
+        }
         adapter.submit(paths);
         pager.setAdapter(adapter);
         pager.setCurrentItem(Math.min(index, paths.size() - 1), false);
+        // Открыли видео из сетки — сразу запускаем плеер; назад вернёт
+        // в просмотрщик, где можно листать дальше (фото и видео по порядку)
+        if (getIntent().getBooleanExtra("autoplay", false) && savedInstanceState == null) {
+            String p = adapter.getPath(pager.getCurrentItem());
+            if (p != null && adapter.isVideo(p)) playVideo(p);
+        }
         pager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
@@ -161,10 +177,9 @@ public class PhotoViewerActivity extends AppCompatActivity {
                 if (it == null) return;
                 Actions.confirmTrash(this, Collections.singletonList(it), this::finish);
             });
-            // Пока галерея «закрыта» маскировкой — сейф и корневые папки не показываем
+            // Пока галерея «закрыта» маскировкой — сейф не показываем
             if (MaskGuard.hidden()) {
                 btnSafe.setVisibility(View.GONE);
-                btnMove.setVisibility(View.GONE);
             }
         } else {
             btnFav.setVisibility(View.GONE);
@@ -184,6 +199,16 @@ public class PhotoViewerActivity extends AppCompatActivity {
             });
         }
         findViewById(R.id.btnVwInfo).setOnClickListener(v -> showInfo());
+    }
+
+    /** Запускает полноценный плеер для видео со страницы просмотрщика. */
+    private void playVideo(String path) {
+        Intent intent = new Intent(this, VideoPlayerActivity.class);
+        intent.putExtra("path", path);
+        intent.putExtra("name", decorateName(MediaItem.fromFile(new File(path))).name);
+        intent.putExtra("mode", mode);
+        startActivity(intent);
+        overridePendingTransition(0, 0);
     }
 
     private void showInfo() {
@@ -236,11 +261,6 @@ public class PhotoViewerActivity extends AppCompatActivity {
     private void moveCurrent() {
         MediaItem it = current();
         if (it == null) return;
-        if (Prefs.rootPath() == null) {
-            pendingMoveItem = Collections.singletonList(it);
-            showRootNeeded();
-            return;
-        }
         DestSheet sheet = DestSheet.newInstance(false, it.folderPath);
         sheet.setListener(dir -> runCopyMove(Collections.singletonList(current()), dir));
         sheet.show(getSupportFragmentManager(), "dest");
@@ -287,27 +307,6 @@ public class PhotoViewerActivity extends AppCompatActivity {
                         Toast.LENGTH_SHORT).show();
                 finish();
             });
-        }
-    }
-
-    private void showRootNeeded() {
-        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.root_needed_title)
-                .setMessage(R.string.root_needed_desc)
-                .setPositiveButton(R.string.continue_btn, (d, w) ->
-                        startActivityForResult(new Intent(this,
-                                RootPickerActivity.class), REQ_ROOT))
-                .setNegativeButton(R.string.cancel, null)
-                .show();
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQ_ROOT && resultCode == RESULT_OK && pendingMoveItem != null) {
-            List<MediaItem> items = pendingMoveItem;
-            pendingMoveItem = null;
-            runCopyMove(items, new File(Prefs.rootPath()));
         }
     }
 

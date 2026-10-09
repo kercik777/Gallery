@@ -14,8 +14,9 @@ import com.premiumlab.galleryx.data.Prefs;
 import com.premiumlab.galleryx.ui.SafeFragment;
 
 /**
- * Сейф: экран защищён PIN-кодом (если PIN установлен).
- * При сворачивании приложения сейф снова закрывается.
+ * Сейф: экран защищён PIN-кодом. Без PIN-кода вход невозможен — при первом
+ * открытии предлагается его создать. При сворачивании приложения сейф
+ * снова закрывается автоматически.
  */
 public class SafeActivity extends AppCompatActivity {
 
@@ -49,28 +50,21 @@ public class SafeActivity extends AppCompatActivity {
                     .commit();
         }
         updateGate();
+
+        // Сейф без PIN-кода не имеет смысла: при первом входе сразу
+        // предлагаем создать код. Отказ — выходим из сейфа.
+        if (!Prefs.pinSet() && savedInstanceState == null) {
+            Toast.makeText(this, R.string.safe_pin_setup_hint, Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, PinActivity.class);
+            intent.putExtra("mode", PinActivity.MODE_CREATE);
+            startActivityForResult(intent, REQ_PIN_CREATE);
+        }
     }
 
     private void updateGate() {
         boolean needPin = Prefs.pinSet() && !passed;
         gate.setVisibility(needPin ? View.VISIBLE : View.GONE);
         content.setVisibility(needPin ? View.GONE : View.VISIBLE);
-    }
-
-    /**
-     * Нажатие на замок в сейфе. Если PIN-код ещё не установлен — сразу
-     * предлагаем его создать; после создания сейф остаётся открытым.
-     */
-    public void lockSafe() {
-        if (!Prefs.pinSet()) {
-            Toast.makeText(this, R.string.safe_pin_setup_hint, Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(this, PinActivity.class);
-            intent.putExtra("mode", PinActivity.MODE_CREATE);
-            startActivityForResult(intent, REQ_PIN_CREATE);
-            return;
-        }
-        passed = false;
-        updateGate();
     }
 
     @Override
@@ -82,10 +76,12 @@ public class SafeActivity extends AppCompatActivity {
         } else if (requestCode == REQ_PIN_CREATE) {
             if (resultCode == RESULT_OK) {
                 Toast.makeText(this, R.string.pin_saved, Toast.LENGTH_SHORT).show();
+                // Код только что создан — пользователь уже «прошёл» проверку
+                passed = true;
+                updateGate();
+            } else {
+                finish();
             }
-            // Пользователь только что был внутри сейфа — не запираем его сразу
-            passed = true;
-            updateGate();
         }
     }
 

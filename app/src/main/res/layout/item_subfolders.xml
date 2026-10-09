@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="@dimen/spacing_s">
+
+    <TextView
+        android:id="@+id/txtSubfoldersTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0.02"
+        android:paddingStart="@dimen/spacing_l"
+        android:paddingTop="@dimen/spacing_s"
+        android:paddingEnd="@dimen/spacing_l"
+        android:text="@string/subfolders_title"
+        android:textAllCaps="true"
+        android:textColor="@color/textSecondary"
+        android:textSize="13sp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerSubfolders"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:nestedScrollingEnabled="false"
+        android:overScrollMode="never"
+        android:paddingStart="@dimen/spacing_s"
+        android:paddingEnd="@dimen/spacing_s" />
+</LinearLayout>

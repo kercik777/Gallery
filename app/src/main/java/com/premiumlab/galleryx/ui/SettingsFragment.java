@@ -35,7 +35,7 @@ public class SettingsFragment extends Fragment {
 
     private static final int REQ_ROOT = 503;
 
-    private TextView txtMaskingStatus, txtThemeCurrent, txtGridCurrent;
+    private TextView txtMaskingStatus, txtThemeCurrent, txtGridCurrent, txtGridAlbumsCurrent;
     private TextView txtRootCurrent, txtTrashCount, txtSafeCount, txtPermsStatus, txtVersion;
     private View rowSafe, rowMasking, sectionMasking, sectionFolders, cardFolders;
     private Runnable pendingAfterRoot;
@@ -53,6 +53,7 @@ public class SettingsFragment extends Fragment {
         txtMaskingStatus = v.findViewById(R.id.txtMaskingStatus);
         txtThemeCurrent = v.findViewById(R.id.txtThemeCurrent);
         txtGridCurrent = v.findViewById(R.id.txtGridCurrent);
+        txtGridAlbumsCurrent = v.findViewById(R.id.txtGridAlbumsCurrent);
         txtRootCurrent = v.findViewById(R.id.txtRootCurrent);
         txtTrashCount = v.findViewById(R.id.txtTrashCount);
         txtSafeCount = v.findViewById(R.id.txtSafeCount);
@@ -77,6 +78,12 @@ public class SettingsFragment extends Fragment {
             GridSheet sheet = new GridSheet();
             sheet.setListener(columns -> refresh());
             sheet.show(getParentFragmentManager(), "grid");
+        });
+
+        v.findViewById(R.id.rowGridAlbums).setOnClickListener(x -> {
+            GridSheet sheet = GridSheet.forAlbums();
+            sheet.setListener(columns -> refresh());
+            sheet.show(getParentFragmentManager(), "grid_albums");
         });
 
         v.findViewById(R.id.rowRoot).setOnClickListener(x ->
@@ -130,6 +137,7 @@ public class SettingsFragment extends Fragment {
                 : R.string.settings_theme_system);
 
         txtGridCurrent.setText(getString(R.string.grid_value, Prefs.columns()));
+        txtGridAlbumsCurrent.setText(getString(R.string.grid_value, Prefs.albumColumns()));
 
         String root = Prefs.rootPath();
         txtRootCurrent.setText(root == null ? getString(R.string.root_not_set) : root);

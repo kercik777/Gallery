@@ -250,14 +250,11 @@ public final class MediaEngine {
         if (rootPath != null && !rootHidden) {
             File root = new File(rootPath);
             if (root.exists()) {
-                // Сам корень альбомом не считается — только папки внутри него
-                List<File> dirs = new ArrayList<>(userFoldersRecursive(root));
-                for (File d : dirs) {
-                    List<MediaItem> direct = directMedia(d);
-                    int count = direct.size();
-                    // Для вложенных папок показываем и содержимое подпапок? Нет — только прямое содержимое.
-                    String cover = count > 0 ? direct.get(0).path : null;
-                    user.add(new Album(d.getName(), d.getAbsolutePath(), cover, count, true));
+                // Сам корень альбомом не считается, вложенные папки второго
+                // уровня — тоже: в «Альбомах» только прямые папки корня,
+                // подпапки показываются внутри своей папки.
+                for (File d : listSubdirs(root)) {
+                    user.add(albumFor(d, true));
                 }
                 Collections.sort(user, (a, b) -> a.name.toLowerCase(Locale.US)
                         .compareTo(b.name.toLowerCase(Locale.US)));
@@ -315,6 +312,31 @@ public final class MediaEngine {
             List<Object> rows = buildAlbums(app);
             MAIN.post(() -> cb.onLoaded(rows));
         });
+    }
+
+    /** Карточка папки: имя, обложка и число файлов (прямое содержимое, свежее из File API). */
+    public static Album albumFor(File dir, boolean isUser) {
+        List<MediaItem> direct = directMedia(dir);
+        int count = direct.size();
+        String cover = count > 0 ? direct.get(0).path : null;
+        if (cover == null) {
+            // Пустая папка с подпапками — возьмём обложку из первой непустой подпапки
+            for (File sub : listSubdirs(dir)) {
+                List<MediaItem> inner = directMedia(sub);
+                if (!inner.isEmpty()) {
+                    cover = inner.get(0).path;
+                    break;
+                }
+            }
+        }
+        return new Album(dir.getName(), dir.getAbsolutePath(), cover, count, isUser);
+    }
+
+    /** Карточки вложенных папок для экрана папки. */
+    public static List<Album> subfolderAlbums(File dir, boolean isUser) {
+        List<Album> out = new ArrayList<>();
+        for (File d : listSubdirs(dir)) out.add(albumFor(d, isUser));
+        return out;
     }
 
     /** Прямые медиафайлы папки без сортировки по дате (свежие из File API). */
