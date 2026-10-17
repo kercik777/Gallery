@@ -129,10 +129,29 @@ public final class ExtraSources {
     }
 
     /**
-     * Убирает из включённых папки, которых больше нет на диске (пользователь
-     * удалил альбом из «Альбомов» или файловым менеджером). Вызывается при
-     * показе счётчика и при входе на экран источников — список и счётчик
-     * становятся честными сразу, не дожидаясь фонового сканирования.
+     * Есть ли в папке медиафайлы (прямо в ней, как считает сканирование).
+     * Пустая папка для источников равна удалённой: приложения вроде WhatsApp
+     * мгновенно пересоздают свои каталоги, поэтому проверки «папка существует»
+     * недостаточно.
+     */
+    public static boolean hasMedia(File dir) {
+        File[] files = dir.listFiles();
+        if (files == null) return false;
+        for (File f : files) {
+            String name = f.getName();
+            if (f.isDirectory() || name.startsWith(".")) continue;
+            if (MediaEngine.isMediaName(name)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Убирает из включённых папки, которых больше нет на диске или в которых
+     * не осталось ни одного фото/видео (пользователь удалил альбом из
+     * «Альбомов» — файлы ушли в корзину, а каталог могло пересоздать само
+     * приложение-владелец). Вызывается при показе счётчика и при входе на
+     * экран источников — список и счётчик становятся честными сразу,
+     * не дожидаясь фонового сканирования.
      *
      * @return true — что-то удалили.
      */
@@ -141,7 +160,8 @@ public final class ExtraSources {
         boolean changed = false;
         java.util.Iterator<String> it = set.iterator();
         while (it.hasNext()) {
-            if (!new File(it.next()).isDirectory()) {
+            File dir = new File(it.next());
+            if (!dir.isDirectory() || !hasMedia(dir)) {
                 it.remove();
                 changed = true;
             }
@@ -357,9 +377,11 @@ public final class ExtraSources {
             List<Source> out = new ArrayList<>(arr.length());
             for (int i = 0; i < arr.length(); i++) {
                 Source s = Source.fromJson(arr.getJSONObject(i));
-                // Папка могла быть удалена после прошлого сканирования —
-                // не показываем её даже из кеша
-                if (!new File(s.path).isDirectory()) continue;
+                // Папка могла быть удалена (или опустошена) после прошлого
+                // сканирования: файлы ушли в корзину, а пустой каталог
+                // пересоздало приложение-владелец — не показываем её из кеша
+                File dir = new File(s.path);
+                if (!dir.isDirectory() || !hasMedia(dir)) continue;
                 s.enabled = enabled.contains(s.path);
                 out.add(s);
             }

@@ -233,6 +233,9 @@ public final class FolderOps {
                         for (File f : dirs) {
                             if (!f.exists()) LockStore.removeUnder(f.getAbsolutePath());
                         }
+                        // Удалённая папка могла быть «дополнительным источником» —
+                        // выключаем её сразу, чтобы список и счётчик были честными
+                        com.premiumlab.galleryx.data.ExtraSources.pruneMissing();
                         if (!host.isAdded()) return;
                         Toasts.makeText(act, Fmt.plural(act, R.plurals.result_albums_deleted, ok),
                                 Toast.LENGTH_SHORT).show();
