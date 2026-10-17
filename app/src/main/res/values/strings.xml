@@ -809,4 +809,27 @@
     </plurals>
 
     <string name="sources_new_found">New folders: %1$s</string>
+
+    <!-- Duplicate finder -->
+    <string name="settings_duplicates">Duplicate finder</string>
+    <string name="settings_duplicates_sub">Find and remove identical photos</string>
+    <string name="dup_status_idle">Exact copies — compared by content, not by name</string>
+    <string name="dup_intro_title">Find duplicate photos</string>
+    <string name="dup_intro_sub">The app compares file contents, so copies are found even under different names. Nothing is deleted automatically — you review every group and choose what to remove.</string>
+    <string name="dup_scan_btn">Scan images</string>
+    <string name="dup_scanning">Scanning images…</string>
+    <string name="dup_preparing">Collecting photo list…</string>
+    <string name="dup_progress">Checked %1$d of %2$d</string>
+    <string name="dup_empty_title">No duplicates</string>
+    <string name="dup_empty_sub">Every photo is unique — nothing to clean up</string>
+    <string name="dup_status_found">Groups: %1$d · extra copies: %2$d (%3$s)</string>
+    <string name="dup_group_title">Group %1$d</string>
+    <string name="dup_group_info">%1$s · %2$s each</string>
+    <string name="dup_auto_select">Select extras</string>
+    <string name="dup_auto_hint">The oldest file in every group is kept</string>
+    <string name="dup_clear_select">Clear selection</string>
+    <string name="dup_delete_btn">Delete selected (%1$d · %2$s)</string>
+    <string name="dup_badge_oldest">oldest</string>
+    <string name="dup_preview">Open photo</string>
+    <string name="dup_select">Select file</string>
 </resources>

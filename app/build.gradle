@@ -10,8 +10,8 @@ android {
         applicationId "com.premiumlab.galleryx"
         minSdk 26
         targetSdk 37
-        versionCode 40
-        versionName "3.22.0"
+        versionCode 41
+        versionName "3.23.0"
     }
 
     buildTypes {

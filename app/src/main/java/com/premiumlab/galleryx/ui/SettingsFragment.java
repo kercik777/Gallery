@@ -211,6 +211,11 @@ public class SettingsFragment extends Fragment {
                         Prefs.setUseTrash(true);
                     }
                 });
+        // Поиск дубликатов: точные копии фото по содержимому (размер + SHA-256)
+        row(general, R.drawable.ic_copy, getString(R.string.settings_duplicates),
+                getString(R.string.settings_duplicates_sub),
+                () -> startActivity(new Intent(act,
+                        com.premiumlab.galleryx.DuplicatesActivity.class)));
         toggle(general, R.drawable.ic_pip, getString(R.string.settings_pip),
                 getString(R.string.settings_pip_sub), Prefs::pip, Prefs::setPip);
         toggle(general, R.drawable.ic_unfold_more, getString(R.string.settings_fast_scroll),

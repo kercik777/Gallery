@@ -90,6 +90,11 @@
             android:name=".TrashActivity"
             android:exported="false" />
 
+        <!-- Поиск дубликатов фото (Настройки → Поиск дубликатов) -->
+        <activity
+            android:name=".DuplicatesActivity"
+            android:exported="false" />
+
         <activity
             android:name=".editor.EditorActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden"
