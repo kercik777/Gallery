@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Передний слой адаптивной иконки: «диафрагма» из восьми объёмных лепестков
+     (градиент + блик), светлая апертура в центре. Рисунок помещается в безопасную
+     зону 66dp — не обрезается ни круглой, ни скруглённой маской. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Мягкая тень под лепестками -->
+    <path android:pathData="M54,56 m-31,0 a31,31 0 1 0 62,0 a31,31 0 1 0 -62,0 z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="54"
+                android:centerY="57"
+                android:gradientRadius="31">
+                <item android:offset="0.0" android:color="#2A000000" />
+                <item android:offset="0.75" android:color="#10000000" />
+                <item android:offset="1.0" android:color="#00000000" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Лепесток 1 -->
+    <group
+        android:rotation="0"
+        android:pivotX="54"
+        android:pivotY="54">
+        <path android:pathData="M54,50 C61.5,45 66.5,36 62.5,28 C59.5,22.5 51.5,22.5 48.5,28 C44.5,36 47.5,46 54,50 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="52"
+                    android:startY="49"
+                    android:endX="58"
+                    android:endY="24">
+                    <item android:offset="0.0" android:color="#6FB6FF" />
+                    <item android:offset="1.0" android:color="#2F6FE4" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:pathData="M51.6,45.5 C53,40.5 54.8,35.5 56.6,31"
+            android:strokeColor="#8CFFFFFF"
+            android:strokeWidth="1.6"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M54,50 C61.5,45 66.5,36 62.5,28 C59.5,22.5 51.5,22.5 48.5,28 C44.5,36 47.5,46 54,50 Z"
+            android:strokeColor="#26FFFFFF"
+            android:strokeWidth="0.8" />
+    </group>
+    <!-- Лепесток 2 -->
+    <group
+        android:rotation="45"
+        android:pivotX="54"
+        android:pivotY="54">
+        <path android:pathData="M54,50 C61.5,45 66.5,36 62.5,28 C59.5,22.5 51.5,22.5 48.5,28 C44.5,36 47.5,46 54,50 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="52"
+                    android:startY="49"
+                    android:endX="58"
+                    android:endY="24">
+                    <item android:offset="0.0" android:color="#5FE0EE" />
+                    <item android:offset="1.0" android:color="#17A7C6" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:pathData="M51.6,45.5 C53,40.5 54.8,35.5 56.6,31"
+            android:strokeColor="#8CFFFFFF"
+            android:strokeWidth="1.6"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M54,50 C61.5,45 66.5,36 62.5,28 C59.5,22.5 51.5,22.5 48.5,28 C44.5,36 47.5,46 54,50 Z"
+            android:strokeColor="#26FFFFFF"
+            android:strokeWidth="0.8" />
+    </group>
+    <!-- Лепесток 3 -->
+    <group
+        android:rotation="90"
+        android:pivotX="54"
+        android:pivotY="54">
+        <path android:pathData="M54,50 C61.5,45 66.5,36 62.5,28 C59.5,22.5 51.5,22.5 48.5,28 C44.5,36 47.5,46 54,50 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="52"
+                    android:startY="49"
+                    android:endX="58"
+                    android:endY="24">
+                    <item android:offset="0.0" android:color="#8CE68A" />
+                    <item android:offset="1.0" android:color="#2FAF48" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:pathData="M51.6,45.5 C53,40.5 54.8,35.5 56.6,31"
+            android:strokeColor="#8CFFFFFF"
+            android:strokeWidth="1.6"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M54,50 C61.5,45 66.5,36 62.5,28 C59.5,22.5 51.5,22.5 48.5,28 C44.5,36 47.5,46 54,50 Z"
+            android:strokeColor="#26FFFFFF"
+            android:strokeWidth="0.8" />
+    </group>
+    <!-- Лепесток 4 -->
+    <group
+        android:rotation="135"
+        android:pivotX="54"
+        android:pivotY="54">
+        <path android:pathData="M54,50 C61.5,45 66.5,36 62.5,28 C59.5,22.5 51.5,22.5 48.5,28 C44.5,36 47.5,46 54,50 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="52"
+                    android:startY="49"
+                    android:endX="58"
+                    android:endY="24">
+                    <item android:offset="0.0" android:color="#FFE573" />
+                    <item android:offset="1.0" android:color="#F2B300" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:pathData="M51.6,45.5 C53,40.5 54.8,35.5 56.6,31"
+            android:strokeColor="#8CFFFFFF"
+            android:strokeWidth="1.6"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M54,50 C61.5,45 66.5,36 62.5,28 C59.5,22.5 51.5,22.5 48.5,28 C44.5,36 47.5,46 54,50 Z"
+            android:strokeColor="#26FFFFFF"
+            android:strokeWidth="0.8" />
+    </group>
+    <!-- Лепесток 5 -->
+    <group
+        android:rotation="180"
+        android:pivotX="54"
+        android:pivotY="54">
+        <path android:pathData="M54,50 C61.5,45 66.5,36 62.5,28 C59.5,22.5 51.5,22.5 48.5,28 C44.5,36 47.5,46 54,50 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="52"
+                    android:startY="49"
+                    android:endX="58"
+                    android:endY="24">
+                    <item android:offset="0.0" android:color="#FFBC66" />
+                    <item android:offset="1.0" android:color="#F47A1C" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:pathData="M51.6,45.5 C53,40.5 54.8,35.5 56.6,31"
+            android:strokeColor="#8CFFFFFF"
+            android:strokeWidth="1.6"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M54,50 C61.5,45 66.5,36 62.5,28 C59.5,22.5 51.5,22.5 48.5,28 C44.5,36 47.5,46 54,50 Z"
+            android:strokeColor="#26FFFFFF"
+            android:strokeWidth="0.8" />
+    </group>
+    <!-- Лепесток 6 -->
+    <group
+        android:rotation="225"
+        android:pivotX="54"
+        android:pivotY="54">
+        <path android:pathData="M54,50 C61.5,45 66.5,36 62.5,28 C59.5,22.5 51.5,22.5 48.5,28 C44.5,36 47.5,46 54,50 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="52"
+                    android:startY="49"
+                    android:endX="58"
+                    android:endY="24">
+                    <item android:offset="0.0" android:color="#FF8A7A" />
+                    <item android:offset="1.0" android:color="#E33B33" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:pathData="M51.6,45.5 C53,40.5 54.8,35.5 56.6,31"
+            android:strokeColor="#8CFFFFFF"
+            android:strokeWidth="1.6"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M54,50 C61.5,45 66.5,36 62.5,28 C59.5,22.5 51.5,22.5 48.5,28 C44.5,36 47.5,46 54,50 Z"
+            android:strokeColor="#26FFFFFF"
+            android:strokeWidth="0.8" />
+    </group>
+    <!-- Лепесток 7 -->
+    <group
+        android:rotation="270"
+        android:pivotX="54"
+        android:pivotY="54">
+        <path android:pathData="M54,50 C61.5,45 66.5,36 62.5,28 C59.5,22.5 51.5,22.5 48.5,28 C44.5,36 47.5,46 54,50 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="52"
+                    android:startY="49"
+                    android:endX="58"
+                    android:endY="24">
+                    <item android:offset="0.0" android:color="#FF9BCB" />
+                    <item android:offset="1.0" android:color="#E23A8E" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:pathData="M51.6,45.5 C53,40.5 54.8,35.5 56.6,31"
+            android:strokeColor="#8CFFFFFF"
+            android:strokeWidth="1.6"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M54,50 C61.5,45 66.5,36 62.5,28 C59.5,22.5 51.5,22.5 48.5,28 C44.5,36 47.5,46 54,50 Z"
+            android:strokeColor="#26FFFFFF"
+            android:strokeWidth="0.8" />
+    </group>
+    <!-- Лепесток 8 -->
+    <group
+        android:rotation="315"
+        android:pivotX="54"
+        android:pivotY="54">
+        <path android:pathData="M54,50 C61.5,45 66.5,36 62.5,28 C59.5,22.5 51.5,22.5 48.5,28 C44.5,36 47.5,46 54,50 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="52"
+                    android:startY="49"
+                    android:endX="58"
+                    android:endY="24">
+                    <item android:offset="0.0" android:color="#BC98FF" />
+                    <item android:offset="1.0" android:color="#7A4BE0" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:pathData="M51.6,45.5 C53,40.5 54.8,35.5 56.6,31"
+            android:strokeColor="#8CFFFFFF"
+            android:strokeWidth="1.6"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M54,50 C61.5,45 66.5,36 62.5,28 C59.5,22.5 51.5,22.5 48.5,28 C44.5,36 47.5,46 54,50 Z"
+            android:strokeColor="#26FFFFFF"
+            android:strokeWidth="0.8" />
+    </group>
+
+    <!-- Апертура: светлое пересечение лепестков -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M54,54 m-6.2,0 a6.2,6.2 0 1 0 12.4,0 a6.2,6.2 0 1 0 -12.4,0 z" />
+    <path android:pathData="M54,54 m-4.2,0 a4.2,4.2 0 1 0 8.4,0 a4.2,4.2 0 1 0 -8.4,0 z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="52.5"
+                android:centerY="52.5"
+                android:gradientRadius="5">
+                <item android:offset="0.0" android:color="#FFFFFFFF" />
+                <item android:offset="1.0" android:color="#FFD9DBE6" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:fillColor="#FF9A9DB0"
+        android:pathData="M54,54 m-1.3,0 a1.3,1.3 0 1 0 2.6,0 a1.3,1.3 0 1 0 -2.6,0 z" />
+</vector>

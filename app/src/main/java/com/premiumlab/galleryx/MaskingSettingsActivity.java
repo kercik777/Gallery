@@ -1,0 +1,302 @@
+package com.premiumlab.galleryx;
+
+import com.premiumlab.galleryx.util.Toasts;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.materialswitch.MaterialSwitch;
+import com.premiumlab.galleryx.data.Prefs;
+import com.premiumlab.galleryx.data.SessionManager;
+
+/**
+ * Настройки режима маскировки: включение, PIN-код, автоскрытие, защита снимков.
+ */
+public class MaskingSettingsActivity extends AppCompatActivity {
+
+    private static final int REQ_PIN_CREATE = 201;
+    private static final int REQ_PIN_DISABLE = 202;
+    private static final int REQ_PIN_CHANGE = 203;
+    private static final int REQ_PIN_OFF = 204;
+    private static final int REQ_PIN_BEFORE_CHANGE = 205;
+    private static final int REQ_PIN_MASK_OFF = 206;
+
+    private MaterialSwitch switchMasking, switchPin, switchSecure, switchMaskPin;
+    private TextView txtHeroStatus;
+    private View rowChangePin, rowMaskPin;
+    private boolean guard = false;
+
+    private final View[] autoRows = new View[4];
+    private final ImageView[] autoChecks = new ImageView[4];
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        com.premiumlab.galleryx.util.Theming.apply(this);
+        setContentView(R.layout.activity_masking_settings);
+
+        findViewById(R.id.btnBackMasking).setOnClickListener(v -> finish());
+
+        switchMasking = findViewById(R.id.switchMasking);
+        switchPin = findViewById(R.id.switchPin);
+        switchSecure = findViewById(R.id.switchSecure);
+        txtHeroStatus = findViewById(R.id.txtMaskingHeroStatus);
+        rowChangePin = findViewById(R.id.rowChangePin);
+        rowMaskPin = findViewById(R.id.rowMaskPin);
+        switchMaskPin = findViewById(R.id.switchMaskPin);
+
+        autoRows[0] = findViewById(R.id.rowAutoMinimize);
+        autoRows[1] = findViewById(R.id.rowAuto1);
+        autoRows[2] = findViewById(R.id.rowAuto5);
+        autoRows[3] = findViewById(R.id.rowAutoManual);
+        autoChecks[0] = findViewById(R.id.chkMinimize);
+        autoChecks[1] = findViewById(R.id.chk1);
+        autoChecks[2] = findViewById(R.id.chk5);
+        autoChecks[3] = findViewById(R.id.chkManual);
+
+        setupMaskingSwitch();
+        setupPinSection();
+        setupAutoHide();
+        setupSecure();
+        setupExtraSources();
+        refreshStatus();
+    }
+
+    // ---------- Дополнительные источники ----------
+
+    private void setupExtraSources() {
+        View row = findViewById(R.id.rowExtraSources);
+        if (row == null) return;
+        com.premiumlab.galleryx.util.Press.attach(row, 0.985f);
+        row.setOnClickListener(v -> startActivity(new Intent(this, ExtraSourcesActivity.class)));
+    }
+
+    private void refreshExtraSourcesCount() {
+        android.widget.TextView t = findViewById(R.id.txtExtraSourcesCount);
+        if (t == null) return;
+        int n = Prefs.extraFolders().size();
+        t.setVisibility(n > 0 ? View.VISIBLE : View.GONE);
+        if (n > 0) {
+            t.setText(getString(R.string.sources_enabled_n,
+                    com.premiumlab.galleryx.util.Fmt.plural(this, R.plurals.folders_count, n)));
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshExtraSourcesCount();
+    }
+
+    // ---------- Маскировка ----------
+
+    private void setupMaskingSwitch() {
+        switchMasking.setChecked(Prefs.masking());
+        switchMasking.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (guard) return;
+            if (isChecked) {
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle(R.string.masking_enable_title)
+                        .setMessage(R.string.masking_enable_msg)
+                        .setPositiveButton(R.string.ok, (d, w) -> {
+                            Prefs.setMasking(true);
+                            // Пользователь сейчас в приложении: галерея остаётся
+                            // открытой (появляется «глазик»), а не прячется сразу
+                            SessionManager.unlock();
+                            refreshStatus();
+                            if (!Prefs.pinSet()) {
+                                Toasts.makeText(this, R.string.masking_suggest_pin,
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        })
+                        .setNegativeButton(R.string.cancel, (d, w) -> {
+                            guard = true;
+                            switchMasking.setChecked(false);
+                            guard = false;
+                        })
+                        .show();
+            } else {
+                if (Prefs.maskingPinRequired()) {
+                    guard = true;
+                    switchMasking.setChecked(true);
+                    guard = false;
+                    Intent intent = new Intent(this, PinActivity.class);
+                    intent.putExtra("mode", PinActivity.MODE_UNLOCK);
+                    startActivityForResult(intent, REQ_PIN_DISABLE);
+                } else {
+                    confirmDisable();
+                }
+            }
+        });
+    }
+
+    private void confirmDisable() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.masking_disable_title)
+                .setMessage(R.string.masking_disable_msg)
+                .setPositiveButton(R.string.ok, (d, w) -> {
+                    Prefs.setMasking(false);
+                    refreshStatus();
+                })
+                .setNegativeButton(R.string.cancel, (d, w) -> {
+                    guard = true;
+                    switchMasking.setChecked(true);
+                    guard = false;
+                })
+                .show();
+    }
+
+    // ---------- PIN ----------
+
+    private void setupPinSection() {
+        switchPin.setChecked(Prefs.pinSet());
+        rowChangePin.setVisibility(Prefs.pinSet() ? View.VISIBLE : View.GONE);
+        switchPin.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (guard) return;
+            if (isChecked) {
+                Intent intent = new Intent(this, PinActivity.class);
+                intent.putExtra("mode", PinActivity.MODE_CREATE);
+                startActivityForResult(intent, REQ_PIN_CREATE);
+            } else {
+                // Отключить PIN можно только зная его: сначала ввод, потом подтверждение
+                guard = true;
+                switchPin.setChecked(true);
+                guard = false;
+                Intent intent = new Intent(this, PinActivity.class);
+                intent.putExtra("mode", PinActivity.MODE_UNLOCK);
+                startActivityForResult(intent, REQ_PIN_OFF);
+            }
+        });
+
+        rowChangePin.setOnClickListener(v -> {
+            // Смена PIN — тоже после ввода текущего; здесь же доступно
+            // восстановление забытого PIN по секретному коду (долгое нажатие)
+            Intent intent = new Intent(this, PinActivity.class);
+            intent.putExtra("mode", PinActivity.MODE_UNLOCK);
+            intent.putExtra(PinActivity.EXTRA_RECOVERY, true);
+            startActivityForResult(intent, REQ_PIN_BEFORE_CHANGE);
+        });
+
+        switchMaskPin.setChecked(Prefs.maskingUsesPin());
+        switchMaskPin.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (guard) return;
+            if (isChecked) {
+                Prefs.setMaskingUsesPin(true);
+                refreshStatus();
+            } else {
+                // Снять защиту маскировки — только после ввода PIN
+                guard = true;
+                switchMaskPin.setChecked(true);
+                guard = false;
+                Intent intent = new Intent(this, PinActivity.class);
+                intent.putExtra("mode", PinActivity.MODE_UNLOCK);
+                startActivityForResult(intent, REQ_PIN_MASK_OFF);
+            }
+        });
+    }
+
+    private void confirmPinOff() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.pin_disabled_confirm_title)
+                .setMessage(R.string.pin_disabled_confirm_msg)
+                .setPositiveButton(R.string.ok, (d, w) -> {
+                    Prefs.clearPin();
+                    refreshStatus();
+                })
+                .setNegativeButton(R.string.cancel, (d, w) -> refreshStatus())
+                .show();
+    }
+
+    // ---------- Автоскрытие ----------
+
+    private void setupAutoHide() {
+        int[] modes = {Prefs.AUTOHIDE_MINIMIZE, Prefs.AUTOHIDE_1MIN,
+                Prefs.AUTOHIDE_5MIN, Prefs.AUTOHIDE_MANUAL};
+        for (int i = 0; i < autoRows.length; i++) {
+            final int mode = modes[i];
+            autoRows[i].setOnClickListener(v -> {
+                Prefs.setAutoHide(mode);
+                // Если сменили режим при открытой галерее — перепланируем таймер
+                SessionManager.rescheduleIfUnlocked();
+                refreshStatus();
+            });
+        }
+    }
+
+    // ---------- Скриншоты ----------
+
+    private void setupSecure() {
+        switchSecure.setChecked(Prefs.flagSecure());
+        switchSecure.setOnCheckedChangeListener((buttonView, isChecked) ->
+                Prefs.setFlagSecure(isChecked));
+    }
+
+    // ---------- Статус ----------
+
+    private void refreshStatus() {
+        guard = true;
+        switchMasking.setChecked(Prefs.masking());
+        switchPin.setChecked(Prefs.pinSet());
+        switchSecure.setChecked(Prefs.flagSecure());
+        switchMaskPin.setChecked(Prefs.maskingUsesPin());
+        guard = false;
+
+        txtHeroStatus.setText(Prefs.masking()
+                ? R.string.masking_status_on : R.string.masking_status_off);
+        rowChangePin.setVisibility(Prefs.pinSet() ? View.VISIBLE : View.GONE);
+        rowMaskPin.setVisibility(Prefs.pinSet() ? View.VISIBLE : View.GONE);
+
+        int current = Prefs.autoHide();
+        int[] modes = {Prefs.AUTOHIDE_MINIMIZE, Prefs.AUTOHIDE_1MIN,
+                Prefs.AUTOHIDE_5MIN, Prefs.AUTOHIDE_MANUAL};
+        for (int i = 0; i < modes.length; i++) {
+            boolean selected = modes[i] == current;
+            autoChecks[i].setVisibility(selected ? View.VISIBLE : View.INVISIBLE);
+            autoRows[i].setBackgroundResource(selected
+                    ? R.drawable.bg_row_selected : R.drawable.bg_row_normal);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_PIN_CREATE) {
+            if (resultCode == RESULT_OK) {
+                Toasts.makeText(this, R.string.pin_saved, Toast.LENGTH_SHORT).show();
+            }
+            refreshStatus();
+        } else if (requestCode == REQ_PIN_CHANGE) {
+            if (resultCode == RESULT_OK) {
+                Toasts.makeText(this, R.string.pin_saved, Toast.LENGTH_SHORT).show();
+            }
+            refreshStatus();
+        } else if (requestCode == REQ_PIN_DISABLE && resultCode == RESULT_OK) {
+            confirmDisable();
+        } else if (requestCode == REQ_PIN_OFF) {
+            if (resultCode == RESULT_OK) confirmPinOff();
+            else refreshStatus();
+        } else if (requestCode == REQ_PIN_BEFORE_CHANGE && resultCode == RESULT_OK) {
+            Intent intent = new Intent(this, PinActivity.class);
+            intent.putExtra("mode", PinActivity.MODE_CREATE);
+            startActivityForResult(intent, REQ_PIN_CHANGE);
+        } else if (requestCode == REQ_PIN_MASK_OFF) {
+            if (resultCode == RESULT_OK) Prefs.setMaskingUsesPin(false);
+            refreshStatus();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (!App.isForeground() && Prefs.masking() && SessionManager.isUnlocked()
+                && Prefs.autoHide() == Prefs.AUTOHIDE_MINIMIZE) {
+            SessionManager.lock();
+        }
+    }
+}

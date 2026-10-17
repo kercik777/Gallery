@@ -1,0 +1,1060 @@
+package com.premiumlab.galleryx.ui;
+
+import com.premiumlab.galleryx.util.Toasts;
+import android.content.Intent;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.HorizontalScrollView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.SimpleItemAnimator;
+
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.premiumlab.galleryx.MainActivity;
+import com.premiumlab.galleryx.PhotoViewerActivity;
+import com.premiumlab.galleryx.R;
+import com.premiumlab.galleryx.RootPickerActivity;
+import com.premiumlab.galleryx.data.LockStore;
+import com.premiumlab.galleryx.data.Album;
+import com.premiumlab.galleryx.data.MaskGuard;
+import com.premiumlab.galleryx.data.MediaItem;
+import com.premiumlab.galleryx.data.Prefs;
+import com.premiumlab.galleryx.data.SessionManager;
+import com.premiumlab.galleryx.ui.adapter.MediaAdapter;
+import com.premiumlab.galleryx.ui.dialog.CreateFolderDialog;
+import com.premiumlab.galleryx.ui.dialog.DestSheet;
+import com.premiumlab.galleryx.ui.dialog.OpProgressDialog;
+import com.premiumlab.galleryx.ui.sheet.SortSheet;
+import com.premiumlab.galleryx.util.FileOp;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+/**
+ * Базовый фрагмент любой сетки медиафайлов: галерея, избранное, папка,
+ * корзина, сейф. Реализует поиск, сортировку, щипок изменения сетки,
+ * множественное выделение и все операции с файлами.
+ *
+ * Панели выделения (верхняя и нижняя) живут на уровне host-activity
+ * (selectionTop / selectionActions) и появляются поверх контента —
+ * сетка при входе в режим выделения не смещается.
+ */
+public abstract class BaseMediaFragment extends Fragment
+        implements MediaAdapter.Listener, BackHandler, PhotoViewerActivity.ThumbLocator {
+
+    protected static final int REQ_ROOT = 501;
+
+    protected RecyclerView recycler;
+    protected MediaAdapter adapter;
+    protected GridLayoutManager layoutManager;
+    private com.premiumlab.galleryx.util.DragSelect dragSelect;
+    protected final List<MediaItem> allItems = new ArrayList<>();
+    protected final List<MediaItem> shownItems = new ArrayList<>();
+    protected String query = "";
+
+    protected View headerRoot, layoutEmpty, layoutLoading, searchRow;
+    protected HorizontalScrollView chipRow;
+    protected LinearLayout chipContainer;
+    protected EditText editSearch;
+    protected TextView txtHeaderTitle, txtEmptyTitle, txtEmptySub;
+    protected ImageView imgEmpty, btnBack, btnSearch, btnSort, btnHeaderExtra;
+    protected ImageView btnHideNow, btnSearchClose;
+
+    /** Хром выделения на уровне activity. */
+    protected View selTop, selActions;
+    protected TextView txtSelCount;
+
+    /** Действие, которое нужно повторить после выбора корневой папки. */
+    protected Runnable pendingAfterRoot;
+    /** Отложенная операция копирования/перемещения. */
+    protected List<MediaItem> pendingDestItems;
+    protected boolean pendingDestCopy;
+    private boolean resumedOnce = false;
+
+    // ---------- Контракт подклассов ----------
+
+    protected abstract int layoutRes();
+
+    protected abstract void loadMedia();
+
+    protected void onViewsReady(@NonNull View root) {
+    }
+
+    protected List<MediaItem> extraFilter(List<MediaItem> input) {
+        return applyTypeFilter(input);
+    }
+
+    // ---------- Фильтр «Все / Фото / Видео» (папки, корзина, сейф) ----------
+
+    protected static final int TYPE_ALL = 0;
+    protected static final int TYPE_PHOTO = 1;
+    protected static final int TYPE_VIDEO = 2;
+    protected int typeFilter = TYPE_ALL;
+    private TextView chipTypeAll, chipTypePhotos, chipTypeVideos;
+
+    /** Показывать ли общий ряд чипов типа. Галерея управляет своими чипами сама. */
+    protected boolean useTypeChips() {
+        return true;
+    }
+
+    private void setupTypeChips(View v) {
+        if (!useTypeChips()) return;
+        chipTypeAll = v.findViewById(R.id.chipAll);
+        chipTypePhotos = v.findViewById(R.id.chipPhotos);
+        chipTypeVideos = v.findViewById(R.id.chipVideos);
+        if (chipTypeAll == null || chipTypePhotos == null || chipTypeVideos == null) return;
+        View fav = v.findViewById(R.id.chipFavorites);
+        if (fav != null) fav.setVisibility(View.GONE);
+        if (chipRow != null) chipRow.setVisibility(View.VISIBLE);
+        chipTypeAll.setOnClickListener(x -> setTypeFilter(TYPE_ALL));
+        chipTypePhotos.setOnClickListener(x -> setTypeFilter(TYPE_PHOTO));
+        chipTypeVideos.setOnClickListener(x -> setTypeFilter(TYPE_VIDEO));
+        styleTypeChips();
+    }
+
+    protected void setTypeFilter(int f) {
+        if (typeFilter == f) return;
+        typeFilter = f;
+        styleTypeChips();
+        // Выделение относится к видимым элементам — при смене фильтра сбрасываем
+        if (adapter != null && adapter.isSelection()) adapter.exitSelection();
+        applyFilter();
+    }
+
+    private void styleTypeChips() {
+        styleChip(chipTypeAll, typeFilter == TYPE_ALL);
+        styleChip(chipTypePhotos, typeFilter == TYPE_PHOTO);
+        styleChip(chipTypeVideos, typeFilter == TYPE_VIDEO);
+    }
+
+    protected void styleChip(TextView chip, boolean active) {
+        if (chip == null || !isAdded()) return;
+        chip.setBackgroundResource(active ? R.drawable.bg_chip_active : R.drawable.bg_chip);
+        chip.setTextColor(active ? com.premiumlab.galleryx.util.Theming.accent(requireContext())
+                : requireContext().getColor(R.color.textSecondary));
+    }
+
+    protected List<MediaItem> applyTypeFilter(List<MediaItem> input) {
+        if (typeFilter == TYPE_ALL) return input;
+        List<MediaItem> out = new ArrayList<>();
+        for (MediaItem it : input) {
+            if (typeFilter == TYPE_PHOTO && !it.isVideo) out.add(it);
+            if (typeFilter == TYPE_VIDEO && it.isVideo) out.add(it);
+        }
+        return out;
+    }
+
+    /** Настраивает видимость кнопок нижнего ряда действий под конкретный экран. */
+    protected void configureSelectionBar() {
+    }
+
+    protected boolean allowSearch() {
+        return true;
+    }
+
+    protected boolean allowSort() {
+        return true;
+    }
+
+    /** Показывать ли в панели выделения «ещё» → «Изменить размер» (не в корзине и сейфе). */
+    protected boolean allowResize() {
+        return true;
+    }
+
+    /** Меню «ещё» панели выделения: дополнительные действия над выбранными файлами. */
+    protected void showSelectionMore() {
+        List<MediaItem> sel = selectedItems();
+        if (sel.isEmpty()) return;
+        com.premiumlab.galleryx.ui.sheet.OptionsSheet sheet =
+                new com.premiumlab.galleryx.ui.sheet.OptionsSheet()
+                        .setHeader(Fmt_sel(sel.size()), null);
+        sheet.add(new com.premiumlab.galleryx.ui.sheet.OptionsSheet.Item(R.drawable.ic_resize,
+                getString(R.string.resizer_title), getString(R.string.resizer_selection_sub),
+                () -> openResizer(sel)));
+        sheet.show(getParentFragmentManager(), "sel_more");
+    }
+
+    /** Открывает инструмент изменения размера для выбранных фото (видео пропускаются). */
+    protected void openResizer(List<MediaItem> sel) {
+        ArrayList<String> photos = new ArrayList<>();
+        int videos = 0;
+        for (MediaItem it : sel) {
+            if (it.isVideo) videos++; else photos.add(it.path);
+        }
+        if (photos.isEmpty()) {
+            Toasts.makeText(requireContext(), R.string.resizer_only_photos, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (videos > 0) {
+            Toasts.makeText(requireContext(),
+                    getString(R.string.resizer_videos_skipped, videos), Toast.LENGTH_SHORT).show();
+        }
+        com.premiumlab.galleryx.resizer.ResizeSession.paths = photos;
+        startActivity(new Intent(requireContext(),
+                com.premiumlab.galleryx.resizer.ResizerActivity.class));
+        exitSelection();
+    }
+
+    protected void onItemOpen(MediaItem item) {
+    }
+
+    /**
+     * Открывает единый просмотрщик со ВСЕМИ показанными элементами (фото и
+     * видео вперемешку, в текущем порядке сортировки). Если открыли видео —
+     * оно сразу запускается в плеере, а после возврата можно листать дальше.
+     */
+    protected void openViewer(MediaItem item, int mode) {
+        ArrayList<String> paths = new ArrayList<>();
+        int index = 0;
+        long chars = 0;
+        for (MediaItem it : shownItems) {
+            if (it.path.equals(item.path)) index = paths.size();
+            paths.add(it.path);
+            chars += it.path.length();
+        }
+        Intent intent = new Intent(requireContext(), PhotoViewerActivity.class);
+        if (chars > PhotoViewerActivity.MAX_INTENT_CHARS) {
+            // Тысячи файлов не влезут в Intent (лимит Binder ~1 МБ — вылет):
+            // передаём список через память, как GorillaGallery — свой ViewerRequest
+            PhotoViewerActivity.setSharedPaths(paths);
+            intent.putExtra("shared", true);
+        } else {
+            intent.putStringArrayListExtra("paths", paths);
+        }
+        intent.putExtra("index", index);
+        intent.putExtra("mode", mode);
+        intent.putExtra("autoplay", item.isVideo);
+        // «Герой»: параметры миниатюры сетки — первый кадр возьмётся из памяти
+        intent.putExtra("heroSig", item.dateModified);
+        intent.putExtra("heroSize", MediaAdapter.thumbSize(requireContext()));
+        int[] src = MediaAdapter.lastClickRect;
+        MediaAdapter.lastClickRect = null;
+        // Просмотрщик будет возвращать кадр в ячейку текущего файла (см. ThumbLocator)
+        PhotoViewerActivity.setThumbLocator(this);
+        if (src != null && src[2] > 0) {
+            intent.putExtra("src", src);
+            startActivity(intent);
+            // Просмотрщик сам анимирует появление из миниатюры
+            requireActivity().overridePendingTransition(0, 0);
+        } else {
+            startActivity(intent);
+        }
+    }
+
+    protected void onDeleteSelected(List<MediaItem> selected) {
+        FragmentActivity act = requireActivity();
+        Actions.confirmTrash(act, selected, this::afterAction);
+    }
+
+    // ---------- Ячейка файла для анимации закрытия просмотрщика ----------
+
+    @Override
+    public void prepareThumb(String path) {
+        if (!isAdded() || adapter == null || recycler == null || layoutManager == null) return;
+        int pos = adapter.positionOf(path);
+        if (pos < 0) return;
+        RecyclerView.ViewHolder vh = recycler.findViewHolderForAdapterPosition(pos);
+        if (vh != null && vh.itemView.getHeight() > 0) {
+            int top = vh.itemView.getTop(), bottom = vh.itemView.getBottom();
+            int visTop = recycler.getPaddingTop();
+            int visBottom = recycler.getHeight() - recycler.getPaddingBottom();
+            if (top >= visTop && bottom <= visBottom) return; // ячейка целиком видна
+        }
+        // Пока просмотрщик закрывает экран — ставим ячейку в середину сетки
+        int cell = recycler.getWidth() / Math.max(1, layoutManager.getSpanCount());
+        int offset = Math.max(0, (recycler.getHeight() - recycler.getPaddingBottom()) / 2 - cell / 2);
+        layoutManager.scrollToPositionWithOffset(pos, offset);
+    }
+
+    @Override
+    public int[] locateThumb(String path) {
+        if (!isAdded() || adapter == null || recycler == null) return null;
+        int pos = adapter.positionOf(path);
+        if (pos < 0) return null;
+        RecyclerView.ViewHolder vh = recycler.findViewHolderForAdapterPosition(pos);
+        if (vh == null) return null;
+        View v = vh.itemView;
+        if (v.getWidth() <= 0 || v.getHeight() <= 0) return null;
+        // Ячейка должна быть хотя бы наполовину в видимой области списка
+        int visTop = recycler.getPaddingTop();
+        int visBottom = recycler.getHeight() - recycler.getPaddingBottom();
+        int cy = (v.getTop() + v.getBottom()) / 2;
+        if (cy < visTop || cy > visBottom) return null;
+        int[] loc = new int[2];
+        v.getLocationOnScreen(loc);
+        return new int[]{loc[0], loc[1], v.getWidth(), v.getHeight()};
+    }
+
+    protected void onRestoreSelected(java.util.Set<String> paths) {
+    }
+
+    protected void onHeaderExtraClick() {
+    }
+
+    // ---------- Жизненный цикл ----------
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(layoutRes(), container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View v, @Nullable Bundle savedInstanceState) {
+        bindViews(v);
+        setupRecycler(v);
+        setupHeader(v);
+        setupSelectionChrome();
+        setupPinchZoom(v);
+        setupTypeChips(v);
+        onViewsReady(v);
+        loadMedia();
+    }
+
+    protected void bindViews(View v) {
+        headerRoot = v.findViewById(R.id.headerRoot);
+        layoutEmpty = v.findViewById(R.id.layoutEmpty);
+        layoutLoading = v.findViewById(R.id.layoutLoading);
+        searchRow = v.findViewById(R.id.layoutSearchRow);
+        chipRow = v.findViewById(R.id.chipRow);
+        chipContainer = v.findViewById(R.id.chipContainer);
+        editSearch = v.findViewById(R.id.editSearch);
+        txtHeaderTitle = v.findViewById(R.id.txtHeaderTitle);
+        txtEmptyTitle = v.findViewById(R.id.txtEmptyTitle);
+        txtEmptySub = v.findViewById(R.id.txtEmptySub);
+        imgEmpty = v.findViewById(R.id.imgEmpty);
+        btnBack = v.findViewById(R.id.btnBack);
+        btnSearch = v.findViewById(R.id.btnSearch);
+        btnSort = v.findViewById(R.id.btnSort);
+        btnHeaderExtra = v.findViewById(R.id.btnHeaderExtra);
+        btnHideNow = v.findViewById(R.id.btnHideNow);
+        btnSearchClose = v.findViewById(R.id.btnSearchClose);
+        for (View b : new View[]{btnBack, btnSearch, btnSort, btnHeaderExtra, btnHideNow,
+                btnSearchClose}) {
+            com.premiumlab.galleryx.util.Press.attach(b);
+        }
+    }
+
+    protected void setupRecycler(View v) {
+        recycler = v.findViewById(R.id.recyclerMedia);
+        adapter = new MediaAdapter(requireContext(), this);
+        layoutManager = new GridLayoutManager(requireContext(), Prefs.columns()) {
+            @Override
+            public boolean canScrollVertically() {
+                return true;
+            }
+        };
+        layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                return adapter.getItemViewType(position) == MediaAdapter.getItemTypeMedia()
+                        ? 1 : layoutManager.getSpanCount();
+            }
+        });
+        recycler.setLayoutManager(layoutManager);
+        recycler.setAdapter(adapter);
+        recycler.setHasFixedSize(true);
+        // Выделение протягиванием: долгое нажатие + ведение пальца по сетке
+        dragSelect = com.premiumlab.galleryx.util.DragSelect.attach(recycler,
+                new com.premiumlab.galleryx.util.DragSelect.Host() {
+                    @Override
+                    public String pathAt(int position) {
+                        return adapter == null ? null : adapter.pathAt(position);
+                    }
+
+                    @Override
+                    public boolean isSelected(String path) {
+                        return adapter != null && adapter.isSelected(path);
+                    }
+
+                    @Override
+                    public void setSelected(java.util.Collection<String> paths, boolean sel) {
+                        if (adapter != null) adapter.setSelected(paths, sel);
+                    }
+
+                    @Override
+                    public void onSelectionChanged() {
+                        updateSelBar();
+                    }
+                });
+        // Плавность: без анимации «мерцания» при смене выделения
+        RecyclerView.ItemAnimator an = recycler.getItemAnimator();
+        if (an instanceof SimpleItemAnimator) {
+            ((SimpleItemAnimator) an).setSupportsChangeAnimations(false);
+        }
+        recycler.setItemViewCacheSize(12);
+        // Сетка уезжает под прозрачную панель навигации — добавляем её высоту к отступу
+        com.premiumlab.galleryx.util.EdgeToEdge.padBottom(recycler);
+        setupFastScroll();
+    }
+
+    private com.premiumlab.galleryx.ui.view.FastScroller fastScroller;
+
+    /** Быстрая прокрутка — накладка поверх сетки (настройка «Быстрая прокрутка»). */
+    protected void setupFastScroll() {
+        if (!(recycler.getParent() instanceof android.widget.FrameLayout)) return;
+        android.widget.FrameLayout parent = (android.widget.FrameLayout) recycler.getParent();
+        fastScroller = new com.premiumlab.galleryx.ui.view.FastScroller(requireContext());
+        parent.addView(fastScroller, new android.widget.FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        fastScroller.attach(recycler, adapter::labelAt);
+        // Дорожка бегунка заканчивается над плавающей панелью/системной навигацией
+        int basePad = (getActivity() instanceof MainActivity) ? Math.round(
+                88f * getResources().getDisplayMetrics().density) : 0;
+        fastScroller.setPadding(0, 0, 0, basePad);
+        com.premiumlab.galleryx.util.EdgeToEdge.padBottom(fastScroller);
+        fastScroller.setVisibility(Prefs.fastScroll() ? View.VISIBLE : View.GONE);
+    }
+
+    protected void setupHeader(View v) {
+        if (btnBack != null) {
+            // Как системная кнопка «Назад»: во вложенной папке — на уровень выше,
+            // и только с верхнего уровня — закрыть экран
+            btnBack.setOnClickListener(x ->
+                    requireActivity().getOnBackPressedDispatcher().onBackPressed());
+        }
+        if (btnSearch != null) {
+            if (allowSearch()) {
+                btnSearch.setOnClickListener(x -> toggleSearch(true));
+            } else {
+                btnSearch.setVisibility(View.GONE);
+            }
+        }
+        if (btnSearchClose != null) {
+            btnSearchClose.setOnClickListener(x -> toggleSearch(false));
+        }
+        if (editSearch != null) {
+            editSearch.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int a, int b, int c) {
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int a, int b, int c) {
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    query = s.toString().trim().toLowerCase(Locale.ROOT);
+                    applyFilter();
+                }
+            });
+        }
+        if (btnSort != null) {
+            if (allowSort()) {
+                btnSort.setOnClickListener(x -> {
+                    SortSheet sheet = new SortSheet();
+                    sheet.setListener(mode -> applyFilter());
+                    sheet.show(getParentFragmentManager(), "sort");
+                });
+            } else {
+                btnSort.setVisibility(View.GONE);
+            }
+        }
+        if (btnHeaderExtra != null) {
+            btnHeaderExtra.setOnClickListener(x -> onHeaderExtraClick());
+        }
+        if (btnHideNow != null) {
+            updateHideNowButton();
+            btnHideNow.setOnClickListener(x -> {
+                SessionManager.lock();
+                if (!(requireActivity() instanceof MainActivity)) {
+                    requireActivity().finish();
+                }
+            });
+        }
+    }
+
+    protected void updateHideNowButton() {
+        if (btnHideNow == null) return;
+        // «Глаз» живёт только на главных вкладках (Галерея / Альбомы / Избранное)
+        boolean show = getActivity() instanceof MainActivity
+                && Prefs.masking() && Prefs.autoHide() == Prefs.AUTOHIDE_MANUAL
+                && SessionManager.isUnlocked();
+        btnHideNow.setVisibility(show ? View.VISIBLE : View.GONE);
+    }
+
+    protected void toggleSearch(boolean show) {
+        if (searchRow == null || btnSearch == null) return;
+        searchRow.setVisibility(show ? View.VISIBLE : View.GONE);
+        boolean headerIcon = allowSearch() && !(getActivity() instanceof SelectionHost);
+        btnSearch.setVisibility(show || !headerIcon ? View.GONE : View.VISIBLE);
+        if (show && editSearch != null) {
+            editSearch.requestFocus();
+        } else if (editSearch != null) {
+            editSearch.setText("");
+            query = "";
+            applyFilter();
+        }
+    }
+
+    // ---------- Хром множественного выделения ----------
+
+    /**
+     * Привязывает верхнюю панель и нижний ряд действий (находятся в layout
+     * host-activity) к этому фрагменту. Вызывается при создании и каждом
+     * показе фрагмента, чтобы видимая вкладка всегда владела кнопками.
+     */
+    protected void setupSelectionChrome() {
+        FragmentActivity act = getActivity();
+        if (act == null) return;
+        selTop = act.findViewById(R.id.selectionTop);
+        selActions = act.findViewById(R.id.selectionActions);
+        if (!(act instanceof MainActivity) && selActions != null
+                && selActions.getTag(R.id.e2e_done) == null) {
+            // В главном экране капсула живёт внутри bottomArea, который уже приподнят
+            com.premiumlab.galleryx.util.EdgeToEdge.growBottom(selActions);
+            selActions.setTag(R.id.e2e_done, true);
+        }
+
+        if (selTop != null) {
+            selTop.findViewById(R.id.btnSelClose).setOnClickListener(x -> exitSelection());
+            View btnAll = selTop.findViewById(R.id.btnSelAll);
+            btnAll.setVisibility(View.VISIBLE);
+            btnAll.setOnClickListener(x -> {
+                if (adapter == null) return;
+                if (isAllSelected()) {
+                    exitSelection();
+                } else if (adapter.isFolderSelection()) {
+                    adapter.selectAllFolders();
+                    updateSelBar();
+                } else {
+                    adapter.selectAll(shownItems);
+                    updateSelBar();
+                }
+            });
+            txtSelCount = selTop.findViewById(R.id.txtSelCount);
+            View btnMore = selTop.findViewById(R.id.btnSelMore);
+            if (btnMore != null) {
+                btnMore.setVisibility(allowResize() ? View.VISIBLE : View.GONE);
+                btnMore.setOnClickListener(x -> guard(this::showSelectionMore));
+            }
+        }
+
+        if (selActions != null) {
+            // Панели общие для всех вкладок activity: сначала возвращаем набор
+            // кнопок по умолчанию, иначе после «Альбомов» (где остаётся только
+            // «Удалить») в галерее пропадали остальные действия.
+            resetSelectionBar();
+            selActions.findViewById(R.id.btnSelFavorite).setOnClickListener(x -> guard(() -> {
+                List<MediaItem> sel = selectedItems();
+                if (!sel.isEmpty()) {
+                    Actions.favorite(requireActivity(), sel, this::afterAction);
+                }
+            }));
+            selActions.findViewById(R.id.btnSelCopy).setOnClickListener(x -> guard(() -> destFlow(true)));
+            selActions.findViewById(R.id.btnSelMove).setOnClickListener(x -> guard(() -> destFlow(false)));
+            selActions.findViewById(R.id.btnSelSafe).setOnClickListener(x -> guard(() -> {
+                List<MediaItem> sel = selectedItems();
+                if (!sel.isEmpty()) {
+                    Actions.confirmSafe(requireActivity(), sel, this::afterAction);
+                }
+            }));
+            selActions.findViewById(R.id.btnSelShare).setOnClickListener(x -> guard(() -> {
+                List<MediaItem> sel = selectedItems();
+                if (!sel.isEmpty()) Actions.share(requireActivity(), sel);
+            }));
+            selActions.findViewById(R.id.btnSelDelete).setOnClickListener(x -> guard(() -> {
+                if (folderSelectionActive()) {
+                    onFolderAction(R.id.btnSelDelete);
+                    return;
+                }
+                List<MediaItem> sel = selectedItems();
+                if (!sel.isEmpty()) onDeleteSelected(sel);
+            }));
+            // Кнопки только для выделенных подпапок
+            selActions.findViewById(R.id.btnSelLock).setOnClickListener(x -> guard(() -> {
+                if (folderSelectionActive()) onFolderAction(R.id.btnSelLock);
+            }));
+            selActions.findViewById(R.id.btnSelRename).setOnClickListener(x -> guard(() -> {
+                if (folderSelectionActive()) onFolderAction(R.id.btnSelRename);
+            }));
+            selActions.findViewById(R.id.btnSelRestore).setOnClickListener(x -> guard(() -> {
+                if (adapter != null && adapter.getSelectedCount() > 0) {
+                    onRestoreSelected(adapter.getSelectedPaths());
+                }
+            }));
+        }
+
+        configureSelectionBar();
+        // Пока галерея «закрыта» маскировкой — сейф не показываем
+        // (копирование и перемещение в папки устройства остаются доступны)
+        if (MaskGuard.hidden() && selActions != null) {
+            selActions.findViewById(R.id.btnSelSafe).setVisibility(View.GONE);
+        }
+        updateSelBar();
+    }
+
+    /** Набор кнопок нижнего ряда по умолчанию (обычная сетка медиа). */
+    private void resetSelectionBar() {
+        if (selActions == null) return;
+        folderBarMode = false;
+        int[] visible = {R.id.btnSelFavorite, R.id.btnSelShare, R.id.btnSelCopy,
+                R.id.btnSelMove, R.id.btnSelSafe, R.id.btnSelDelete};
+        for (int id : visible) {
+            View b = selActions.findViewById(id);
+            if (b != null) b.setVisibility(View.VISIBLE);
+        }
+        View restore = selActions.findViewById(R.id.btnSelRestore);
+        if (restore != null) restore.setVisibility(View.GONE);
+        View rename = selActions.findViewById(R.id.btnSelRename);
+        if (rename != null) rename.setVisibility(View.GONE);
+        View lock = selActions.findViewById(R.id.btnSelLock);
+        if (lock != null) lock.setVisibility(View.GONE);
+    }
+
+    protected boolean isAllSelected() {
+        if (adapter == null) return false;
+        if (adapter.isFolderSelection()) {
+            int all = adapter.allFolders().size();
+            return all > 0 && adapter.getSelectedFolderCount() >= all;
+        }
+        return !shownItems.isEmpty() && adapter.getSelectedCount() >= shownItems.size();
+    }
+
+    // ---------- Выделение вложенных папок ----------
+
+    /** Сейчас выбраны карточки подпапок (а не файлы). */
+    protected boolean folderSelectionActive() {
+        return adapter != null && adapter.isFolderSelection();
+    }
+
+    /** Каталоги выбранных подпапок в порядке показа. */
+    protected List<java.io.File> selectedFolderDirs() {
+        List<java.io.File> out = new ArrayList<>();
+        if (adapter == null) return out;
+        for (Album a : adapter.selectedFolders()) out.add(new java.io.File(a.path));
+        return out;
+    }
+
+    /**
+     * Действие нижнего ряда над выбранными подпапками (R.id.btnSelCopy / Move /
+     * Delete / Lock / Rename). Реализует экран папки.
+     */
+    protected void onFolderAction(int actionId) {
+    }
+
+    /** Настройка кнопок под выбранные подпапки (надпись «Заблокировать/Разблокировать» и т.п.). */
+    protected void configureFolderSelectionBar(List<Album> selectedFolders) {
+    }
+
+    /** Какой набор кнопок сейчас показан: true — для папок, false — для файлов. */
+    private boolean folderBarMode = false;
+
+    @Override
+    public void onFolderClick(Album folder) {
+        if (adapter != null && adapter.isSelection()) {
+            // Пока выбраны файлы — папки не выбираются (и наоборот)
+            if (adapter.isFolderSelection()) {
+                adapter.toggleFolder(folder.path);
+                updateSelBar();
+            }
+            return;
+        }
+        onFolderOpen(folder);
+    }
+
+    @Override
+    public void onFolderLongClick(Album folder) {
+        if (adapter != null && !adapter.isSelection()) {
+            adapter.toggleFolder(folder.path);
+            updateSelBar();
+        }
+    }
+
+    protected void setupPinchZoom(View v) {
+        if (recycler == null) return;
+        // Щипок меняет колонки прямо во время жеста, ячейки перетекают с анимацией
+        com.premiumlab.galleryx.util.GridZoom.attach(recycler, layoutManager, 2, 5,
+                Prefs::setColumns);
+    }
+
+    // ---------- Данные ----------
+
+    protected void setData(List<MediaItem> items) {
+        allItems.clear();
+        allItems.addAll(items);
+        applyFilter();
+    }
+
+    protected void applyFilter() {
+        List<MediaItem> filtered = new ArrayList<>();
+        String q = query;
+        boolean maskHidden = hidesMaskedPaths() && MaskGuard.hidden();
+        boolean lockHidden = hidesLockedFolders() && LockStore.any();
+        for (MediaItem it : extraFilter(allItems)) {
+            // Содержимое корневой папки скрыто, пока маскировка «закрыта»
+            if (maskHidden && MaskGuard.isHiddenPath(it.path)) continue;
+            // Файлы из заблокированных папок в общих разделах не показываются никогда
+            if (lockHidden && LockStore.isUnderLocked(it.path)) continue;
+            if (q.isEmpty() || matchesQuery(it, q)) {
+                filtered.add(it);
+            }
+        }
+        shownItems.clear();
+        shownItems.addAll(filtered);
+        MediaEngine_sort(shownItems);
+        if (adapter != null) {
+            List<MediaAdapter.Row> rows = new ArrayList<>(topRows());
+            rows.addAll(MediaAdapter.buildRows(requireContext(), shownItems));
+            adapter.submitRows(rows);
+            // Выделение могло сохраниться (тихое обновление) или частично исчезнуть
+            updateSelBar();
+        }
+        updateEmptyState();
+    }
+
+    /**
+     * Прятать ли файлы из заблокированных папок. В общих разделах — да;
+     * внутри самой папки (после ввода PIN) — нет.
+     */
+    protected boolean hidesLockedFolders() {
+        return true;
+    }
+
+    /**
+     * Прятать ли содержимое корневой папки при «закрытой» маскировке.
+     * В общих разделах — да; корзина и сейф показывают свои файлы всегда
+     * (сами файлы лежат в служебной папке внутри корня).
+     */
+    protected boolean hidesMaskedPaths() {
+        return true;
+    }
+
+    /**
+     * Проходит ли файл по строке поиска. По умолчанию — по имени файла;
+     * экран поиска сопоставляет сам (по индексу: папки, даты, типы) и
+     * переопределяет этот метод.
+     */
+    protected boolean matchesQuery(MediaItem it, String q) {
+        return it.name.toLowerCase(Locale.ROOT).contains(q);
+    }
+
+    /** Дополнительные строки над сеткой (например, блок вложенных папок). */
+    protected List<MediaAdapter.Row> topRows() {
+        return new ArrayList<>();
+    }
+
+    private void MediaEngine_sort(List<MediaItem> list) {
+        com.premiumlab.galleryx.data.MediaEngine.sort(list, sortMode());
+    }
+
+    /** Режим сортировки экрана; по умолчанию — общий из настроек. */
+    protected int sortMode() {
+        return Prefs.sortMode();
+    }
+
+    protected void updateEmptyState() {
+        if (layoutLoading != null) layoutLoading.setVisibility(View.GONE);
+        if (layoutEmpty != null) {
+            // Если над сеткой есть блок папок — экран не пустой
+            boolean empty = shownItems.isEmpty() && topRows().isEmpty();
+            layoutEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
+            if (!query.isEmpty() && empty) {
+                txtEmptyTitle.setText(R.string.search_no_results_title);
+                txtEmptySub.setText(R.string.search_no_results_sub);
+            }
+        }
+    }
+
+    protected void showLoading(boolean show) {
+        // Если на экране уже есть данные — тихо обновляем без мигания индикатора
+        if (show && !allItems.isEmpty()) return;
+        if (layoutLoading != null) layoutLoading.setVisibility(show ? View.VISIBLE : View.GONE);
+        if (show && layoutEmpty != null) layoutEmpty.setVisibility(View.GONE);
+    }
+
+    protected void reload() {
+        exitSelection();
+        loadMedia();
+    }
+
+    /** Тихое обновление данных (изменился MediaStore): без сброса выделения и чипов. */
+    public void refreshData() {
+        if (!isAdded() || adapter == null) return;
+        loadMedia();
+    }
+
+    /** Полное обновление экрана после смены состояния маскировки. */
+    public void reloadForMask() {
+        if (!isAdded() || adapter == null) return;
+        exitSelection();
+        // Панели выделения общие на всю activity: перепривязывать их может
+        // только видимая вкладка, иначе скрытая «Альбомы» перехватывала
+        // кнопки Удалить/Копировать/Переместить у Галереи (кнопки «молчали»)
+        if (!isHidden()) setupSelectionChrome();
+        updateHideNowButton();
+        loadMedia();
+    }
+
+    /**
+     * Выполняет действие панели выделения, не давая неожиданной ошибке уронить
+     * приложение: ошибка пишется в журнал, пользователь видит короткое сообщение.
+     */
+    protected void guard(Runnable action) {
+        try {
+            action.run();
+        } catch (Throwable t) {
+            com.premiumlab.galleryx.util.CrashLog.record(getClass().getSimpleName(), t);
+            if (isAdded()) {
+                com.premiumlab.galleryx.util.Toasts.makeText(requireContext(),
+                        R.string.error_generic, android.widget.Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    protected void afterAction() {
+        if (!isAdded()) return;
+        exitSelection();
+        loadMedia();
+    }
+
+    // ---------- Выделение ----------
+
+    protected List<MediaItem> selectedItems() {
+        List<MediaItem> out = new ArrayList<>();
+        for (MediaItem it : shownItems) {
+            if (adapter.isSelected(it.path)) out.add(it);
+        }
+        return out;
+    }
+
+    public boolean isInSelection() {
+        return adapter != null && adapter.isSelection();
+    }
+
+    protected void exitSelection() {
+        if (adapter != null && adapter.isSelection()) {
+            adapter.exitSelection();
+        }
+        updateSelBar();
+    }
+
+    protected void updateSelBar() {
+        if (adapter == null || !isAdded()) return;
+        int count = adapter.getSelectedCount() + adapter.getSelectedFolderCount();
+        boolean active = count > 0;
+        boolean folderMode = adapter.isFolderSelection();
+        if (selActions != null && folderMode != folderBarMode) {
+            folderBarMode = folderMode;
+            if (folderMode) {
+                int[] hide = {R.id.btnSelFavorite, R.id.btnSelShare, R.id.btnSelSafe,
+                        R.id.btnSelRestore};
+                int[] show = {R.id.btnSelCopy, R.id.btnSelMove, R.id.btnSelDelete,
+                        R.id.btnSelLock, R.id.btnSelRename};
+                for (int id : hide) selActions.findViewById(id).setVisibility(View.GONE);
+                for (int id : show) selActions.findViewById(id).setVisibility(View.VISIBLE);
+            } else {
+                resetSelectionBar();
+                configureSelectionBar();
+                if (MaskGuard.hidden()) {
+                    selActions.findViewById(R.id.btnSelSafe).setVisibility(View.GONE);
+                }
+            }
+        }
+        if (folderMode && selActions != null) {
+            configureFolderSelectionBar(adapter.selectedFolders());
+        }
+        if (selTop != null) {
+            selTop.setVisibility(active ? View.VISIBLE : View.GONE);
+            if (active && txtSelCount != null) {
+                txtSelCount.setText(Fmt_sel(count));
+            }
+            View btnMore = selTop.findViewById(R.id.btnSelMore);
+            if (btnMore != null) {
+                // Дополнительные действия только для файлов (не для папок)
+                btnMore.setVisibility(allowResize() && !folderMode ? View.VISIBLE : View.GONE);
+            }
+            ImageView btnAll = selTop.findViewById(R.id.btnSelAll);
+            if (btnAll != null) {
+                boolean all = isAllSelected();
+                btnAll.setImageResource(all
+                        ? R.drawable.ic_deselect_all : R.drawable.ic_select_all);
+                btnAll.setContentDescription(getString(all
+                        ? R.string.deselect_all : R.string.select_all));
+            }
+        }
+        if (selActions != null) {
+            selActions.setVisibility(active ? View.VISIBLE : View.GONE);
+        }
+        // В полноэкранных экранах (папка/корзина/сейф) панель действий
+        // перекрывает низ сетки — даём контенту отступ на время выделения
+        if (recycler != null && !(getActivity() instanceof SelectionHost)) {
+            int pad = (int) (active ? 100 : 20) * getResources().getDisplayMetrics().densityDpi
+                    / 160 + com.premiumlab.galleryx.util.EdgeToEdge.bottomInset(recycler);
+            recycler.setPadding(recycler.getPaddingLeft(), recycler.getPaddingTop(),
+                    recycler.getPaddingRight(), pad);
+        }
+        if (getActivity() instanceof SelectionHost) {
+            ((SelectionHost) getActivity()).onSelectionChanged(count);
+        }
+    }
+
+    private String Fmt_sel(int count) {
+        return com.premiumlab.galleryx.util.Fmt.plural(requireContext(),
+                R.plurals.selected_count, count);
+    }
+
+    @Override
+    public boolean onBackPressedHandled() {
+        if (isInSelection()) {
+            exitSelection();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void onMediaClick(MediaItem item, int position) {
+        if (adapter.isSelection()) {
+            // Пока выбраны папки — файлы не выбираются
+            if (adapter.isFolderSelection()) return;
+            adapter.toggle(item.path);
+            updateSelBar();
+        } else {
+            onItemOpen(item);
+        }
+    }
+
+    @Override
+    public void onMediaLongClick(MediaItem item, int position) {
+        // Пока выделены папки — файлы не выбираются (правило «первого вида»)
+        if (adapter.isFolderSelection()) return;
+        if (!adapter.isSelected(item.path)) {
+            adapter.toggle(item.path);
+            updateSelBar();
+        }
+        // Палец ещё на экране: дальнейшее ведение по сетке выделяет диапазон
+        if (dragSelect != null) dragSelect.start(position);
+    }
+
+    // ---------- Копирование / перемещение ----------
+
+    protected void destFlow(boolean copy) {
+        if (folderSelectionActive()) {
+            onFolderAction(copy ? R.id.btnSelCopy : R.id.btnSelMove);
+            return;
+        }
+        List<MediaItem> sel = selectedItems();
+        if (sel.isEmpty()) return;
+        FragmentActivity act = requireActivity();
+
+        DestSheet sheet = DestSheet.newInstance(copy, destParentPath());
+        sheet.setListener(dir -> runCopyMove(copy, sel, dir));
+        sheet.show(getParentFragmentManager(), "dest");
+    }
+
+    /** Папка, в которой «Новая папка…» листа назначений создаёт подпапку (null — корень). */
+    protected String destParentPath() {
+        return null;
+    }
+
+    protected void runCopyMove(boolean copy, List<MediaItem> items, File dir) {
+        FragmentActivity act = requireActivity();
+        FileOp op = new FileOp(act);
+        OpProgressDialog dlg = OpProgressDialog.show(act,
+                act.getString(copy ? R.string.op_copy : R.string.op_move), op::cancel);
+        if (copy) {
+            op.copy(items, dir, dlg, (ok, fail, cancelled) -> {
+                dlg.dismiss();
+                onCopyMoveDone(act, ok, cancelled, true);
+            });
+        } else {
+            op.move(items, dir, dlg, (ok, fail, cancelled) -> {
+                dlg.dismiss();
+                onCopyMoveDone(act, ok, cancelled, false);
+            });
+        }
+    }
+
+    private void onCopyMoveDone(FragmentActivity act, int ok, boolean cancelled, boolean copy) {
+        if (!isAdded()) return;
+        Toasts.makeText(act, cancelled ? act.getString(R.string.op_cancelled)
+                : com.premiumlab.galleryx.util.Fmt.plural(act,
+                copy ? R.plurals.result_copied : R.plurals.result_moved, ok),
+                Toast.LENGTH_SHORT).show();
+        afterAction();
+    }
+
+    // ---------- Корневая папка ----------
+
+    protected void showRootNeeded(Runnable after) {
+        FragmentActivity act = requireActivity();
+        pendingAfterRoot = after;
+        new MaterialAlertDialogBuilder(act)
+                .setTitle(R.string.root_needed_title)
+                .setMessage(R.string.root_needed_desc)
+                .setPositiveButton(R.string.continue_btn, (d, w) ->
+                        startActivityForResult(new Intent(act, RootPickerActivity.class), REQ_ROOT))
+                .setNegativeButton(R.string.cancel, (d, w) -> pendingAfterRoot = null)
+                .show();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_ROOT && resultCode == FragmentActivity.RESULT_OK) {
+            Runnable r = pendingAfterRoot;
+            pendingAfterRoot = null;
+            if (r != null) r.run();
+        }
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (!isAdded()) return;
+        if (hidden) {
+            // Уходим с вкладки — сбрасываем выделение, чтобы панели не «зависали»
+            exitSelection();
+        } else {
+            // Видимая вкладка заново владеет панелями выделения
+            setupSelectionChrome();
+            updateHideNowButton();
+            applyColumns();
+            reload();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (fastScroller != null) {
+            fastScroller.setVisibility(Prefs.fastScroll() ? View.VISIBLE : View.GONE);
+        }
+        updateHideNowButton();
+        applyColumns();
+        if (resumedOnce && !isHidden()) {
+            // Вернулись из просмотрщика/другого экрана — данные могли измениться
+            loadMedia();
+        }
+        resumedOnce = true;
+    }
+
+    /** Применяет текущий размер сетки без перезапуска. */
+    protected void applyColumns() {
+        if (layoutManager != null && recycler != null
+                && layoutManager.getSpanCount() != Prefs.columns()) {
+            com.premiumlab.galleryx.util.GridZoom.change(recycler, layoutManager, Prefs.columns(), null);
+        }
+    }
+}

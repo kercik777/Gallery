@@ -1,0 +1,841 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Русская локализация. Значения по умолчанию (English) — в values/strings.xml -->
+<resources>
+    <string name="app_name">Галерея</string>
+
+    <!-- Навигация -->
+    <string name="nav_gallery">Галерея</string>
+    <string name="nav_albums">Альбомы</string>
+    <string name="nav_favorites">Избранное</string>
+    <string name="nav_settings">Настройки</string>
+
+    <!-- Общие -->
+    <string name="loading">Загрузка…</string>
+    <string name="ok">ОК</string>
+    <string name="cancel">Отмена</string>
+    <string name="save">Сохранить</string>
+    <string name="continue_btn">Продолжить</string>
+    <string name="close">Закрыть</string>
+    <string name="back">Назад</string>
+    <string name="delete">Удалить</string>
+    <string name="error_generic">Что-то пошло не так</string>
+    <string name="no_app_to_share">Не найдено приложение для отправки</string>
+
+    <!-- Разрешения -->
+    <string name="permission_title">Требуется доступ к файлам</string>
+    <string name="permission_desc">Чтобы показать все фотографии и видео на устройстве, приложению нужен доступ ко всем файлам. Разрешение используется только локально.</string>
+    <string name="permission_btn">Разрешить доступ</string>
+    <string name="permission_note">Все данные обрабатываются только на вашем устройстве</string>
+
+    <!-- Поиск и фильтры -->
+    <string name="search_hint">Поиск…</string>
+    <string name="search_no_results_title">Ничего не найдено</string>
+    <string name="search_no_results_sub">Попробуйте изменить запрос</string>
+    <string name="filter_all">Все</string>
+    <string name="filter_photo">Фото</string>
+    <string name="filter_video">Видео</string>
+
+    <!-- Сортировка -->
+    <string name="sort_title">Сортировка</string>
+    <string name="sort_date_desc">Сначала новые</string>
+    <string name="sort_date_asc">Сначала старые</string>
+    <string name="sort_name_asc">По имени (А–Я)</string>
+    <string name="sort_name_desc">По имени (Я–А)</string>
+    <string name="sort_size_desc">По размеру (крупные)</string>
+    <string name="sort_size_asc">По размеру (маленькие)</string>
+
+    <!-- Даты -->
+    <string name="today">Сегодня</string>
+    <string name="yesterday">Вчера</string>
+
+    <!-- Пустые состояния -->
+    <string name="empty_gallery_title">Нет медиафайлов</string>
+    <string name="empty_gallery_sub">Фотографии и видео со всего устройства появятся здесь</string>
+    <string name="fav_empty_title">Пока пусто</string>
+    <string name="fav_empty_sub">Добавляйте фото и видео в избранное звёздочкой</string>
+    <string name="albums_empty_title">Нет папок</string>
+    <string name="albums_empty_sub">Создайте свою первую папку</string>
+    <string name="folder_empty_title">Папка пуста</string>
+    <string name="folder_empty_sub">В этой папке нет фото и видео</string>
+
+    <!-- Избранное -->
+    <string name="favorites_title">Избранное</string>
+    <string name="fav_added">Добавлено в избранное</string>
+    <string name="fav_removed">Убрано из избранного</string>
+
+    <!-- Альбомы -->
+    <string name="albums_title">Альбомы</string>
+    <string name="my_folders">Мои папки</string>
+    <string name="my_folders_short">Моя</string>
+    <string name="device_folders">Папки устройства</string>
+    <string name="subfolders">Подпапки</string>
+    <string name="open">Открыть</string>
+    <string name="rename">Переименовать</string>
+
+    <!-- Папки -->
+    <string name="create_folder">Создать папку</string>
+    <string name="new_folder">Новая папка</string>
+    <string name="folder_name_hint">Название папки</string>
+    <string name="will_be_created">Будет создана: %1$s</string>
+    <string name="folder_created">Папка создана</string>
+    <string name="folder_exists">Папка с таким именем уже существует</string>
+    <string name="invalid_folder_name">Недопустимое название папки</string>
+    <string name="delete_folder">Удалить папку</string>
+    <string name="delete_folder_confirm">Удалить папку «%1$s»? Её содержимое будет перемещено в корзину.</string>
+    <string name="folder_menu_new">Новая папка внутри</string>
+    <string name="rename_folder_title">Переименование папки</string>
+    <string name="delete_selected_folders_confirm">Удалить выбранные папки? Их содержимое будет перемещено в корзину.</string>
+
+    <!-- Корневая папка -->
+    <string name="root_title">Корневая папка</string>
+    <string name="root_desc">Выберите место для корневой папки приложения. Все папки, которые вы создаёте, будут находиться внутри неё — так всю коллекцию удобно перенести на компьютер. Корзина и сейф тоже хранятся внутри неё, в скрытом каталоге.</string>
+    <string name="root_name_hint">Название корневой папки</string>
+    <string name="root_create_btn">Создать здесь и выбрать</string>
+    <string name="root_pick_current_btn">Выбрать текущую папку</string>
+    <string name="root_desc_service">Служебные папки приложения (корзина и сейф) создаются внутри корневой папки в скрытом каталоге .GalleryX.</string>
+    <string name="root_required_title">Сначала выберите корневую папку</string>
+    <string name="root_required_msg">Корзина и сейф хранятся внутри корневой папки приложения. Выберите её — и действие станет доступно.</string>
+    <string name="root_required_btn">Выбрать папку</string>
+    <string name="dest_pick_title">Папка назначения</string>
+    <string name="dest_pick_desc">Перейдите в нужную папку на устройстве и нажмите «Выбрать текущую папку», либо создайте новую папку прямо здесь.</string>
+    <string name="dest_create_here_btn">Создать здесь и выбрать</string>
+    <string name="dest_pick_current_btn">Выбрать текущую папку</string>
+    <string name="dest_other_folder">Другая папка на устройстве…</string>
+    <string name="play">Воспроизвести</string>
+    <string name="subfolders_title">Папки</string>
+    <string name="dest_pick_desc_short">Выбрать любую папку в памяти телефона</string>
+    <string name="dest_section_mine">Мои папки</string>
+    <string name="dest_section_device">Папки устройства</string>
+    <string name="dest_section_actions">Быстрые действия</string>
+    <string name="dest_new_subfolder">Новая папка в «%1$s»</string>
+    <string name="storage_internal">Внутренняя память</string>
+    <string name="root_selected">Корневая папка выбрана</string>
+    <string name="root_needed_title">Сначала выберите корневую папку</string>
+    <string name="root_needed_desc">Все новые папки создаются внутри корневой. Выберите, где её создать — например, в Download или DCIM.</string>
+    <string name="root_not_set">Не выбрана</string>
+    <string name="settings_root">Корневая папка</string>
+    <string name="root_removed_please_note">Файлы в старой папке останутся на месте</string>
+
+    <!-- Режим маскировки -->
+    <string name="masking_title">Режим маскировки</string>
+    <string name="masking_subtitle">Галерея выглядит обычной, но корневая папка и сейф скрыты, пока вы их не откроете</string>
+    <string name="masking_status_on">Включена</string>
+    <string name="masking_status_off">Выключена</string>
+    <string name="masking_switch">Включить маскировку</string>
+    <string name="masking_switch_desc">Прятать корневую папку, сейф и эти настройки</string>
+    <string name="masking_enable_title">Включить режим маскировки?</string>
+    <string name="masking_enable_msg">Пока маскировка «закрыта», из галереи исчезают корневая папка со всеми вашими папками, сейф и пункт «Режим маскировки» в настройках.\n\nСейчас галерея останется открытой — спрятать её можно значком «глаз» на главном экране. Чтобы снова всё показать, удерживайте заголовок «Галерея» в течение 3 секунд.</string>
+    <string name="masking_disable_title">Выключить режим маскировки?</string>
+    <string name="masking_disable_msg">Корневая папка и сейф будут видны всегда.</string>
+    <string name="masking_hint_title">Как открыть скрытую галерею</string>
+    <string name="masking_hint_steps">1. Откройте приложение — это обычная галерея без корневой папки и сейфа.\n2. Удерживайте заголовок «Галерея» 3 секунды.\n3. Если установлен PIN-код — введите его.\n4. Появятся ваши папки, сейф и настройки маскировки.</string>
+    <string name="masking_suggest_pin">Рекомендуется установить PIN-код</string>
+    <string name="masking_active_now">Маскировка активна</string>
+
+    <!-- PIN-код -->
+    <string name="pin_title">PIN-код</string>
+    <string name="pin_switch_desc">Один код для сейфа и для открытия скрытых папок</string>
+    <string name="pin_required_title">Сначала установите PIN-код</string>
+    <string name="pin_required_safe_msg">Сейф защищён PIN-кодом. Создайте его — и файлы можно будет прятать.</string>
+    <string name="pin_required_btn">Создать PIN</string>
+    <string name="safe_pin_setup_hint">Сначала установите PIN-код для сейфа</string>
+    <string name="pin_change">Сменить PIN-код</string>
+    <string name="pin_enter_title">Введите PIN-код</string>
+    <string name="pin_create_title">Придумайте PIN-код</string>
+    <string name="pin_confirm_title">Повторите PIN-код</string>
+    <string name="pin_wrong">Неверный PIN-код</string>
+    <string name="pin_mismatch">PIN-коды не совпадают. Попробуйте ещё раз</string>
+    <string name="pin_saved">PIN-код установлен</string>
+    <string name="pin_removed">PIN-код отключён</string>
+    <string name="pin_disabled_confirm_title">Отключить PIN-код?</string>
+    <string name="pin_disabled_confirm_msg">Скрытые папки будут открываться без пароля — сразу после удержания заголовка.</string>
+    <string name="pin_locked_seconds">Слишком много попыток. Подождите %1$d сек.</string>
+    <string name="pin_recovery_title">Восстановление PIN-кода</string>
+    <string name="pin_recovery_msg">Введите секретный код для восстановления пароля</string>
+    <string name="pin_recovery_hint">Секретный код</string>
+    <string name="pin_recovery_wrong">Неверный секретный код</string>
+
+    <!-- Автоскрытие -->
+    <string name="autohide_title">Автоскрытие</string>
+    <string name="autohide_desc">Когда корневая папка и сейф снова скроются</string>
+    <string name="autohide_minimize">При сворачивании приложения</string>
+    <string name="autohide_minimize_desc">Скроются, когда вы уйдёте из приложения</string>
+    <string name="autohide_1min">Через 1 минуту</string>
+    <string name="autohide_1min_desc">После открытия снова скроются через минуту</string>
+    <string name="autohide_5min">Через 5 минут</string>
+    <string name="autohide_5min_desc">После открытия снова скроются через 5 минут</string>
+    <string name="autohide_manual">Только вручную</string>
+    <string name="autohide_manual_desc">Скрываются только по кнопке «Скрыть сейчас»</string>
+    <string name="hide_now">Скрыть сейчас</string>
+    <string name="secure_shots">Запретить скриншоты</string>
+    <string name="secure_shots_desc">Скрывает содержимое приложения в панели недавних и мешает делать снимки экрана</string>
+
+    <!-- Выделение и действия -->
+    <string name="select_all">Выбрать все</string>
+    <string name="deselect_all">Снять выделение</string>
+    <string name="album_dest_inside_itself">Нельзя переместить папку в саму себя</string>
+    <string name="video_sound">Звук</string>
+    <string name="note_title">Заметка</string>
+    <string name="note_title_hint">Заголовок</string>
+    <string name="note_body_hint">Текст заметки…</string>
+    <string name="note_loading">Загрузка…</string>
+    <string name="note_mode_edit">Редактировать</string>
+    <string name="note_mode_view">Просмотр</string>
+    <string name="note_updated">Изменено: %s</string>
+    <string name="note_saved">Заметка сохранена</string>
+    <string name="note_deleted">Заметка удалена</string>
+    <string name="note_delete_title">Удалить заметку?</string>
+    <string name="note_delete_msg">Текст заметки к этому файлу будет удалён без возможности восстановления.</string>
+    <string name="lock_folder">Заблокировать</string>
+    <string name="unlock_folder">Разблокировать</string>
+    <string name="locked_folder">Заблокированная папка</string>
+    <string name="pin_required_lock_msg">Блокировка папок работает только с PIN-кодом. Создайте код — он же защищает сейф.</string>
+    <string name="lock_done">Папки заблокированы: файлы скрыты из общих разделов</string>
+    <string name="unlock_done">Блокировка снята</string>
+    <string name="mask_pin_title">PIN-код для маскировки</string>
+    <string name="mask_pin_desc">Спрашивать PIN при открытии скрытого (удержание заголовка 3 с). Выключено — открывается сразу, PIN защищает только сейф и заблокированные папки</string>
+    <string name="album_no_files">В выбранных папках нет файлов</string>
+    <string name="action_copy">Копировать</string>
+    <string name="action_move">Переместить</string>
+    <string name="action_favorite">В избранное</string>
+    <string name="action_favorite_short">Избранное</string>
+    <string name="action_safe">В сейф</string>
+    <string name="action_safe_short">Сейф</string>
+    <string name="action_share">Поделиться</string>
+    <string name="action_restore">Восстановить</string>
+    <string name="action_delete_forever">Удалить навсегда</string>
+    <string name="action_info">Свойства</string>
+    <string name="rewind_10">Назад 10 секунд</string>
+    <string name="forward_10">Вперёд 10 секунд</string>
+
+    <!-- Подтверждения -->
+    <string name="delete_confirm_title">Удалить?</string>
+    <string name="delete_confirm_text">Выбранные элементы будут перемещены в корзину. Оттуда их можно восстановить в течение 30 дней.</string>
+    <string name="delete_forever_confirm_title">Удалить навсегда?</string>
+    <string name="delete_forever_confirm_text">Элементы будут удалены безвозвратно. Это действие нельзя отменить.</string>
+    <string name="safe_move_confirm_title">Переместить в сейф?</string>
+    <string name="safe_move_confirm_text">Элементы исчезнут из галереи и будут доступны только в сейфе.</string>
+
+    <!-- Корзина -->
+    <string name="trash_title">Корзина</string>
+    <string name="trash_subtitle">Элементы хранятся 30 дней, затем удаляются навсегда</string>
+    <string name="trash_empty_title">Корзина пуста</string>
+    <string name="trash_empty_sub">Недавно удалённые элементы появятся здесь</string>
+    <string name="trash_clear_btn">Очистить корзину</string>
+    <string name="trash_clear_confirm">Очистить корзину?</string>
+    <string name="trash_clear_confirm_text">Все элементы будут удалены навсегда.</string>
+
+    <!-- Сейф -->
+    <string name="safe_title">Сейф</string>
+    <string name="safe_subtitle">Файлы скрыты из галереи и защищены</string>
+    <string name="safe_empty_title">Сейф пуст</string>
+    <string name="safe_empty_sub">Переместите сюда файлы, чтобы спрятать их от посторонних</string>
+    <string name="safe_locked_title">Сейф защищён PIN-кодом</string>
+    <string name="safe_locked_sub">Введите PIN-код галереи, чтобы открыть сейф</string>
+    <string name="safe_open_btn">Открыть сейф</string>
+    <string name="safe_lock_btn">Закрыть сейф</string>
+
+    <!-- Назначение копирования/перемещения -->
+    <string name="dest_copy_title">Куда скопировать?</string>
+    <string name="dest_move_title">Куда переместить?</string>
+    <string name="dest_new_folder">Новая папка…</string>
+    <string name="dest_root_folder">Корневая папка</string>
+    <string name="dest_empty_title">Нет доступных папок</string>
+    <string name="dest_empty_sub">Сначала создайте корневую папку</string>
+
+    <!-- Операции -->
+    <string name="op_copy">Копирование</string>
+    <string name="op_move">Перемещение</string>
+    <string name="op_trash">Удаление</string>
+    <string name="op_safe">Перемещение в сейф</string>
+    <string name="op_restore">Восстановление</string>
+    <string name="op_delete">Удаление навсегда</string>
+    <string name="op_cancel">Отмена</string>
+    <string name="op_progress_of">%1$d из %2$d</string>
+    <string name="op_notif_channel">Файловые операции</string>
+    <string name="op_notif_channel_desc">Ход копирования, перемещения и удаления файлов</string>
+    <string name="op_notif_running">Выполняется…</string>
+    <string name="op_notif_done">Готово: %1$d из %2$d</string>
+    <string name="op_cancelled">Операция прервана</string>
+
+    <!-- Свойства файла -->
+    <string name="info_title">Свойства</string>
+    <string name="info_name">Имя</string>
+    <string name="info_type">Тип</string>
+    <string name="info_type_photo">Фото</string>
+    <string name="info_type_video">Видео</string>
+    <string name="info_path">Путь</string>
+    <string name="info_size">Размер</string>
+    <string name="info_dims">Разрешение</string>
+    <string name="info_date">Дата изменения</string>
+    <string name="info_duration">Длительность</string>
+    <string name="info_album">Альбом</string>
+    <string name="smart_media_types">Типы медиа</string>
+    <string name="smart_utilities">Инструменты</string>
+    <string name="smart_photos">Фото</string>
+    <string name="smart_videos">Видео</string>
+    <string name="smart_selfies">Селфи</string>
+    <string name="smart_screenshots">Скриншоты</string>
+    <string name="smart_favorites">Избранное</string>
+    <string name="smart_edited">Отредактированные</string>
+    <string name="smart_analysing_title">Ищем селфи…</string>
+    <string name="smart_analysing_sub">Фото анализируются на устройстве. Это делается один раз, список появится автоматически.</string>
+    <string name="smart_empty_title">Пока пусто</string>
+    <string name="smart_empty_sub">Здесь появятся подходящие файлы</string>
+    <string name="meta_edit_title">Изменить</string>
+    <string name="meta_date_title">Дата и время</string>
+    <string name="meta_date_hint">Дата записывается в EXIF (для JPEG) и в дату изменения файла — по ней файл сортируется в ленте.</string>
+    <string name="meta_saved">Изменения сохранены</string>
+    <string name="meta_name_exists">Файл с таким именем уже есть</string>
+    <string name="meta_failed">Не удалось изменить файл</string>
+    <string name="info_adjust_date">Изменить дату</string>
+    <string name="info_search_image">Поиск по картинке</string>
+    <string name="info_no_lens">Google Lens не установлен</string>
+    <string name="viewer_edit">Редактировать</string>
+    <string name="viewer_edit_sub">Кадрирование, фильтры, поворот</string>
+    <string name="no_editor_app">Нет приложения для редактирования</string>
+    <string name="pin_use_code">Ввести код</string>
+    <string name="settings_biometric">Вход по отпечатку или лицу</string>
+    <string name="settings_search_hint">Поиск настроек</string>
+    <string name="settings_privacy">Приватность</string>
+    <string name="settings_general">Общие</string>
+    <string name="settings_pin">PIN-код</string>
+    <string name="settings_pin_sub">Сейф и маскировка. Смена и отключение кода</string>
+    <string name="settings_pin_set">Задан</string>
+    <string name="settings_pin_not_set">Не задан</string>
+    <string name="settings_biometric_sub">Отпечаток или лицо вместо PIN; код остаётся запасным</string>
+    <string name="settings_biometric_need_pin">Сначала задайте PIN-код в настройках маскировки — биометрия только дополняет его.</string>
+    <string name="settings_biometric_unavailable">На устройстве нет настроенной биометрии</string>
+    <string name="settings_safe_in_albums">Сейф в альбомах</string>
+    <string name="settings_safe_in_albums_sub">Показывать «Сейф» в блоке «Инструменты»</string>
+    <string name="settings_flag_secure">Защита от снимков экрана</string>
+    <string name="settings_flag_secure_sub">Запретить скриншоты и показ в недавних</string>
+    <string name="settings_group_by">Группировать фото</string>
+    <string name="settings_group_by_sub">Заголовки в ленте</string>
+    <string name="group_none">Нет</string>
+    <string name="group_day">По дням</string>
+    <string name="group_month">По месяцам</string>
+    <string name="group_year">По годам</string>
+    <string name="settings_hq_thumbs">Качественные миниатюры</string>
+    <string name="settings_hq_thumbs_sub">Чётче в сетке, чуть больше памяти</string>
+    <string name="settings_slider_style">Ползунок плеера</string>
+    <string name="settings_slider_thin">Тонкая линия</string>
+    <string name="settings_slider_thick">Толстая капсула</string>
+    <string name="settings_loop">Зацикливать видео</string>
+    <string name="settings_loop_sub">Повторять ролик после окончания</string>
+    <string name="settings_video_sound">Звук видео по умолчанию</string>
+    <string name="settings_video_sound_sub">Иначе видео стартует без звука</string>
+    <string name="settings_pip">Картинка в картинке</string>
+    <string name="settings_pip_sub">Видео продолжает играть в окне при сворачивании</string>
+    <string name="settings_use_trash">Удалять в корзину</string>
+    <string name="settings_use_trash_sub">Файлы можно восстановить 30 дней</string>
+    <string name="settings_use_trash_warn">Без корзины файлы будут удаляться сразу и навсегда. Продолжить?</string>
+    <string name="settings_quiet">Скрывать уведомления</string>
+    <string name="settings_quiet_sub">Без всплывающих подсказок и подтверждений удаления</string>
+    <string name="settings_fast_scroll">Быстрая прокрутка</string>
+    <string name="settings_fast_scroll_sub">Ползунок у правого края сетки</string>
+    <string name="about_privacy_title">Приватность</string>
+    <string name="info_file_section">Файл</string>
+    <string name="info_camera_section">Камера</string>
+    <string name="info_location_section">Место съёмки</string>
+    <string name="info_megapixels">Мегапиксели</string>
+    <string name="info_aperture">Диафрагма</string>
+    <string name="info_shutter">Выдержка</string>
+    <string name="info_iso">ISO</string>
+    <string name="info_focal">Фокусное</string>
+    <string name="info_open_maps">Карты</string>
+    <string name="info_no_maps">Нет приложения карт</string>
+    <string name="viewer_options">Опции</string>
+    <string name="viewer_move_sub">Выбрать папку назначения</string>
+    <string name="viewer_copy_sub">Копия в другую папку</string>
+    <string name="viewer_safe_sub">Скрыть за PIN-кодом</string>
+    <string name="viewer_open_in">Открыть в другом приложении</string>
+    <string name="viewer_open_in_sub">Редактор, плеер и т. д.</string>
+    <string name="viewer_wallpaper">Установить как обои</string>
+    <string name="viewer_wallpaper_sub">Рабочий стол или экран блокировки</string>
+    <string name="viewer_info_sub">Размер, разрешение, камера, место</string>
+    <string name="viewer_note_sub">Текст, привязанный к файлу</string>
+    <string name="no_app_to_open">Нет приложения для открытия файла</string>
+    <string name="info_path_copied">Путь скопирован</string>
+    <string name="info_hidden_file">Скрытый файл сейфа</string>
+
+    <!-- Настройки -->
+    <string name="settings_appearance">Оформление</string>
+    <string name="settings_theme">Тема</string>
+    <string name="settings_theme_system">Как в системе</string>
+    <string name="settings_theme_light">Светлая</string>
+    <string name="settings_theme_dark">Тёмная</string>
+    <string name="settings_grid">Размер сетки</string>
+    <string name="settings_grid_albums">Размер сетки альбомов</string>
+    <string name="grid_value">Колонок: %1$d</string>
+    <string name="grid_hint">Меняется также щипком по сетке</string>
+    <string name="settings_folders_section">Папки</string>
+    <string name="settings_data_section">Данные</string>
+    <string name="settings_about_section">О приложении</string>
+    <string name="settings_version">Версия %1$s</string>
+    <string name="about_desc">Галерея — многофункциональная приватная галерея с режимом маскировки, сейфом, корзиной и гибкой работой с папками.</string>
+    <string name="about_privacy">Все данные хранятся только на вашем устройстве</string>
+    <string name="theme_title">Тема оформления</string>
+
+    <!-- Видео -->
+    <string name="video_error">Не удалось воспроизвести видео: формат не поддерживается</string>
+
+    <!-- Мелочи -->
+    <string name="share_via">Поделиться</string>
+    <string name="video_badge">ВИДЕО</string>
+
+    <plurals name="items_count">
+        <item quantity="one">%d элемент</item>
+        <item quantity="few">%d элемента</item>
+        <item quantity="many">%d элементов</item>
+        <item quantity="other">%d элементов</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">Выбран %d элемент</item>
+        <item quantity="few">Выбрано %d элемента</item>
+        <item quantity="many">Выбрано %d элементов</item>
+        <item quantity="other">Выбрано %d элементов</item>
+    </plurals>
+
+    <plurals name="days_left">
+        <item quantity="one">Остался %d день</item>
+        <item quantity="few">Осталось %d дня</item>
+        <item quantity="many">Осталось %d дней</item>
+        <item quantity="other">Осталось %d дней</item>
+    </plurals>
+
+    <plurals name="result_copied">
+        <item quantity="one">Скопирован %d файл</item>
+        <item quantity="few">Скопировано %d файла</item>
+        <item quantity="many">Скопировано %d файлов</item>
+        <item quantity="other">Скопировано %d файлов</item>
+    </plurals>
+
+    <plurals name="result_moved">
+        <item quantity="one">Перемещён %d файл</item>
+        <item quantity="few">Перемещено %d файла</item>
+        <item quantity="many">Перемещено %d файлов</item>
+        <item quantity="other">Перемещено %d файлов</item>
+    </plurals>
+
+    <plurals name="result_trashed">
+        <item quantity="one">Перемещён %d файл в корзину</item>
+        <item quantity="few">Перемещено %d файла в корзину</item>
+        <item quantity="many">Перемещено %d файлов в корзину</item>
+        <item quantity="other">Перемещено %d файлов в корзину</item>
+    </plurals>
+
+    <plurals name="result_safed">
+        <item quantity="one">Перемещён %d файл в сейф</item>
+        <item quantity="few">Перемещено %d файла в сейф</item>
+        <item quantity="many">Перемещено %d файлов в сейф</item>
+        <item quantity="other">Перемещено %d файлов в сейф</item>
+    </plurals>
+
+    <plurals name="result_restored">
+        <item quantity="one">Восстановлен %d файл</item>
+        <item quantity="few">Восстановлено %d файла</item>
+        <item quantity="many">Восстановлено %d файлов</item>
+        <item quantity="other">Восстановлено %d файлов</item>
+    </plurals>
+
+    <plurals name="result_albums_copied">
+        <item quantity="one">Скопирован %d альбом</item>
+        <item quantity="few">Скопировано %d альбома</item>
+        <item quantity="many">Скопировано %d альбомов</item>
+        <item quantity="other">Скопировано %d альбомов</item>
+    </plurals>
+
+    <plurals name="result_albums_moved">
+        <item quantity="one">Перемещён %d альбом</item>
+        <item quantity="few">Перемещено %d альбома</item>
+        <item quantity="many">Перемещено %d альбомов</item>
+        <item quantity="other">Перемещено %d альбомов</item>
+    </plurals>
+
+    <plurals name="result_albums_deleted">
+        <item quantity="one">Удалён %d альбом (файлы в корзине)</item>
+        <item quantity="few">Удалено %d альбома (файлы в корзине)</item>
+        <item quantity="many">Удалено %d альбомов (файлы в корзине)</item>
+        <item quantity="other">Удалено %d альбомов (файлы в корзине)</item>
+    </plurals>
+
+    <plurals name="result_deleted">
+        <item quantity="one">Удалён %d файл навсегда</item>
+        <item quantity="few">Удалено %d файла навсегда</item>
+        <item quantity="many">Удалено %d файлов навсегда</item>
+        <item quantity="other">Удалено %d файлов навсегда</item>
+    </plurals>
+
+    <!-- Встроенный редактор -->
+    <string name="editor_title">Редактор</string>
+    <string name="editor_undo">Отменить</string>
+    <string name="editor_redo">Повторить</string>
+    <string name="editor_reset">Сбросить</string>
+    <string name="editor_rotate">Повернуть</string>
+    <string name="editor_flip">Отразить</string>
+    <string name="editor_load_failed">Не удалось открыть файл</string>
+    <string name="editor_nothing">Изменений нет</string>
+    <string name="editor_save_title">Сохранить изменения</string>
+    <string name="editor_save_copy">Сохранить копию</string>
+    <string name="editor_overwrite">Перезаписать оригинал</string>
+    <string name="editor_save_failed">Не удалось сохранить</string>
+    <string name="editor_saved">Сохранено</string>
+    <string name="editor_discard_title">Отменить изменения?</string>
+    <string name="editor_discard_msg">Несохранённые правки будут потеряны.</string>
+    <string name="editor_discard">Отменить правки</string>
+    <string name="editor_restore_first">Сначала восстановите файл из сейфа или корзины</string>
+    <string name="video_editor_title">Видеоредактор</string>
+    <string name="video_editor_trim">Обрезка</string>
+    <string name="video_editor_mute">Без звука</string>
+    <string name="video_editor_rotate">Поворот</string>
+    <string name="video_editor_hint">Выберите отрезок, поворот и звук — файл сохраняется без перекодирования</string>
+    <string name="video_editor_saving">Сохранение видео…</string>
+    <string name="video_editor_failed">Не удалось сохранить видео</string>
+    <string name="settings_theme_system_short">Авто</string>
+    <string name="settings_theme_amoled">AMOLED</string>
+    <string name="theme_mode">Режим темы</string>
+    <string name="theme_mode_sub">Как показывать светлые и тёмные поверхности</string>
+    <string name="theme_accent">Акцентный цвет</string>
+    <string name="settings_slider_slim">Тонкая капсула</string>
+    <!-- Поиск (3.14) -->
+    <string name="search_title">Поиск</string>
+    <string name="search_placeholder">Фото, альбомы, даты…</string>
+    <string name="search_recent">НЕДАВНИЕ ЗАПРОСЫ</string>
+    <string name="search_clear">Очистить</string>
+    <string name="search_categories_eyebrow">КАТЕГОРИИ</string>
+    <string name="search_categories_title">Типы медиа</string>
+    <string name="search_subjects_eyebrow">ПОДБОРКИ</string>
+    <string name="search_subjects_title">Быстрый доступ</string>
+    <string name="search_tip">Ищите по имени файла, папке, дате («март 2024», «5 мая») или словам «видео», «фото», «скриншот», «избранное», «селфи».</string>
+    <string name="search_nothing_for">По запросу «%1$s» ничего нет</string>
+    <string name="search_recent_month">За этот месяц</string>
+    <string name="search_large_files">Крупные файлы</string>
+    <!-- Видеоредактор 3.14 -->
+    <string name="video_editor_label">ВИДЕО</string>
+    <string name="editor_done">Готово</string>
+    <string name="editor_label_photo">ФОТО</string>
+    <string name="video_editor_transcode_note">Будет выполнено перекодирование — это займёт время в зависимости от длины видео.</string>
+    <string name="video_editor_fast_note">Изменения применятся без перекодирования — быстро и без потери качества.</string>
+    <string name="video_editor_saving_pct">Сохранение видео… %1$d%%</string>
+
+    <!-- Редакторы: названия вкладок, правок, фильтров, подсказки -->
+    <string-array name="editor_tune_names">
+        <item>Экспозиция</item><item>Сияние</item><item>Яркость</item><item>Света</item>
+        <item>Тени</item><item>Контраст</item><item>Насыщенность</item><item>Сочность</item>
+        <item>Теплота</item><item>Виньетка</item><item>Резкость</item>
+    </string-array>
+    <string-array name="editor_aspect_names">
+        <item>Свободно</item><item>Исходное</item><item>1:1</item><item>4:5</item>
+        <item>9:16</item><item>4:3</item><item>16:9</item><item>3:2</item>
+    </string-array>
+    <string-array name="video_aspect_names">
+        <item>Оригинал</item><item>Свободно</item><item>1:1</item><item>4:5</item>
+        <item>9:16</item><item>16:9</item><item>4:3</item><item>3:2</item>
+    </string-array>
+    <string-array name="editor_filter_names">
+        <item>Оригинал</item><item>Яркий</item><item>Холодный</item><item>Тёплый</item>
+        <item>Выцветший</item><item>Моно</item><item>Нуар</item><item>Сепия</item>
+        <item>Полароид</item><item>Кино</item><item>Пастель</item><item>Панк</item>
+    </string-array>
+    <string-array name="editor_mode_names">
+        <item>Правка</item><item>Рисунок</item><item>Фильтры</item><item>Кадр</item><item>Текст</item>
+    </string-array>
+    <string-array name="video_mode_names">
+        <item>Видео</item><item>Звук</item><item>Фильтры</item><item>Кадр</item>
+    </string-array>
+    <string-array name="editor_brush_names">
+        <item>Перо</item><item>Карандаш</item><item>Ластик</item>
+    </string-array>
+    <string name="editor_hint_doodle">Рисуйте пальцем по фото</string>
+    <string name="editor_hint_crop">Тяните углы и края кадра</string>
+    <string name="editor_hint_text">Коснитесь надписи, чтобы выбрать; двойное касание — изменить</string>
+    <string name="editor_hint_compare">Удерживайте фото, чтобы сравнить с оригиналом</string>
+    <string name="editor_add">Добавить</string>
+    <string name="editor_edit">Изменить</string>
+    <string name="editor_backdrop">Подложка</string>
+    <string name="editor_text_hint">Текст</string>
+    <string name="editor_text_title">Надпись</string>
+    <string name="video_hint_audio">Громкость выше 100% применяется при сохранении</string>
+    <string name="video_hint_filter">Фильтр применяется ко всему видео</string>
+    <string name="video_hint_crop">Тяните рамку и её углы; поворот и отражение — кнопками</string>
+    <string name="video_hint_trim">Тяните края плёнки, чтобы выбрать отрезок</string>
+    <string name="video_mute">Без звука</string>
+    <string name="video_no_audio_track">В этом видео нет звуковой дорожки</string>
+    <string name="video_reset_volume">Сбросить громкость</string>
+
+    <!-- Акцентные цвета -->
+    <string name="accent_adaptive">Авто</string>
+    <string name="accent_violet">Фиалковый</string>
+    <string name="accent_red">Красный</string>
+    <string name="accent_crimson">Малиновый</string>
+    <string name="accent_rose">Розовый</string>
+    <string name="accent_purple">Пурпурный</string>
+    <string name="accent_deep_purple">Фиолетовый</string>
+    <string name="accent_indigo">Индиго</string>
+    <string name="accent_blue">Синий</string>
+    <string name="accent_sky_blue">Голубой</string>
+    <string name="accent_cyan">Бирюзовый</string>
+    <string name="accent_electric_cyan">Циан</string>
+    <string name="accent_teal">Морской</string>
+    <string name="accent_green">Зелёный</string>
+    <string name="accent_light_green">Салатовый</string>
+    <string name="accent_lime">Лайм</string>
+    <string name="accent_yellow">Жёлтый</string>
+    <string name="accent_amber">Янтарный</string>
+    <string name="accent_orange">Оранжевый</string>
+    <string name="accent_deep_orange">Коралловый</string>
+    <string name="accent_blue_grey">Серо-синий</string>
+
+    <!-- Единицы и форматы -->
+    <string name="size_b">Б</string>
+    <string name="size_kb">КБ</string>
+    <string name="size_mb">МБ</string>
+    <string name="size_gb">ГБ</string>
+    <string name="unit_mm">мм</string>
+    <string name="unit_sec">с</string>
+    <string name="unit_mp">Мп</string>
+    <string name="trash_days_badge">%1$d дн.</string>
+    <string name="trash_note">Файлы хранятся в корзине 30 дней, затем удаляются навсегда</string>
+    <string name="search_query_large">крупные</string>
+
+    <!-- Язык -->
+    <string name="settings_language">Язык</string>
+    <string name="language_system">Как в системе</string>
+    <string name="language_ru">Русский</string>
+    <string name="language_en">English</string>
+    <string name="create_in_root">В корневой папке</string>
+    <string name="create_in_device">В памяти устройства…</string>
+    <string name="folder_transfer_contents">Только содержимое</string>
+    <string name="folder_transfer_contents_sub">Файлы попадут прямо в папку назначения</string>
+    <string name="folder_transfer_whole">Вместе с папкой</string>
+    <string name="folder_transfer_whole_sub">Папка целиком станет подпапкой назначения</string>
+    <string name="trash_clear_photos_title">Удалить все фото из корзины?</string>
+    <string name="trash_clear_photos_text">Все фото в корзине будут удалены навсегда. Видео останутся.</string>
+    <string name="trash_clear_videos_title">Удалить все видео из корзины?</string>
+    <string name="trash_clear_videos_text">Все видео в корзине будут удалены навсегда. Фото останутся.</string>
+    <string name="create_in_device_desc">Перейдите в нужное место в памяти телефона, введите имя и нажмите «Создать здесь».</string>
+    <string name="create_here_btn">Создать здесь</string>
+    <string name="folder_transfer_question">Что перенести?</string>
+
+    <!-- Сейф 3.17: разделы и папки -->
+    <string name="safe_images">Изображения</string>
+    <string name="safe_videos">Видео</string>
+    <string name="safe_home_sub">Файлы скрыты из галереи и защищены PIN-кодом. Выберите раздел.</string>
+    <string name="safe_home_hint">Отправленные в сейф файлы попадают в папку «Личный» своего раздела. Внутри раздела можно создавать свои папки.</string>
+    <string name="safe_folder_personal">Личный</string>
+    <string name="safe_reveal">Раскрыть</string>
+    <string name="safe_reveal_title">Раскрыть файлы?</string>
+    <string name="safe_reveal_text">%1$s: файлы вернутся в исходные папки и снова появятся в галерее.</string>
+    <string name="safe_delete_folder_title">Удалить папку «%1$s»?</string>
+    <string name="safe_delete_folders_title">Удалить выбранные папки?</string>
+    <string name="safe_delete_folder_text">Папка и всё её содержимое (%1$s) будут удалены навсегда, минуя корзину.</string>
+    <string name="safe_folder_empty_title">Папка пуста</string>
+    <string name="safe_folder_empty_sub">Переместите сюда файлы из других папок сейфа или отправьте из галереи</string>
+    <string name="safe_dest_sub_photos">Папки раздела «Изображения»</string>
+    <string name="safe_dest_sub_videos">Папки раздела «Видео»</string>
+    <string name="safe_new_folder_sub">Создать папку в сейфе и перенести туда</string>
+    <plurals name="folders_count">
+        <item quantity="one">%d папка</item>
+        <item quantity="few">%d папки</item>
+        <item quantity="many">%d папок</item>
+        <item quantity="other">%d папок</item>
+    </plurals>
+
+    <!-- Журнал ошибок (3.17.1) -->
+    <string name="crash_log_title">Журнал ошибок</string>
+    <string name="crash_log_sub">Последняя запись: %1$s</string>
+    <string name="crash_log_empty">Ошибок не записано</string>
+    <string name="crash_log_clear">Очистить</string>
+    <string name="crash_log_subject">Журнал ошибок Галереи</string>
+    <string name="crash_prompt_title">Приложение завершилось с ошибкой</string>
+    <string name="crash_prompt_text">Подробности сохранены в журнал. Его можно посмотреть и отправить (Настройки → О приложении), чтобы исправить проблему.</string>
+    <string name="crash_prompt_open">Открыть журнал</string>
+    <string name="crash_prompt_later">Позже</string>
+
+    <!-- ===== Изменение размера / сжатие фото ===== -->
+    <string name="resizer_title">Изменить размер</string>
+    <string name="viewer_resize_sub">Сохранить уменьшенную или сжатую копию</string>
+    <string name="resizer_selection_sub">Уменьшить или сжать выбранные фото, сохранив копии</string>
+    <string name="resizer_only_photos">Изменять размер можно только у фото</string>
+    <string name="resizer_videos_skipped">Видео пропущено: %1$d</string>
+    <string name="resizer_op_title">Изменение размера фото</string>
+    <plurals name="resizer_photos_count">
+        <item quantity="one">%d фото</item>
+        <item quantity="few">%d фото</item>
+        <item quantity="many">%d фото</item>
+        <item quantity="other">%d фото</item>
+    </plurals>
+
+    <string name="resizer_pick_title">Выбор фото</string>
+    <string name="resizer_pick_sub">Фото в галерее: %1$d</string>
+    <string name="resizer_pick_empty">Фото не найдены</string>
+    <string name="resizer_pick_next">Далее</string>
+    <string name="resizer_pick_next_n">Далее (%1$d)</string>
+    <string name="resizer_pick_none">Выберите хотя бы одно фото</string>
+
+    <string name="resizer_preview">Предпросмотр</string>
+    <string name="resizer_index">%1$d / %2$d · нажмите для следующего</string>
+    <string name="resizer_src_info">%1$d×%2$d · %3$s · %4$s</string>
+    <string name="resizer_result_estimate">Результат: %1$d×%2$d · ≈ %3$s · %4$s</string>
+    <string name="resizer_result_exact">Результат: %1$d×%2$d · %3$s · %4$s</string>
+    <string name="resizer_result_error">Не удалось обработать это фото</string>
+    <string name="resizer_quality_value">качество %1$d</string>
+    <string name="resizer_warn_upscale">Результат больше оригинала — изображение будет увеличено и может выглядеть размытым.</string>
+    <string name="resizer_warn_png_target">PNG — формат без потерь: целевой размер файла к нему не применяется. Выберите JPEG или WebP.</string>
+    <string name="resizer_warn_target_missed">Целевой размер %1$s недостижим: лучший результат — %2$s.</string>
+    <string name="resizer_alpha_warn">У фото есть прозрачность, JPEG её не поддерживает — прозрачные области будут залиты выбранным ниже цветом.</string>
+    <string name="resizer_preview_saved">Было %1$s, стало %2$s (-%3$d%%)</string>
+    <string name="resizer_preview_bigger">Было %1$s, стало %2$s (файл не стал меньше)</string>
+
+    <string name="resizer_quick_presets">Быстрые пресеты</string>
+    <string name="resizer_preset_whatsapp">WhatsApp</string>
+    <string name="resizer_preset_social">Соцсети</string>
+    <string name="resizer_preset_email">E-mail</string>
+    <string name="resizer_preset_web">Веб</string>
+    <string name="resizer_preset_print">Печать 10×15</string>
+    <string name="resizer_preset_gp_icon">Google Play: иконка 512</string>
+    <string name="resizer_preset_gp_feature">Google Play: баннер 1024×500</string>
+    <string name="resizer_preset_gp_shot">Google Play: скриншот</string>
+
+    <string name="resizer_section_size">Размер</string>
+    <string name="resizer_mode_pixels">Пиксели</string>
+    <string name="resizer_mode_percent">Проценты</string>
+    <string name="resizer_mode_long">Длинная сторона</string>
+    <string name="resizer_mode_print">Печать</string>
+    <string name="resizer_original">Оригинал</string>
+    <string name="resizer_width">Ширина</string>
+    <string name="resizer_height">Высота</string>
+    <string name="resizer_times">×</string>
+    <string name="resizer_colon">:</string>
+    <string name="resizer_swap">Поменять ширину и высоту местами</string>
+    <string name="resizer_keep_aspect">Сохранять пропорции</string>
+    <string name="resizer_percent_hint">1–400</string>
+    <string name="resizer_long_side_hint">Длинная сторона</string>
+    <string name="resizer_px">px</string>
+    <string name="resizer_long_side_note">Большая сторона приводится к этому значению, меньшая следует пропорциям. Удобно для пакета из вертикальных и горизонтальных фото.</string>
+    <string name="resizer_unit_mm">мм</string>
+    <string name="resizer_unit_cm">см</string>
+    <string name="resizer_unit_inch">дюйм</string>
+    <string name="resizer_dpi">DPI</string>
+    <string name="resizer_print_hint">= %1$d×%2$d px, DPI записывается в файл</string>
+
+    <string name="resizer_section_aspect">Соотношение сторон</string>
+    <string name="resizer_aspect_original">Как есть</string>
+    <string name="resizer_custom">Своё</string>
+    <string name="resizer_aspect_w">Ш</string>
+    <string name="resizer_aspect_h">В</string>
+    <string name="resizer_fit_label">Если пропорции отличаются</string>
+    <string name="resizer_fit_crop">Обрезать</string>
+    <string name="resizer_fit_inside">Вписать</string>
+    <string name="resizer_fit_stretch">Растянуть</string>
+    <string name="resizer_pad_label">Фон</string>
+    <string name="resizer_pad_blur">Размытие</string>
+    <string name="resizer_pad_white">Белый</string>
+    <string name="resizer_pad_black">Чёрный</string>
+    <string name="resizer_pad_custom">Цвет</string>
+    <string name="resizer_bg_gray">Серый</string>
+    <string name="resizer_color_hint">#RRGGBB</string>
+
+    <string name="resizer_section_format">Формат и сжатие</string>
+    <string name="resizer_quality">Качество</string>
+    <string name="resizer_target_label">Целевой размер файла</string>
+    <string name="resizer_target_none">Выкл.</string>
+    <string name="resizer_target_hint">Размер</string>
+    <string name="resizer_kb">КБ</string>
+    <string name="resizer_mb">МБ</string>
+    <string name="resizer_target_note">Качество (а при необходимости и разрешение) снижается автоматически, пока файл не уложится в цель. Нажмите «Предпросмотр», чтобы увидеть точный результат.</string>
+
+    <string name="resizer_section_save">Сохранение</string>
+    <string name="resizer_folder">Папка</string>
+    <string name="resizer_folder_value">Папка: %1$s</string>
+    <string name="resizer_name_pattern">Шаблон имени файла</string>
+    <string name="resizer_name_pattern_hint">{name}_{w}x{h}</string>
+    <string name="resizer_name_example">Пример: %1$s · подстановки {name} {w} {h} {n} {date}</string>
+
+    <string name="resizer_reset">Сбросить</string>
+    <string name="resizer_reset_done">Настройки сброшены</string>
+    <string name="resizer_save_copy">Сохранить копию</string>
+    <string name="resizer_already_saved_title">Уже сохранено</string>
+    <string name="resizer_already_saved_msg">Эти фото уже сохранены с такими же настройками. Сохранить ещё раз? Новые файлы получат суффикс «(1)».</string>
+    <string name="resizer_save_again">Сохранить ещё раз</string>
+    <string name="resizer_err_folder">Не удалось создать папку %1$s</string>
+    <string name="resizer_err_unsupported">Неподдерживаемый или повреждённый файл</string>
+    <string name="resizer_err_too_large">Слишком большое изображение</string>
+    <string name="resizer_err_memory">Недостаточно памяти для обработки изображения</string>
+    <string name="resizer_err_write">Не удалось записать файл</string>
+    <string name="resizer_err_space">Недостаточно свободного места</string>
+
+    <string name="resizer_sum_title_ok">Готово</string>
+    <string name="resizer_sum_title_fail">Ничего не сохранено</string>
+    <string name="resizer_sum_saved">Сохранено: %1$d из %2$d</string>
+    <string name="resizer_sum_cancelled">Отменено — оставшиеся файлы не обработаны.</string>
+    <string name="resizer_sum_size">Объём: было %1$s, стало %2$s (-%3$d%%)</string>
+    <string name="resizer_sum_dims">Размер: %1$d×%2$d</string>
+    <string name="resizer_sum_missed">Для %1$d файл(ов) целевой размер %2$s недостижим — сохранены с наименьшим возможным размером.</string>
+    <string name="resizer_sum_failed">Ошибок: %1$d</string>
+    <string name="resizer_open_folder">Открыть папку</string>
+
+    <!-- Системный выбор медиа для других приложений -->
+    <string name="picker_title_media">Выбор медиа</string>
+    <string name="picker_title_photo">Выбор фото</string>
+    <string name="picker_title_video">Выбор видео</string>
+    <string name="picker_sub">Файлов в галерее: %1$d</string>
+    <string name="picker_empty">Ничего не найдено</string>
+    <string name="picker_done">Готово</string>
+    <string name="picker_done_n">Готово (%1$d)</string>
+    <string name="picker_none">Выберите хотя бы один файл</string>
+    <string name="picker_no_permission">Сначала откройте Галерею и дайте доступ к файлам</string>
+    <string name="picker_fail">Не удалось передать выбранный файл</string>
+    <!-- О приложении: связь с разработчиком -->
+    <string name="about_telegram_title">Telegram-канал</string>
+    <string name="about_telegram_sub">@TmAppPro — новости, обновления и советы</string>
+    <string name="about_contact_title">Связаться с разработчиком</string>
+    <string name="about_contact_sub">Сообщить об ошибке или предложить идею по почте</string>
+    <string name="about_btn_telegram">Telegram</string>
+    <string name="about_btn_email">Написать нам</string>
+    <string name="about_email_subject">%1$s %2$s — обратная связь</string>
+    <string name="about_email_footer">— Данные устройства (помогают разобраться с ошибкой) —</string>
+    <string name="about_email_chooser">Отправить письмо через</string>
+    <string name="about_no_email_app">Почтовое приложение не найдено. Адрес скопирован: %1$s</string>
+    <string name="about_no_browser">Не удалось открыть ссылку. Скопирована: %1$s</string>
+    <!-- Поиск: карточки найденных папок -->
+    <string name="search_folders_title">Папки</string>
+
+    <!-- Дополнительные источники (настройки маскировки) -->
+    <string name="sources_title">Дополнительные источники</string>
+    <string name="sources_row_desc">Скрытые папки, медиа приложений (WhatsApp, Telegram…), Documents — выберите, что показывать в галерее</string>
+    <string name="sources_enabled_n">Включено: %1$s</string>
+    <string name="sources_filter_hint">Фильтр по папкам…</string>
+    <string name="sources_rescan">Сканировать заново</string>
+    <string name="sources_scanning">Сканирую память…</string>
+    <string name="sources_scanning_progress">Просмотрено папок: %1$d · найдено: %2$d</string>
+    <string name="sources_status">%1$s · файлов: %2$d · включено: %3$d</string>
+    <string name="sources_show_all">Показать все</string>
+    <string name="sources_hide_all">Скрыть все</string>
+    <string name="sources_all_on">Все папки добавлены в галерею</string>
+    <string name="sources_all_off">Папки скрыты из галереи</string>
+    <string name="sources_group_apps">Медиа приложений</string>
+    <string name="sources_group_hidden">Скрытые папки</string>
+    <string name="sources_group_other">Другие папки</string>
+    <string name="sources_badge_hidden">скрытая</string>
+    <string name="sources_preview">Открыть папку</string>
+    <string name="sources_empty_title">Ничего дополнительного не найдено</string>
+    <string name="sources_empty_sub">Все фото и видео на устройстве уже есть в галерее</string>
+
+    <plurals name="photos_count">
+        <item quantity="one">%d фото</item>
+        <item quantity="few">%d фото</item>
+        <item quantity="many">%d фото</item>
+        <item quantity="other">%d фото</item>
+    </plurals>
+    <plurals name="videos_count">
+        <item quantity="one">%d видео</item>
+        <item quantity="few">%d видео</item>
+        <item quantity="many">%d видео</item>
+        <item quantity="other">%d видео</item>
+    </plurals>
+
+    <string name="sources_new_found">Новых папок: %1$s</string>
+</resources>

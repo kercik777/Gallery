@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Встроенный редактор фото: холст + панель инструментов текущего режима + вкладки режимов -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/editorRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0B0B10"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Верхняя панель: Отмена | ФОТО | undo/redo | Готово (как в GorillaGallery) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp">
+
+            <TextView
+                android:id="@+id/btnEdClose"
+                android:layout_width="wrap_content"
+                android:layout_height="42dp"
+                android:background="@drawable/bg_editor_cancel"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:paddingStart="17dp"
+                android:paddingEnd="17dp"
+                android:text="@string/cancel"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtEdTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:letterSpacing="0.08"
+                android:maxLines="1"
+                android:text="@string/editor_label_photo"
+                android:textColor="#85FFFFFF"
+                android:textSize="14sp" />
+
+            <ImageView
+                android:id="@+id/btnEdUndo"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/editor_undo"
+                android:padding="9dp"
+                android:src="@drawable/ic_undo"
+                app:tint="@color/white" />
+
+            <ImageView
+                android:id="@+id/btnEdRedo"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="6dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/editor_redo"
+                android:padding="9dp"
+                android:src="@drawable/ic_redo"
+                app:tint="@color/white" />
+
+            <TextView
+                android:id="@+id/btnEdSave"
+                android:layout_width="wrap_content"
+                android:layout_height="42dp"
+                android:background="@drawable/bg_editor_done"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:paddingStart="17dp"
+                android:paddingEnd="17dp"
+                android:text="@string/editor_done"
+                android:textColor="?attr/gxAccent"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Холст -->
+        <com.premiumlab.galleryx.editor.EditorCanvasView
+            android:id="@+id/editorCanvas"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- Подпись режима / подсказка -->
+        <TextView
+            android:id="@+id/txtEdHint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingTop="6dp"
+            android:textColor="#9999B0"
+            android:textSize="12sp" />
+
+        <!-- Панель текущего режима -->
+        <FrameLayout
+            android:id="@+id/panelContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="132dp">
+
+            <!-- Правка: список коррекций + ползунок -->
+            <LinearLayout
+                android:id="@+id/panelTune"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp">
+
+                    <TextView
+                        android:id="@+id/txtTuneValue"
+                        android:layout_width="44dp"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:textColor="@color/white"
+                        android:textSize="13sp" />
+
+                    <SeekBar
+                        android:id="@+id/seekTune"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:max="200"
+                        android:progress="100"
+                        android:progressTint="?attr/gxAccent"
+                        android:thumbTint="@color/white" />
+
+                    <ImageView
+                        android:id="@+id/btnTuneReset"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/editor_reset"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_restore"
+                        app:tint="#9999B0" />
+                </LinearLayout>
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/rowTuneOptions"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingStart="12dp"
+                        android:paddingTop="6dp"
+                        android:paddingEnd="12dp"
+                        android:paddingBottom="10dp" />
+                </HorizontalScrollView>
+            </LinearLayout>
+
+            <!-- Фильтры: миниатюры -->
+            <HorizontalScrollView
+                android:id="@+id/panelFilters"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/rowFilters"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="10dp" />
+            </HorizontalScrollView>
+
+            <!-- Кадр: пропорции + поворот/отражение -->
+            <LinearLayout
+                android:id="@+id/panelCrop"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingTop="8dp">
+
+                    <ImageView
+                        android:id="@+id/btnCropRotate"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/bg_glass_round"
+                        android:contentDescription="@string/editor_rotate"
+                        android:padding="12dp"
+                        android:src="@drawable/ic_rotate"
+                        app:tint="@color/white" />
+
+                    <ImageView
+                        android:id="@+id/btnCropFlip"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="14dp"
+                        android:background="@drawable/bg_glass_round"
+                        android:contentDescription="@string/editor_flip"
+                        android:padding="12dp"
+                        android:src="@drawable/ic_flip"
+                        app:tint="@color/white" />
+
+                    <ImageView
+                        android:id="@+id/btnCropReset"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="14dp"
+                        android:background="@drawable/bg_glass_round"
+                        android:contentDescription="@string/editor_reset"
+                        android:padding="12dp"
+                        android:src="@drawable/ic_restore"
+                        app:tint="@color/white" />
+                </LinearLayout>
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/rowCropAspects"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingStart="12dp"
+                        android:paddingTop="10dp"
+                        android:paddingEnd="12dp"
+                        android:paddingBottom="10dp" />
+                </HorizontalScrollView>
+            </LinearLayout>
+
+            <!-- Рисование: инструмент, цвет, толщина -->
+            <LinearLayout
+                android:id="@+id/panelDoodle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="16dp">
+
+                    <SeekBar
+                        android:id="@+id/seekBrush"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:max="100"
+                        android:progress="25"
+                        android:progressTint="?attr/gxAccent"
+                        android:thumbTint="@color/white" />
+
+                    <ImageView
+                        android:id="@+id/btnDoodleUndo"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/editor_undo"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_undo"
+                        app:tint="#9999B0" />
+                </LinearLayout>
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/rowDoodleColors"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="12dp"
+                        android:paddingTop="4dp"
+                        android:paddingEnd="12dp" />
+                </HorizontalScrollView>
+
+                <!-- Прокрутка по горизонтали: чипы не обрезаются на узких экранах -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fillViewport="true"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/rowDoodleTools"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_horizontal"
+                        android:orientation="horizontal"
+                        android:paddingStart="12dp"
+                        android:paddingTop="8dp"
+                        android:paddingEnd="4dp"
+                        android:paddingBottom="10dp" />
+                </HorizontalScrollView>
+            </LinearLayout>
+
+            <!-- Текст -->
+            <LinearLayout
+                android:id="@+id/panelText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="16dp">
+
+                    <SeekBar
+                        android:id="@+id/seekTextSize"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:max="100"
+                        android:progress="30"
+                        android:progressTint="?attr/gxAccent"
+                        android:thumbTint="@color/white" />
+                </LinearLayout>
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/rowTextColors"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="12dp"
+                        android:paddingTop="4dp"
+                        android:paddingEnd="12dp" />
+                </HorizontalScrollView>
+
+                <!-- Прокрутка по горизонтали: чипы не обрезаются на узких экранах -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fillViewport="true"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/rowTextTools"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_horizontal"
+                        android:orientation="horizontal"
+                        android:paddingStart="12dp"
+                        android:paddingTop="8dp"
+                        android:paddingEnd="4dp"
+                        android:paddingBottom="10dp" />
+                </HorizontalScrollView>
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- Вкладки режимов -->
+        <LinearLayout
+            android:id="@+id/rowModes"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:background="#141420"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/layoutEdProgress"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminateTint="?attr/gxAccent" />
+    </FrameLayout>
+</FrameLayout>

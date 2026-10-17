@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Атрибуты темы: акцент и поверхности меняются выбором в настройках (Theming.apply) -->
+<resources>
+    <attr name="gxAccent" format="color" />
+    <attr name="gxOnAccent" format="color" />
+    <attr name="gxAccentDark" format="color" />
+    <attr name="gxAccentContainer" format="color" />
+    <attr name="gxOnAccentContainer" format="color" />
+    <attr name="gxAccentSoft" format="color" />
+    <attr name="gxAccentStroke" format="color" />
+    <attr name="gxGradStart" format="color" />
+    <attr name="gxGradEnd" format="color" />
+    <attr name="gxBg" format="color" />
+    <attr name="gxSurface" format="color" />
+    <attr name="gxSurfaceAlt" format="color" />
+    <attr name="gxSurfaceHigh" format="color" />
+    <attr name="gxGlass" format="color" />
+    <attr name="gxGlassStrong" format="color" />
+</resources>

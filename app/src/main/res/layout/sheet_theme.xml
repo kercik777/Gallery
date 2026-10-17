@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Тема оформления в духе GorillaGallery: режим (сегменты) + акцентный цвет (образцы) -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet"
+    android:orientation="vertical"
+    android:paddingTop="@dimen/spacing_l"
+    android:paddingBottom="@dimen/spacing_xl">
+
+    <View
+        android:layout_width="36dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/bg_handle" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/spacing_xl"
+        android:paddingTop="@dimen/spacing_l"
+        android:paddingEnd="@dimen/spacing_xl"
+        android:text="@string/theme_title"
+        android:textColor="@color/textPrimary"
+        android:textSize="17sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/spacing_xl"
+        android:paddingTop="14dp"
+        android:paddingEnd="@dimen/spacing_xl"
+        android:text="@string/theme_mode"
+        android:textColor="@color/textPrimary"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/spacing_xl"
+        android:paddingEnd="@dimen/spacing_xl"
+        android:paddingBottom="10dp"
+        android:text="@string/theme_mode_sub"
+        android:textColor="@color/textSecondary"
+        android:textSize="12sp" />
+
+    <LinearLayout
+        android:id="@+id/rowThemeModes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/spacing_xl"
+        android:layout_marginEnd="@dimen/spacing_xl"
+        android:background="@drawable/bg_segment_track"
+        android:orientation="horizontal"
+        android:padding="4dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/spacing_xl"
+        android:paddingTop="18dp"
+        android:paddingEnd="@dimen/spacing_xl"
+        android:text="@string/theme_accent"
+        android:textColor="@color/textPrimary"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/txtAccentName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/spacing_xl"
+        android:paddingEnd="@dimen/spacing_xl"
+        android:paddingBottom="12dp"
+        android:textColor="@color/textSecondary"
+        android:textSize="12sp" />
+
+    <LinearLayout
+        android:id="@+id/gridAccents"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/spacing_xl"
+        android:layout_marginEnd="@dimen/spacing_xl"
+        android:orientation="vertical" />
+</LinearLayout>

@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Сгенерировано: акцентные палитры в духе GorillaGallery (режим светлый) -->
+<resources>
+    <!-- Базовые пустые стили: AAPT выводит родителя из точек в имени -->
+    <style name="ThemeOverlay.GX" parent="" />
+    <style name="ThemeOverlay.GX.Accent" parent="" />
+
+    <style name="ThemeOverlay.GX.Accent.Violet" parent="">
+        <item name="gxAccent">#6C5CE7</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#4E3FD6</item>
+        <item name="gxAccentContainer">#E4DEFF</item>
+        <item name="gxOnAccentContainer">#2A1E77</item>
+        <item name="gxAccentSoft">#246C5CE7</item>
+        <item name="gxAccentStroke">#526C5CE7</item>
+        <item name="gxGradStart">#8378FF</item>
+        <item name="gxGradEnd">#4E3FD6</item>
+        <item name="gxBg">#F5F4FA</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#EDEBF8</item>
+        <item name="gxSurfaceHigh">#E4E1F3</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.Adaptive" parent="">
+        <item name="gxAccent">#000000</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#282830</item>
+        <item name="gxAccentContainer">#E4E4EA</item>
+        <item name="gxOnAccentContainer">#14141C</item>
+        <item name="gxAccentSoft">#24000000</item>
+        <item name="gxAccentStroke">#52000000</item>
+        <item name="gxGradStart">#464650</item>
+        <item name="gxGradEnd">#0A0A0E</item>
+        <item name="gxBg">#F4F4F7</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#ECECF2</item>
+        <item name="gxSurfaceHigh">#E3E3EB</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.Red" parent="">
+        <item name="gxAccent">#C62828</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#941E1E</item>
+        <item name="gxAccentContainer">#F4D4D4</item>
+        <item name="gxOnAccentContainer">#4F1010</item>
+        <item name="gxAccentSoft">#24C62828</item>
+        <item name="gxAccentStroke">#52C62828</item>
+        <item name="gxGradStart">#CF4848</item>
+        <item name="gxGradEnd">#9E2020</item>
+        <item name="gxBg">#F3EEF3</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#EAE0E8</item>
+        <item name="gxSurfaceHigh">#E0D0DA</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.Crimson" parent="">
+        <item name="gxAccent">#EC5464</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#B13F4B</item>
+        <item name="gxAccentContainer">#FBDDE0</item>
+        <item name="gxOnAccentContainer">#5E2228</item>
+        <item name="gxAccentSoft">#24EC5464</item>
+        <item name="gxAccentStroke">#52EC5464</item>
+        <item name="gxGradStart">#EF6E7B</item>
+        <item name="gxGradEnd">#BD4350</item>
+        <item name="gxBg">#F4EFF5</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#ECE3EB</item>
+        <item name="gxSurfaceHigh">#E4D5E0</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.Rose" parent="">
+        <item name="gxAccent">#D81B60</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#A21448</item>
+        <item name="gxAccentContainer">#F7D1DF</item>
+        <item name="gxOnAccentContainer">#560B26</item>
+        <item name="gxAccentSoft">#24D81B60</item>
+        <item name="gxAccentStroke">#52D81B60</item>
+        <item name="gxGradStart">#DE3D78</item>
+        <item name="gxGradEnd">#AD164D</item>
+        <item name="gxBg">#F3EDF4</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#EBDFEB</item>
+        <item name="gxSurfaceHigh">#E2CFE0</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.Purple" parent="">
+        <item name="gxAccent">#8E24AA</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#6A1B80</item>
+        <item name="gxAccentContainer">#E8D3EE</item>
+        <item name="gxOnAccentContainer">#390E44</item>
+        <item name="gxAccentSoft">#248E24AA</item>
+        <item name="gxAccentStroke">#528E24AA</item>
+        <item name="gxGradStart">#9F45B7</item>
+        <item name="gxGradEnd">#721D88</item>
+        <item name="gxBg">#F1EEF7</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#E6E0F0</item>
+        <item name="gxSurfaceHigh">#DAD0E7</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.DeepPurple" parent="">
+        <item name="gxAccent">#5E35B1</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#462885</item>
+        <item name="gxAccentContainer">#DFD7EF</item>
+        <item name="gxOnAccentContainer">#261547</item>
+        <item name="gxAccentSoft">#245E35B1</item>
+        <item name="gxAccentStroke">#525E35B1</item>
+        <item name="gxGradStart">#7653BD</item>
+        <item name="gxGradEnd">#4B2A8E</item>
+        <item name="gxBg">#F0EEF7</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#E3E1F0</item>
+        <item name="gxSurfaceHigh">#D6D2E8</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.Indigo" parent="">
+        <item name="gxAccent">#3949AB</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#2B3780</item>
+        <item name="gxAccentContainer">#D7DBEE</item>
+        <item name="gxOnAccentContainer">#171D44</item>
+        <item name="gxAccentSoft">#243949AB</item>
+        <item name="gxAccentStroke">#523949AB</item>
+        <item name="gxGradStart">#5764B8</item>
+        <item name="gxGradEnd">#2E3A89</item>
+        <item name="gxBg">#EEEFF7</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#E1E2F0</item>
+        <item name="gxSurfaceHigh">#D2D4E7</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.Blue" parent="">
+        <item name="gxAccent">#1E88E5</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#1666AC</item>
+        <item name="gxAccentContainer">#D2E7FA</item>
+        <item name="gxOnAccentContainer">#0C365C</item>
+        <item name="gxAccentSoft">#241E88E5</item>
+        <item name="gxAccentStroke">#521E88E5</item>
+        <item name="gxGradStart">#409AE9</item>
+        <item name="gxGradEnd">#186DB7</item>
+        <item name="gxBg">#EEF1F8</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#E0E6F3</item>
+        <item name="gxSurfaceHigh">#CFDAED</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.SkyBlue" parent="">
+        <item name="gxAccent">#0279B3</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#025B86</item>
+        <item name="gxAccentContainer">#CDEBFA</item>
+        <item name="gxOnAccentContainer">#013E5C</item>
+        <item name="gxAccentSoft">#240279B3</item>
+        <item name="gxAccentStroke">#520279B3</item>
+        <item name="gxGradStart">#288DBE</item>
+        <item name="gxGradEnd">#02618F</item>
+        <item name="gxBg">#EDF1F8</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#DEE7F3</item>
+        <item name="gxSurfaceHigh">#CDDCED</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.Cyan" parent="">
+        <item name="gxAccent">#008697</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#006571</item>
+        <item name="gxAccentContainer">#CCEEF3</item>
+        <item name="gxOnAccentContainer">#00454D</item>
+        <item name="gxAccentSoft">#24008697</item>
+        <item name="gxAccentStroke">#52008697</item>
+        <item name="gxGradStart">#2698A6</item>
+        <item name="gxGradEnd">#006B78</item>
+        <item name="gxBg">#EDF2F7</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#DEE8F1</item>
+        <item name="gxSurfaceHigh">#CCDEEA</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.ElectricCyan" parent="">
+        <item name="gxAccent">#00B3C7</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#008695</item>
+        <item name="gxAccentContainer">#CCFAFF</item>
+        <item name="gxOnAccentContainer">#005C66</item>
+        <item name="gxAccentSoft">#2400B3C7</item>
+        <item name="gxAccentStroke">#5200B3C7</item>
+        <item name="gxGradStart">#26BECF</item>
+        <item name="gxGradEnd">#008F9F</item>
+        <item name="gxBg">#EDF4F9</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#DEECF5</item>
+        <item name="gxSurfaceHigh">#CCE3F0</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.Teal" parent="">
+        <item name="gxAccent">#00897B</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#00675C</item>
+        <item name="gxAccentContainer">#CCE7E5</item>
+        <item name="gxOnAccentContainer">#003731</item>
+        <item name="gxAccentSoft">#2400897B</item>
+        <item name="gxAccentStroke">#5200897B</item>
+        <item name="gxGradStart">#269B8F</item>
+        <item name="gxGradEnd">#006E62</item>
+        <item name="gxBg">#EDF1F5</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#DEE6ED</item>
+        <item name="gxSurfaceHigh">#CCDAE2</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.Green" parent="">
+        <item name="gxAccent">#347D37</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#275E2A</item>
+        <item name="gxAccentContainer">#D9ECDA</item>
+        <item name="gxOnAccentContainer">#1B401C</item>
+        <item name="gxAccentSoft">#24347D37</item>
+        <item name="gxAccentStroke">#52347D37</item>
+        <item name="gxGradStart">#539055</item>
+        <item name="gxGradEnd">#2A642C</item>
+        <item name="gxBg">#EFF1F4</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#E2E7EA</item>
+        <item name="gxSurfaceHigh">#D3DCDD</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.LightGreen" parent="">
+        <item name="gxAccent">#618C33</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#496927</item>
+        <item name="gxAccentContainer">#E5F0D9</item>
+        <item name="gxOnAccentContainer">#32481A</item>
+        <item name="gxAccentSoft">#24618C33</item>
+        <item name="gxAccentStroke">#52618C33</item>
+        <item name="gxGradStart">#789D52</item>
+        <item name="gxGradEnd">#4D7029</item>
+        <item name="gxBg">#F0F2F4</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#E5E9E9</item>
+        <item name="gxSurfaceHigh">#D9DEDD</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.Lime" parent="">
+        <item name="gxAccent">#969E28</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#70761E</item>
+        <item name="gxAccentContainer">#F2F4D6</item>
+        <item name="gxOnAccentContainer">#4D5114</item>
+        <item name="gxAccentSoft">#24969E28</item>
+        <item name="gxAccentStroke">#52969E28</item>
+        <item name="gxGradStart">#A6AC48</item>
+        <item name="gxGradEnd">#787E20</item>
+        <item name="gxBg">#F2F3F3</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#E9EAE8</item>
+        <item name="gxSurfaceHigh">#E0E0DB</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.Yellow" parent="">
+        <item name="gxAccent">#C5A829</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#947E1F</item>
+        <item name="gxAccentContainer">#FFF7D7</item>
+        <item name="gxOnAccentContainer">#655615</item>
+        <item name="gxAccentSoft">#24C5A829</item>
+        <item name="gxAccentStroke">#52C5A829</item>
+        <item name="gxGradStart">#CEB549</item>
+        <item name="gxGradEnd">#9E8721</item>
+        <item name="gxBg">#F4F3F3</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#EDEBE9</item>
+        <item name="gxSurfaceHigh">#E6E2DC</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.Amber" parent="">
+        <item name="gxAccent">#C78C00</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#956900</item>
+        <item name="gxAccentContainer">#FFF0CC</item>
+        <item name="gxOnAccentContainer">#664800</item>
+        <item name="gxAccentSoft">#24C78C00</item>
+        <item name="gxAccentStroke">#52C78C00</item>
+        <item name="gxGradStart">#CF9D26</item>
+        <item name="gxGradEnd">#9F7000</item>
+        <item name="gxBg">#F4F2F2</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#EDE9E5</item>
+        <item name="gxSurfaceHigh">#E6DED6</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.Orange" parent="">
+        <item name="gxAccent">#C46D00</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#935200</item>
+        <item name="gxAccentContainer">#FEE8CC</item>
+        <item name="gxOnAccentContainer">#643800</item>
+        <item name="gxAccentSoft">#24C46D00</item>
+        <item name="gxAccentStroke">#52C46D00</item>
+        <item name="gxGradStart">#CD8326</item>
+        <item name="gxGradEnd">#9D5700</item>
+        <item name="gxBg">#F4F1F2</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#EDE6E5</item>
+        <item name="gxSurfaceHigh">#E5DAD6</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.DeepOrange" parent="">
+        <item name="gxAccent">#F4511E</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#B73D16</item>
+        <item name="gxAccentContainer">#FDDCD2</item>
+        <item name="gxOnAccentContainer">#62200C</item>
+        <item name="gxAccentSoft">#24F4511E</item>
+        <item name="gxAccentStroke">#52F4511E</item>
+        <item name="gxGradStart">#F66B40</item>
+        <item name="gxGradEnd">#C34118</item>
+        <item name="gxBg">#F4EFF2</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#ECE3E7</item>
+        <item name="gxSurfaceHigh">#E5D4D9</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <style name="ThemeOverlay.GX.Accent.BlueGrey" parent="">
+        <item name="gxAccent">#546E7A</item>
+        <item name="gxOnAccent">#FFFFFF</item>
+        <item name="gxAccentDark">#3F525C</item>
+        <item name="gxAccentContainer">#DDE2E4</item>
+        <item name="gxOnAccentContainer">#222C31</item>
+        <item name="gxAccentSoft">#24546E7A</item>
+        <item name="gxAccentStroke">#52546E7A</item>
+        <item name="gxGradStart">#6E848E</item>
+        <item name="gxGradEnd">#435862</item>
+        <item name="gxBg">#EFF0F5</item>
+        <item name="gxSurface">#FFFFFF</item>
+        <item name="gxSurfaceAlt">#E3E4ED</item>
+        <item name="gxSurfaceHigh">#D5D7E2</item>
+        <item name="gxGlass">#D9FFFFFF</item>
+        <item name="gxGlassStrong">#F2FFFFFF</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+    </style>
+    <!-- AMOLED: чистый чёрный фон, поверхности чуть приподняты -->
+    <style name="ThemeOverlay.GX.Amoled" parent="">
+        <item name="gxBg">#000000</item>
+        <item name="gxSurface">#121214</item>
+        <item name="gxSurfaceAlt">#1B1B1F</item>
+        <item name="gxSurfaceHigh">#26262B</item>
+        <item name="gxGlass">#D9121214</item>
+        <item name="gxGlassStrong">#F2121214</item>
+    </style>
+</resources>

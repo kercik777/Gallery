@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.GalleryX" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Атрибуты оформления по умолчанию (перекрываются ThemeOverlay.GX.Accent.*) -->
+        <item name="gxAccent">@color/primary</item>
+        <item name="gxOnAccent">@color/onPrimary</item>
+        <item name="gxAccentDark">@color/primaryDark</item>
+        <item name="gxAccentContainer">@color/primaryContainer</item>
+        <item name="gxOnAccentContainer">@color/onPrimaryContainer</item>
+        <item name="gxAccentSoft">@color/accentSoft</item>
+        <item name="gxAccentStroke">@color/accentStroke</item>
+        <item name="gxGradStart">@color/grad_start</item>
+        <item name="gxGradEnd">@color/grad_end</item>
+        <item name="gxBg">@color/bg</item>
+        <item name="gxSurface">@color/surface</item>
+        <item name="gxSurfaceAlt">@color/surfaceAlt</item>
+        <item name="gxSurfaceHigh">@color/surfaceHigh</item>
+        <item name="gxGlass">@color/glass</item>
+        <item name="gxGlassStrong">@color/glassStrong</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+
+        <item name="android:colorBackground">?attr/gxBg</item>
+        <item name="colorSurface">?attr/gxSurface</item>
+        <item name="colorOnSurface">@color/textPrimary</item>
+        <item name="colorOnSurfaceVariant">@color/textSecondary</item>
+        <item name="colorOutline">@color/outline</item>
+
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <item name="android:windowAnimationStyle">@style/ActivityAnim</item>
+    </style>
+</resources>

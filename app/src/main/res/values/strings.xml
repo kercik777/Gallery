@@ -1,0 +1,812 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Default (English) strings. Russian lives in values-ru/strings.xml.
+    To add a language: copy this file to values-<lang>/strings.xml and translate.
+-->
+<resources>
+    <string name="app_name">Gallery</string>
+
+    <!-- Navigation -->
+    <string name="nav_gallery">Gallery</string>
+    <string name="nav_albums">Albums</string>
+    <string name="nav_favorites">Favorites</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Common -->
+    <string name="loading">Loading…</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="continue_btn">Continue</string>
+    <string name="close">Close</string>
+    <string name="back">Back</string>
+    <string name="delete">Delete</string>
+    <string name="error_generic">Something went wrong</string>
+    <string name="no_app_to_share">No app found to share with</string>
+
+    <!-- Permissions -->
+    <string name="permission_title">File access required</string>
+    <string name="permission_desc">To show every photo and video on the device, the app needs access to all files. The permission is used locally only.</string>
+    <string name="permission_btn">Allow access</string>
+    <string name="permission_note">All data is processed on your device only</string>
+
+    <!-- Search and filters -->
+    <string name="search_hint">Search…</string>
+    <string name="search_no_results_title">Nothing found</string>
+    <string name="search_no_results_sub">Try a different query</string>
+    <string name="filter_all">All</string>
+    <string name="filter_photo">Photos</string>
+    <string name="filter_video">Videos</string>
+
+    <!-- Sorting -->
+    <string name="sort_title">Sort</string>
+    <string name="sort_date_desc">Newest first</string>
+    <string name="sort_date_asc">Oldest first</string>
+    <string name="sort_name_asc">By name (A–Z)</string>
+    <string name="sort_name_desc">By name (Z–A)</string>
+    <string name="sort_size_desc">By size (largest)</string>
+    <string name="sort_size_asc">By size (smallest)</string>
+
+    <!-- Dates -->
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+
+    <!-- Empty states -->
+    <string name="empty_gallery_title">No media</string>
+    <string name="empty_gallery_sub">Photos and videos from the whole device will appear here</string>
+    <string name="fav_empty_title">Nothing here yet</string>
+    <string name="fav_empty_sub">Add photos and videos to favorites with the heart</string>
+    <string name="albums_empty_title">No folders</string>
+    <string name="albums_empty_sub">Create your first folder</string>
+    <string name="folder_empty_title">Folder is empty</string>
+    <string name="folder_empty_sub">There are no photos or videos in this folder</string>
+
+    <!-- Favorites -->
+    <string name="favorites_title">Favorites</string>
+    <string name="fav_added">Added to favorites</string>
+    <string name="fav_removed">Removed from favorites</string>
+
+    <!-- Albums -->
+    <string name="albums_title">Albums</string>
+    <string name="my_folders">My folders</string>
+    <string name="my_folders_short">Mine</string>
+    <string name="device_folders">Device folders</string>
+    <string name="subfolders">Subfolders</string>
+    <string name="open">Open</string>
+    <string name="rename">Rename</string>
+
+    <!-- Folders -->
+    <string name="create_folder">Create folder</string>
+    <string name="new_folder">New folder</string>
+    <string name="folder_name_hint">Folder name</string>
+    <string name="will_be_created">Will be created: %1$s</string>
+    <string name="folder_created">Folder created</string>
+    <string name="folder_exists">A folder with this name already exists</string>
+    <string name="invalid_folder_name">Invalid folder name</string>
+    <string name="delete_folder">Delete folder</string>
+    <string name="delete_folder_confirm">Delete the folder “%1$s”? Its contents will be moved to the trash.</string>
+    <string name="folder_menu_new">New folder inside</string>
+    <string name="rename_folder_title">Rename folder</string>
+    <string name="delete_selected_folders_confirm">Delete the selected folders? Their contents will be moved to the trash.</string>
+
+    <!-- Root folder -->
+    <string name="root_title">Root folder</string>
+    <string name="root_desc">Choose where the app’s root folder lives. Every folder you create will be inside it, so the whole collection is easy to copy to a computer. The trash and the safe are stored inside it too, in a hidden directory.</string>
+    <string name="root_name_hint">Root folder name</string>
+    <string name="root_create_btn">Create here and select</string>
+    <string name="root_pick_current_btn">Select current folder</string>
+    <string name="root_desc_service">The app’s service folders (trash and safe) are created inside the root folder in the hidden .GalleryX directory.</string>
+    <string name="root_required_title">Choose a root folder first</string>
+    <string name="root_required_msg">The trash and the safe are stored inside the app’s root folder. Choose it and the action becomes available.</string>
+    <string name="root_required_btn">Choose folder</string>
+    <string name="dest_pick_title">Destination folder</string>
+    <string name="dest_pick_desc">Navigate to the folder on the device and tap “Select current folder”, or create a new folder right here.</string>
+    <string name="dest_create_here_btn">Create here and select</string>
+    <string name="dest_pick_current_btn">Select current folder</string>
+    <string name="dest_other_folder">Another folder on the device…</string>
+    <string name="play">Play</string>
+    <string name="subfolders_title">Folders</string>
+    <string name="dest_pick_desc_short">Pick any folder in phone storage</string>
+    <string name="dest_section_mine">My folders</string>
+    <string name="dest_section_device">Device folders</string>
+    <string name="dest_section_actions">Quick actions</string>
+    <string name="dest_new_subfolder">New folder in “%1$s”</string>
+    <string name="storage_internal">Internal storage</string>
+    <string name="root_selected">Root folder selected</string>
+    <string name="root_needed_title">Choose a root folder first</string>
+    <string name="root_needed_desc">All new folders are created inside the root one. Choose where to create it — for example in Download or DCIM.</string>
+    <string name="root_not_set">Not selected</string>
+    <string name="settings_root">Root folder</string>
+    <string name="root_removed_please_note">Files in the old folder stay where they are</string>
+
+    <!-- Masking mode -->
+    <string name="masking_title">Masking mode</string>
+    <string name="masking_subtitle">The gallery looks ordinary, but the root folder and the safe stay hidden until you open them</string>
+    <string name="masking_status_on">On</string>
+    <string name="masking_status_off">Off</string>
+    <string name="masking_switch">Enable masking</string>
+    <string name="masking_switch_desc">Hide the root folder, the safe and these settings</string>
+    <string name="masking_enable_title">Enable masking mode?</string>
+    <string name="masking_enable_msg">While masking is “closed”, the root folder with all your folders, the safe and the “Masking mode” item in Settings disappear from the gallery.\n\nFor now the gallery stays open — hide it with the “eye” icon on the main screen. To show everything again, hold the “Gallery” title for 3 seconds.</string>
+    <string name="masking_disable_title">Disable masking mode?</string>
+    <string name="masking_disable_msg">The root folder and the safe will always be visible.</string>
+    <string name="masking_hint_title">How to open the hidden gallery</string>
+    <string name="masking_hint_steps">1. Open the app — it is an ordinary gallery without the root folder and the safe.\n2. Hold the “Gallery” title for 3 seconds.\n3. If a PIN is set, enter it.\n4. Your folders, the safe and the masking settings appear.</string>
+    <string name="masking_suggest_pin">Setting a PIN is recommended</string>
+    <string name="masking_active_now">Masking is active</string>
+
+    <!-- PIN -->
+    <string name="pin_title">PIN code</string>
+    <string name="pin_switch_desc">One code for the safe and for opening hidden folders</string>
+    <string name="pin_required_title">Set a PIN first</string>
+    <string name="pin_required_safe_msg">The safe is protected by a PIN. Create one and you will be able to hide files.</string>
+    <string name="pin_required_btn">Create PIN</string>
+    <string name="safe_pin_setup_hint">Set a PIN for the safe first</string>
+    <string name="pin_change">Change PIN</string>
+    <string name="pin_enter_title">Enter PIN</string>
+    <string name="pin_create_title">Create a PIN</string>
+    <string name="pin_confirm_title">Repeat the PIN</string>
+    <string name="pin_wrong">Wrong PIN</string>
+    <string name="pin_mismatch">PINs don’t match. Try again</string>
+    <string name="pin_saved">PIN set</string>
+    <string name="pin_removed">PIN disabled</string>
+    <string name="pin_disabled_confirm_title">Disable PIN?</string>
+    <string name="pin_disabled_confirm_msg">Hidden folders will open without a password — right after holding the title.</string>
+    <string name="pin_locked_seconds">Too many attempts. Wait %1$d s.</string>
+    <string name="pin_recovery_title">PIN recovery</string>
+    <string name="pin_recovery_msg">Enter the secret recovery code</string>
+    <string name="pin_recovery_hint">Secret code</string>
+    <string name="pin_recovery_wrong">Wrong recovery code</string>
+
+    <!-- Auto-hide -->
+    <string name="autohide_title">Auto-hide</string>
+    <string name="autohide_desc">When the root folder and the safe get hidden again</string>
+    <string name="autohide_minimize">When the app is minimized</string>
+    <string name="autohide_minimize_desc">Hidden as soon as you leave the app</string>
+    <string name="autohide_1min">After 1 minute</string>
+    <string name="autohide_1min_desc">Hidden again one minute after opening</string>
+    <string name="autohide_5min">After 5 minutes</string>
+    <string name="autohide_5min_desc">Hidden again 5 minutes after opening</string>
+    <string name="autohide_manual">Manually only</string>
+    <string name="autohide_manual_desc">Hidden only with the “Hide now” button</string>
+    <string name="hide_now">Hide now</string>
+    <string name="secure_shots">Block screenshots</string>
+    <string name="secure_shots_desc">Hides app content in Recents and prevents screenshots</string>
+
+    <!-- Selection and actions -->
+    <string name="select_all">Select all</string>
+    <string name="deselect_all">Deselect all</string>
+    <string name="album_dest_inside_itself">A folder can’t be moved into itself</string>
+    <string name="video_sound">Sound</string>
+    <string name="note_title">Note</string>
+    <string name="note_title_hint">Title</string>
+    <string name="note_body_hint">Note text…</string>
+    <string name="note_loading">Loading…</string>
+    <string name="note_mode_edit">Edit</string>
+    <string name="note_mode_view">View</string>
+    <string name="note_updated">Edited: %s</string>
+    <string name="note_saved">Note saved</string>
+    <string name="note_deleted">Note deleted</string>
+    <string name="note_delete_title">Delete note?</string>
+    <string name="note_delete_msg">The note attached to this file will be deleted permanently.</string>
+    <string name="lock_folder">Lock</string>
+    <string name="unlock_folder">Unlock</string>
+    <string name="locked_folder">Locked folder</string>
+    <string name="pin_required_lock_msg">Folder locking works only with a PIN. Create one — it also protects the safe.</string>
+    <string name="lock_done">Folders locked: files are hidden from the shared sections</string>
+    <string name="unlock_done">Unlocked</string>
+    <string name="mask_pin_title">PIN for masking</string>
+    <string name="mask_pin_desc">Ask for the PIN when revealing hidden items (hold the title for 3 s). Off — opens immediately; the PIN protects only the safe and locked folders</string>
+    <string name="album_no_files">The selected folders contain no files</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_move">Move</string>
+    <string name="action_favorite">Favorite</string>
+    <string name="action_favorite_short">Favorite</string>
+    <string name="action_safe">To safe</string>
+    <string name="action_safe_short">Safe</string>
+    <string name="action_share">Share</string>
+    <string name="action_restore">Restore</string>
+    <string name="action_delete_forever">Delete forever</string>
+    <string name="action_info">Details</string>
+    <string name="rewind_10">Back 10 seconds</string>
+    <string name="forward_10">Forward 10 seconds</string>
+
+    <!-- Confirmations -->
+    <string name="delete_confirm_title">Delete?</string>
+    <string name="delete_confirm_text">The selected items will be moved to the trash. You can restore them within 30 days.</string>
+    <string name="delete_forever_confirm_title">Delete forever?</string>
+    <string name="delete_forever_confirm_text">The items will be deleted permanently. This can’t be undone.</string>
+    <string name="safe_move_confirm_title">Move to the safe?</string>
+    <string name="safe_move_confirm_text">The items will disappear from the gallery and be available only in the safe.</string>
+
+    <!-- Trash -->
+    <string name="trash_title">Trash</string>
+    <string name="trash_subtitle">Items are kept for 30 days, then deleted forever</string>
+    <string name="trash_empty_title">Trash is empty</string>
+    <string name="trash_empty_sub">Recently deleted items will appear here</string>
+    <string name="trash_clear_btn">Empty trash</string>
+    <string name="trash_clear_confirm">Empty the trash?</string>
+    <string name="trash_clear_confirm_text">All items will be deleted forever.</string>
+
+    <!-- Safe -->
+    <string name="safe_title">Safe</string>
+    <string name="safe_subtitle">Files are hidden from the gallery and protected</string>
+    <string name="safe_empty_title">Safe is empty</string>
+    <string name="safe_empty_sub">Move files here to hide them from prying eyes</string>
+    <string name="safe_locked_title">The safe is protected by a PIN</string>
+    <string name="safe_locked_sub">Enter the gallery PIN to open the safe</string>
+    <string name="safe_open_btn">Open safe</string>
+    <string name="safe_lock_btn">Lock safe</string>
+
+    <!-- Copy/move destination -->
+    <string name="dest_copy_title">Copy to…</string>
+    <string name="dest_move_title">Move to…</string>
+    <string name="dest_new_folder">New folder…</string>
+    <string name="dest_root_folder">Root folder</string>
+    <string name="dest_empty_title">No folders available</string>
+    <string name="dest_empty_sub">Create a root folder first</string>
+
+    <!-- Operations -->
+    <string name="op_copy">Copying</string>
+    <string name="op_move">Moving</string>
+    <string name="op_trash">Deleting</string>
+    <string name="op_safe">Moving to the safe</string>
+    <string name="op_restore">Restoring</string>
+    <string name="op_delete">Deleting forever</string>
+    <string name="op_cancel">Cancel</string>
+    <string name="op_progress_of">%1$d of %2$d</string>
+    <string name="op_notif_channel">File operations</string>
+    <string name="op_notif_channel_desc">Progress of copying, moving and deleting files</string>
+    <string name="op_notif_running">In progress…</string>
+    <string name="op_notif_done">Done: %1$d of %2$d</string>
+    <string name="op_cancelled">Operation cancelled</string>
+
+    <!-- File details -->
+    <string name="info_title">Details</string>
+    <string name="info_name">Name</string>
+    <string name="info_type">Type</string>
+    <string name="info_type_photo">Photo</string>
+    <string name="info_type_video">Video</string>
+    <string name="info_path">Path</string>
+    <string name="info_size">Size</string>
+    <string name="info_dims">Resolution</string>
+    <string name="info_date">Date modified</string>
+    <string name="info_duration">Duration</string>
+    <string name="info_album">Album</string>
+    <string name="smart_media_types">Media types</string>
+    <string name="smart_utilities">Utilities</string>
+    <string name="smart_photos">Photos</string>
+    <string name="smart_videos">Videos</string>
+    <string name="smart_selfies">Selfies</string>
+    <string name="smart_screenshots">Screenshots</string>
+    <string name="smart_favorites">Favorites</string>
+    <string name="smart_edited">Edited</string>
+    <string name="smart_analysing_title">Looking for selfies…</string>
+    <string name="smart_analysing_sub">Photos are analysed on the device. This happens once; the list will appear automatically.</string>
+    <string name="smart_empty_title">Nothing here yet</string>
+    <string name="smart_empty_sub">Matching files will appear here</string>
+    <string name="meta_edit_title">Edit</string>
+    <string name="meta_date_title">Date and time</string>
+    <string name="meta_date_hint">The date is written to EXIF (for JPEG) and to the file’s modification date — the timeline is sorted by it.</string>
+    <string name="meta_saved">Changes saved</string>
+    <string name="meta_name_exists">A file with this name already exists</string>
+    <string name="meta_failed">Couldn’t change the file</string>
+    <string name="info_adjust_date">Change date</string>
+    <string name="info_search_image">Search by image</string>
+    <string name="info_no_lens">Google Lens is not installed</string>
+    <string name="viewer_edit">Edit</string>
+    <string name="viewer_edit_sub">Crop, filters, rotate</string>
+    <string name="no_editor_app">No app available for editing</string>
+    <string name="pin_use_code">Enter code</string>
+    <string name="settings_biometric">Unlock with fingerprint or face</string>
+    <string name="settings_search_hint">Search settings</string>
+    <string name="settings_privacy">Privacy</string>
+    <string name="settings_general">General</string>
+    <string name="settings_pin">PIN code</string>
+    <string name="settings_pin_sub">Safe and masking. Change or disable the code</string>
+    <string name="settings_pin_set">Set</string>
+    <string name="settings_pin_not_set">Not set</string>
+    <string name="settings_biometric_sub">Fingerprint or face instead of the PIN; the code stays as a fallback</string>
+    <string name="settings_biometric_need_pin">Set a PIN in the masking settings first — biometrics only complement it.</string>
+    <string name="settings_biometric_unavailable">No biometrics are set up on this device</string>
+    <string name="settings_safe_in_albums">Safe in albums</string>
+    <string name="settings_safe_in_albums_sub">Show “Safe” in the “Utilities” block</string>
+    <string name="settings_flag_secure">Screenshot protection</string>
+    <string name="settings_flag_secure_sub">Block screenshots and previews in Recents</string>
+    <string name="settings_group_by">Group photos</string>
+    <string name="settings_group_by_sub">Headers in the timeline</string>
+    <string name="group_none">None</string>
+    <string name="group_day">By day</string>
+    <string name="group_month">By month</string>
+    <string name="group_year">By year</string>
+    <string name="settings_hq_thumbs">High-quality thumbnails</string>
+    <string name="settings_hq_thumbs_sub">Sharper grid, slightly more memory</string>
+    <string name="settings_slider_style">Player slider</string>
+    <string name="settings_slider_thin">Thin line</string>
+    <string name="settings_slider_thick">Thick capsule</string>
+    <string name="settings_loop">Loop videos</string>
+    <string name="settings_loop_sub">Replay the video after it ends</string>
+    <string name="settings_video_sound">Video sound by default</string>
+    <string name="settings_video_sound_sub">Otherwise videos start muted</string>
+    <string name="settings_pip">Picture-in-picture</string>
+    <string name="settings_pip_sub">Video keeps playing in a window when minimized</string>
+    <string name="settings_use_trash">Delete to trash</string>
+    <string name="settings_use_trash_sub">Files can be restored for 30 days</string>
+    <string name="settings_use_trash_warn">Without the trash, files are deleted immediately and forever. Continue?</string>
+    <string name="settings_quiet">Hide notifications</string>
+    <string name="settings_quiet_sub">No pop-up hints or delete confirmations</string>
+    <string name="settings_fast_scroll">Fast scroll</string>
+    <string name="settings_fast_scroll_sub">Scroll thumb at the right edge of the grid</string>
+    <string name="about_privacy_title">Privacy</string>
+    <string name="info_file_section">File</string>
+    <string name="info_camera_section">Camera</string>
+    <string name="info_location_section">Location</string>
+    <string name="info_megapixels">Megapixels</string>
+    <string name="info_aperture">Aperture</string>
+    <string name="info_shutter">Shutter</string>
+    <string name="info_iso">ISO</string>
+    <string name="info_focal">Focal length</string>
+    <string name="info_open_maps">Maps</string>
+    <string name="info_no_maps">No maps app</string>
+    <string name="viewer_options">Options</string>
+    <string name="viewer_move_sub">Choose a destination folder</string>
+    <string name="viewer_copy_sub">Copy to another folder</string>
+    <string name="viewer_safe_sub">Hide behind the PIN</string>
+    <string name="viewer_open_in">Open in another app</string>
+    <string name="viewer_open_in_sub">Editor, player, etc.</string>
+    <string name="viewer_wallpaper">Set as wallpaper</string>
+    <string name="viewer_wallpaper_sub">Home screen or lock screen</string>
+    <string name="viewer_info_sub">Size, resolution, camera, location</string>
+    <string name="viewer_note_sub">Text attached to the file</string>
+    <string name="no_app_to_open">No app can open this file</string>
+    <string name="info_path_copied">Path copied</string>
+    <string name="info_hidden_file">Hidden safe file</string>
+
+    <!-- Settings -->
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_grid">Grid size</string>
+    <string name="settings_grid_albums">Album grid size</string>
+    <string name="grid_value">Columns: %1$d</string>
+    <string name="grid_hint">Also changes by pinching the grid</string>
+    <string name="settings_folders_section">Folders</string>
+    <string name="settings_data_section">Data</string>
+    <string name="settings_about_section">About</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="about_desc">Gallery is a feature-rich private gallery with a masking mode, a safe, a trash and flexible folder management.</string>
+    <string name="about_privacy">All data is stored on your device only</string>
+    <string name="theme_title">Theme</string>
+
+    <!-- Video -->
+    <string name="video_error">Couldn’t play the video: unsupported format</string>
+
+    <!-- Misc -->
+    <string name="share_via">Share</string>
+    <string name="video_badge">VIDEO</string>
+
+    <plurals name="items_count">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">%d item selected</item>
+        <item quantity="other">%d items selected</item>
+    </plurals>
+
+    <plurals name="days_left">
+        <item quantity="one">%d day left</item>
+        <item quantity="other">%d days left</item>
+    </plurals>
+
+    <plurals name="result_copied">
+        <item quantity="one">%d file copied</item>
+        <item quantity="other">%d files copied</item>
+    </plurals>
+
+    <plurals name="result_moved">
+        <item quantity="one">%d file moved</item>
+        <item quantity="other">%d files moved</item>
+    </plurals>
+
+    <plurals name="result_trashed">
+        <item quantity="one">%d file moved to the trash</item>
+        <item quantity="other">%d files moved to the trash</item>
+    </plurals>
+
+    <plurals name="result_safed">
+        <item quantity="one">%d file moved to the safe</item>
+        <item quantity="other">%d files moved to the safe</item>
+    </plurals>
+
+    <plurals name="result_restored">
+        <item quantity="one">%d file restored</item>
+        <item quantity="other">%d files restored</item>
+    </plurals>
+
+    <plurals name="result_albums_copied">
+        <item quantity="one">%d album copied</item>
+        <item quantity="other">%d albums copied</item>
+    </plurals>
+
+    <plurals name="result_albums_moved">
+        <item quantity="one">%d album moved</item>
+        <item quantity="other">%d albums moved</item>
+    </plurals>
+
+    <plurals name="result_albums_deleted">
+        <item quantity="one">%d album deleted (files are in the trash)</item>
+        <item quantity="other">%d albums deleted (files are in the trash)</item>
+    </plurals>
+
+    <plurals name="result_deleted">
+        <item quantity="one">%d file deleted forever</item>
+        <item quantity="other">%d files deleted forever</item>
+    </plurals>
+
+    <!-- Built-in editor -->
+    <string name="editor_title">Editor</string>
+    <string name="editor_undo">Undo</string>
+    <string name="editor_redo">Redo</string>
+    <string name="editor_reset">Reset</string>
+    <string name="editor_rotate">Rotate</string>
+    <string name="editor_flip">Flip</string>
+    <string name="editor_load_failed">Couldn’t open the file</string>
+    <string name="editor_nothing">No changes</string>
+    <string name="editor_save_title">Save changes</string>
+    <string name="editor_save_copy">Save a copy</string>
+    <string name="editor_overwrite">Overwrite original</string>
+    <string name="editor_save_failed">Couldn’t save</string>
+    <string name="editor_saved">Saved</string>
+    <string name="editor_discard_title">Discard changes?</string>
+    <string name="editor_discard_msg">Unsaved edits will be lost.</string>
+    <string name="editor_discard">Discard edits</string>
+    <string name="editor_restore_first">Restore the file from the safe or the trash first</string>
+    <string name="video_editor_title">Video editor</string>
+    <string name="video_editor_trim">Trim</string>
+    <string name="video_editor_mute">Mute</string>
+    <string name="video_editor_rotate">Rotate</string>
+    <string name="video_editor_hint">Choose the segment, rotation and sound — the file is saved without re-encoding</string>
+    <string name="video_editor_saving">Saving video…</string>
+    <string name="video_editor_failed">Couldn’t save the video</string>
+    <string name="settings_theme_system_short">Auto</string>
+    <string name="settings_theme_amoled">AMOLED</string>
+    <string name="theme_mode">Theme mode</string>
+    <string name="theme_mode_sub">How light and dark surfaces are shown</string>
+    <string name="theme_accent">Accent color</string>
+    <string name="settings_slider_slim">Slim capsule</string>
+    <!-- Search (3.14) -->
+    <string name="search_title">Search</string>
+    <string name="search_placeholder">Photos, albums, dates…</string>
+    <string name="search_recent">RECENT SEARCHES</string>
+    <string name="search_clear">Clear</string>
+    <string name="search_categories_eyebrow">CATEGORIES</string>
+    <string name="search_categories_title">Media types</string>
+    <string name="search_subjects_eyebrow">COLLECTIONS</string>
+    <string name="search_subjects_title">Quick access</string>
+    <string name="search_tip">Search by file name, folder, date (“March 2024”, “May 5”) or the words “video”, “photo”, “screenshot”, “favorites”, “selfie”.</string>
+    <string name="search_nothing_for">Nothing found for “%1$s”</string>
+    <string name="search_recent_month">This month</string>
+    <string name="search_large_files">Large files</string>
+    <!-- Video editor 3.14 -->
+    <string name="video_editor_label">VIDEO</string>
+    <string name="editor_done">Done</string>
+    <string name="editor_label_photo">PHOTO</string>
+    <string name="video_editor_transcode_note">The video will be re-encoded — this takes time depending on its length.</string>
+    <string name="video_editor_fast_note">Changes are applied without re-encoding — fast and lossless.</string>
+    <string name="video_editor_saving_pct">Saving video… %1$d%%</string>
+
+    <!-- Editors: tab names, adjustments, filters, hints -->
+    <string-array name="editor_tune_names">
+        <item>Exposure</item><item>Brilliance</item><item>Brightness</item><item>Highlights</item>
+        <item>Shadows</item><item>Contrast</item><item>Saturation</item><item>Vibrance</item>
+        <item>Warmth</item><item>Vignette</item><item>Sharpness</item>
+    </string-array>
+    <string-array name="editor_aspect_names">
+        <item>Free</item><item>Original</item><item>1:1</item><item>4:5</item>
+        <item>9:16</item><item>4:3</item><item>16:9</item><item>3:2</item>
+    </string-array>
+    <string-array name="video_aspect_names">
+        <item>Original</item><item>Free</item><item>1:1</item><item>4:5</item>
+        <item>9:16</item><item>16:9</item><item>4:3</item><item>3:2</item>
+    </string-array>
+    <string-array name="editor_filter_names">
+        <item>Original</item><item>Vivid</item><item>Cool</item><item>Warm</item>
+        <item>Faded</item><item>Mono</item><item>Noir</item><item>Sepia</item>
+        <item>Polaroid</item><item>Cinema</item><item>Pastel</item><item>Punk</item>
+    </string-array>
+    <string-array name="editor_mode_names">
+        <item>Adjust</item><item>Draw</item><item>Filters</item><item>Crop</item><item>Text</item>
+    </string-array>
+    <string-array name="video_mode_names">
+        <item>Video</item><item>Audio</item><item>Filters</item><item>Crop</item>
+    </string-array>
+    <string-array name="editor_brush_names">
+        <item>Pen</item><item>Pencil</item><item>Eraser</item>
+    </string-array>
+    <string name="editor_hint_doodle">Draw on the photo with your finger</string>
+    <string name="editor_hint_crop">Drag the corners and edges of the frame</string>
+    <string name="editor_hint_text">Tap a label to select it; double-tap to edit</string>
+    <string name="editor_hint_compare">Hold the photo to compare with the original</string>
+    <string name="editor_add">Add</string>
+    <string name="editor_edit">Edit</string>
+    <string name="editor_backdrop">Backdrop</string>
+    <string name="editor_text_hint">Text</string>
+    <string name="editor_text_title">Label</string>
+    <string name="video_hint_audio">Volume above 100% is applied on save</string>
+    <string name="video_hint_filter">The filter is applied to the whole video</string>
+    <string name="video_hint_crop">Drag the frame and its corners; rotate and flip with the buttons</string>
+    <string name="video_hint_trim">Drag the edges of the filmstrip to pick a segment</string>
+    <string name="video_mute">Mute</string>
+    <string name="video_no_audio_track">This video has no audio track</string>
+    <string name="video_reset_volume">Reset volume</string>
+
+    <!-- Accent colors -->
+    <string name="accent_adaptive">Auto</string>
+    <string name="accent_violet">Violet</string>
+    <string name="accent_red">Red</string>
+    <string name="accent_crimson">Crimson</string>
+    <string name="accent_rose">Rose</string>
+    <string name="accent_purple">Purple</string>
+    <string name="accent_deep_purple">Deep purple</string>
+    <string name="accent_indigo">Indigo</string>
+    <string name="accent_blue">Blue</string>
+    <string name="accent_sky_blue">Sky blue</string>
+    <string name="accent_cyan">Cyan</string>
+    <string name="accent_electric_cyan">Electric cyan</string>
+    <string name="accent_teal">Teal</string>
+    <string name="accent_green">Green</string>
+    <string name="accent_light_green">Light green</string>
+    <string name="accent_lime">Lime</string>
+    <string name="accent_yellow">Yellow</string>
+    <string name="accent_amber">Amber</string>
+    <string name="accent_orange">Orange</string>
+    <string name="accent_deep_orange">Deep orange</string>
+    <string name="accent_blue_grey">Blue grey</string>
+
+    <!-- Units and formats -->
+    <string name="size_b">B</string>
+    <string name="size_kb">KB</string>
+    <string name="size_mb">MB</string>
+    <string name="size_gb">GB</string>
+    <string name="unit_mm">mm</string>
+    <string name="unit_sec">s</string>
+    <string name="unit_mp">MP</string>
+    <string name="trash_days_badge">%1$d d</string>
+    <string name="trash_note">Items stay in the trash for 30 days, then they are deleted forever</string>
+    <string name="search_query_large">large</string>
+
+    <!-- Language -->
+    <string name="settings_language">Language</string>
+    <string name="language_system">System default</string>
+    <string name="language_ru">Русский</string>
+    <string name="language_en">English</string>
+    <string name="create_in_root">In the root folder</string>
+    <string name="create_in_device">In device storage…</string>
+    <string name="folder_transfer_contents">Contents only</string>
+    <string name="folder_transfer_contents_sub">Files go straight into the destination folder</string>
+    <string name="folder_transfer_whole">Whole folder</string>
+    <string name="folder_transfer_whole_sub">The folder itself becomes a subfolder of the destination</string>
+    <string name="trash_clear_photos_title">Delete all photos from the trash?</string>
+    <string name="trash_clear_photos_text">All photos in the trash will be deleted forever. Videos will stay.</string>
+    <string name="trash_clear_videos_title">Delete all videos from the trash?</string>
+    <string name="trash_clear_videos_text">All videos in the trash will be deleted forever. Photos will stay.</string>
+    <string name="create_in_device_desc">Navigate to the place in phone storage, enter a name and tap “Create here”.</string>
+    <string name="create_here_btn">Create here</string>
+    <string name="folder_transfer_question">What to transfer?</string>
+
+    <!-- Safe 3.17: sections and folders -->
+    <string name="safe_images">Images</string>
+    <string name="safe_videos">Videos</string>
+    <string name="safe_home_sub">Files are hidden from the gallery and protected by the PIN. Pick a section.</string>
+    <string name="safe_home_hint">Files sent to the safe land in the “Personal” folder of their section. You can create your own folders inside a section.</string>
+    <string name="safe_folder_personal">Personal</string>
+    <string name="safe_reveal">Reveal</string>
+    <string name="safe_reveal_title">Reveal files?</string>
+    <string name="safe_reveal_text">%1$s: the files will return to their original folders and reappear in the gallery.</string>
+    <string name="safe_delete_folder_title">Delete the folder “%1$s”?</string>
+    <string name="safe_delete_folders_title">Delete the selected folders?</string>
+    <string name="safe_delete_folder_text">The folder and everything in it (%1$s) will be deleted forever, bypassing the trash.</string>
+    <string name="safe_folder_empty_title">Folder is empty</string>
+    <string name="safe_folder_empty_sub">Move files here from other safe folders or send them from the gallery</string>
+    <string name="safe_dest_sub_photos">Folders of the “Images” section</string>
+    <string name="safe_dest_sub_videos">Folders of the “Videos” section</string>
+    <string name="safe_new_folder_sub">Create a safe folder and move there</string>
+    <plurals name="folders_count">
+        <item quantity="one">%d folder</item>
+        <item quantity="other">%d folders</item>
+    </plurals>
+
+    <!-- Журнал ошибок (3.17.1) -->
+    <string name="crash_log_title">Error log</string>
+    <string name="crash_log_sub">Last entry: %1$s</string>
+    <string name="crash_log_empty">No errors recorded</string>
+    <string name="crash_log_clear">Clear</string>
+    <string name="crash_log_subject">Gallery error log</string>
+    <string name="crash_prompt_title">The app closed unexpectedly</string>
+    <string name="crash_prompt_text">The error details were saved to the log. You can view and share it (Settings → About) to help fix the problem.</string>
+    <string name="crash_prompt_open">Open log</string>
+    <string name="crash_prompt_later">Later</string>
+
+    <!-- ===== Photo resizer / compressor ===== -->
+    <string name="resizer_title">Resize photo</string>
+    <string name="viewer_resize_sub">Save a smaller or compressed copy</string>
+    <string name="resizer_selection_sub">Resize or compress the selected photos as copies</string>
+    <string name="resizer_only_photos">Only photos can be resized</string>
+    <string name="resizer_videos_skipped">Videos skipped: %1$d</string>
+    <string name="resizer_op_title">Resizing photos</string>
+    <plurals name="resizer_photos_count">
+        <item quantity="one">%d photo</item>
+        <item quantity="other">%d photos</item>
+    </plurals>
+
+    <string name="resizer_pick_title">Choose photos</string>
+    <string name="resizer_pick_sub">%1$d photos in the gallery</string>
+    <string name="resizer_pick_empty">No photos found</string>
+    <string name="resizer_pick_next">Next</string>
+    <string name="resizer_pick_next_n">Next (%1$d)</string>
+    <string name="resizer_pick_none">Select at least one photo</string>
+
+    <string name="resizer_preview">Preview</string>
+    <string name="resizer_index">%1$d / %2$d · tap for next</string>
+    <string name="resizer_src_info">%1$d×%2$d · %3$s · %4$s</string>
+    <string name="resizer_result_estimate">Result: %1$d×%2$d · ≈ %3$s · %4$s</string>
+    <string name="resizer_result_exact">Result: %1$d×%2$d · %3$s · %4$s</string>
+    <string name="resizer_result_error">Cannot process this photo</string>
+    <string name="resizer_quality_value">quality %1$d</string>
+    <string name="resizer_warn_upscale">The result is larger than the original — the image will be upscaled and may look soft.</string>
+    <string name="resizer_warn_png_target">PNG is lossless: the target file size is not applied. Choose JPEG or WebP.</string>
+    <string name="resizer_warn_target_missed">Target size %1$s not reached: best possible is %2$s.</string>
+    <string name="resizer_alpha_warn">The photo has transparency; JPEG does not support it — transparent areas will be filled with the colour below.</string>
+    <string name="resizer_preview_saved">Was %1$s, now %2$s (-%3$d%%)</string>
+    <string name="resizer_preview_bigger">Was %1$s, now %2$s (file is not smaller)</string>
+
+    <string name="resizer_quick_presets">Quick presets</string>
+    <string name="resizer_preset_whatsapp">WhatsApp</string>
+    <string name="resizer_preset_social">Social</string>
+    <string name="resizer_preset_email">E-mail</string>
+    <string name="resizer_preset_web">Web</string>
+    <string name="resizer_preset_print">Print 10×15</string>
+    <string name="resizer_preset_gp_icon">Google Play: icon 512</string>
+    <string name="resizer_preset_gp_feature">Google Play: feature graphic 1024×500</string>
+    <string name="resizer_preset_gp_shot">Google Play: screenshot</string>
+
+    <string name="resizer_section_size">Size</string>
+    <string name="resizer_mode_pixels">Pixels</string>
+    <string name="resizer_mode_percent">Percent</string>
+    <string name="resizer_mode_long">Long side</string>
+    <string name="resizer_mode_print">Print</string>
+    <string name="resizer_original">Original</string>
+    <string name="resizer_width">Width</string>
+    <string name="resizer_height">Height</string>
+    <string name="resizer_times">×</string>
+    <string name="resizer_colon">:</string>
+    <string name="resizer_swap">Swap width and height</string>
+    <string name="resizer_keep_aspect">Keep aspect ratio</string>
+    <string name="resizer_percent_hint">1–400</string>
+    <string name="resizer_long_side_hint">Long side</string>
+    <string name="resizer_px">px</string>
+    <string name="resizer_long_side_note">The longer side is scaled to this value; the shorter one follows the aspect ratio. Handy for a batch of portrait and landscape photos.</string>
+    <string name="resizer_unit_mm">mm</string>
+    <string name="resizer_unit_cm">cm</string>
+    <string name="resizer_unit_inch">inch</string>
+    <string name="resizer_dpi">DPI</string>
+    <string name="resizer_print_hint">= %1$d×%2$d px, DPI is written into the file</string>
+
+    <string name="resizer_section_aspect">Aspect ratio</string>
+    <string name="resizer_aspect_original">As is</string>
+    <string name="resizer_custom">Custom</string>
+    <string name="resizer_aspect_w">W</string>
+    <string name="resizer_aspect_h">H</string>
+    <string name="resizer_fit_label">When the ratio differs</string>
+    <string name="resizer_fit_crop">Crop</string>
+    <string name="resizer_fit_inside">Fit</string>
+    <string name="resizer_fit_stretch">Stretch</string>
+    <string name="resizer_pad_label">Background</string>
+    <string name="resizer_pad_blur">Blur</string>
+    <string name="resizer_pad_white">White</string>
+    <string name="resizer_pad_black">Black</string>
+    <string name="resizer_pad_custom">Colour</string>
+    <string name="resizer_bg_gray">Grey</string>
+    <string name="resizer_color_hint">#RRGGBB</string>
+
+    <string name="resizer_section_format">Format and compression</string>
+    <string name="resizer_quality">Quality</string>
+    <string name="resizer_target_label">Target file size</string>
+    <string name="resizer_target_none">Off</string>
+    <string name="resizer_target_hint">Size</string>
+    <string name="resizer_kb">KB</string>
+    <string name="resizer_mb">MB</string>
+    <string name="resizer_target_note">Quality (and, if needed, resolution) is reduced automatically until the file fits. Tap “Preview” to see the exact result.</string>
+
+    <string name="resizer_section_save">Saving</string>
+    <string name="resizer_folder">Folder</string>
+    <string name="resizer_folder_value">Folder: %1$s</string>
+    <string name="resizer_name_pattern">File name pattern</string>
+    <string name="resizer_name_pattern_hint">{name}_{w}x{h}</string>
+    <string name="resizer_name_example">Example: %1$s · placeholders {name} {w} {h} {n} {date}</string>
+
+    <string name="resizer_reset">Reset</string>
+    <string name="resizer_reset_done">Settings reset</string>
+    <string name="resizer_save_copy">Save copy</string>
+    <string name="resizer_already_saved_title">Already saved</string>
+    <string name="resizer_already_saved_msg">These photos were already saved with the same settings. Save again? New files will get a “(1)” suffix.</string>
+    <string name="resizer_save_again">Save again</string>
+    <string name="resizer_err_folder">Cannot create folder %1$s</string>
+    <string name="resizer_err_unsupported">Unsupported or damaged file</string>
+    <string name="resizer_err_too_large">Image is too large</string>
+    <string name="resizer_err_memory">Not enough memory to process the image</string>
+    <string name="resizer_err_write">Failed to write the file</string>
+    <string name="resizer_err_space">Not enough free space</string>
+
+    <string name="resizer_sum_title_ok">Done</string>
+    <string name="resizer_sum_title_fail">Nothing saved</string>
+    <string name="resizer_sum_saved">Saved: %1$d of %2$d</string>
+    <string name="resizer_sum_cancelled">Cancelled — the remaining files were not processed.</string>
+    <string name="resizer_sum_size">Size: was %1$s, now %2$s (-%3$d%%)</string>
+    <string name="resizer_sum_dims">Dimensions: %1$d×%2$d</string>
+    <string name="resizer_sum_missed">Target size %2$s not reached for %1$d file(s); they were saved at the best achievable size.</string>
+    <string name="resizer_sum_failed">Failed: %1$d</string>
+    <string name="resizer_open_folder">Open folder</string>
+
+    <!-- Системный выбор медиа для других приложений -->
+    <string name="picker_title_media">Choose media</string>
+    <string name="picker_title_photo">Choose photo</string>
+    <string name="picker_title_video">Choose video</string>
+    <string name="picker_sub">%1$d files in the gallery</string>
+    <string name="picker_empty">Nothing found</string>
+    <string name="picker_done">Done</string>
+    <string name="picker_done_n">Done (%1$d)</string>
+    <string name="picker_none">Select at least one file</string>
+    <string name="picker_no_permission">Open Gallery and grant file access first</string>
+    <string name="picker_fail">Could not share the selected file</string>
+    <!-- О приложении: связь с разработчиком -->
+    <string name="about_telegram_title">Telegram channel</string>
+    <string name="about_telegram_sub">@TmAppPro — news, updates and tips</string>
+    <string name="about_contact_title">Contact the developer</string>
+    <string name="about_contact_sub">Report a bug or suggest an idea by e-mail</string>
+    <string name="about_btn_telegram">Telegram</string>
+    <string name="about_btn_email">Write to us</string>
+    <string name="about_email_subject">%1$s %2$s — feedback</string>
+    <string name="about_email_footer">— Device info (helps with bug reports) —</string>
+    <string name="about_email_chooser">Send e-mail via</string>
+    <string name="about_no_email_app">No e-mail app found. Address copied: %1$s</string>
+    <string name="about_no_browser">Could not open the link. Copied: %1$s</string>
+    <!-- Поиск: карточки найденных папок -->
+    <string name="search_folders_title">Folders</string>
+
+    <!-- Дополнительные источники (настройки маскировки) -->
+    <string name="sources_title">Extra sources</string>
+    <string name="sources_row_desc">Hidden folders, app media (WhatsApp, Telegram…), Documents — choose what to show in the gallery</string>
+    <string name="sources_enabled_n">Enabled: %1$s</string>
+    <string name="sources_filter_hint">Filter folders…</string>
+    <string name="sources_rescan">Rescan</string>
+    <string name="sources_scanning">Scanning storage…</string>
+    <string name="sources_scanning_progress">Scanned %1$d folders · found %2$d</string>
+    <string name="sources_status">%1$s · %2$d files · enabled %3$d</string>
+    <string name="sources_show_all">Show all</string>
+    <string name="sources_hide_all">Hide all</string>
+    <string name="sources_all_on">All folders added to the gallery</string>
+    <string name="sources_all_off">Folders hidden from the gallery</string>
+    <string name="sources_group_apps">App media</string>
+    <string name="sources_group_hidden">Hidden folders</string>
+    <string name="sources_group_other">Other folders</string>
+    <string name="sources_badge_hidden">hidden</string>
+    <string name="sources_preview">Preview folder</string>
+    <string name="sources_empty_title">Nothing extra found</string>
+    <string name="sources_empty_sub">All photos and videos on the device are already in the gallery</string>
+
+    <plurals name="photos_count">
+        <item quantity="one">%d photo</item>
+        <item quantity="other">%d photos</item>
+    </plurals>
+    <plurals name="videos_count">
+        <item quantity="one">%d video</item>
+        <item quantity="other">%d videos</item>
+    </plurals>
+
+    <string name="sources_new_found">New folders: %1$s</string>
+</resources>

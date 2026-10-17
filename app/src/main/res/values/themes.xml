@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.GalleryX" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Атрибуты оформления по умолчанию (перекрываются ThemeOverlay.GX.Accent.*) -->
+        <item name="gxAccent">@color/primary</item>
+        <item name="gxOnAccent">@color/onPrimary</item>
+        <item name="gxAccentDark">@color/primaryDark</item>
+        <item name="gxAccentContainer">@color/primaryContainer</item>
+        <item name="gxOnAccentContainer">@color/onPrimaryContainer</item>
+        <item name="gxAccentSoft">@color/accentSoft</item>
+        <item name="gxAccentStroke">@color/accentStroke</item>
+        <item name="gxGradStart">@color/grad_start</item>
+        <item name="gxGradEnd">@color/grad_end</item>
+        <item name="gxBg">@color/bg</item>
+        <item name="gxSurface">@color/surface</item>
+        <item name="gxSurfaceAlt">@color/surfaceAlt</item>
+        <item name="gxSurfaceHigh">@color/surfaceHigh</item>
+        <item name="gxGlass">@color/glass</item>
+        <item name="gxGlassStrong">@color/glassStrong</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="colorOnPrimary">?attr/gxOnAccent</item>
+        <item name="colorPrimaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnPrimaryContainer">?attr/gxOnAccentContainer</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">?attr/gxAccentContainer</item>
+        <item name="colorOnSecondaryContainer">?attr/gxOnAccentContainer</item>
+
+        <item name="android:colorBackground">?attr/gxBg</item>
+        <item name="android:windowBackground">?attr/gxBg</item>
+        <item name="colorSurface">?attr/gxSurface</item>
+        <item name="colorOnSurface">@color/textPrimary</item>
+        <item name="colorOnSurfaceVariant">@color/textSecondary</item>
+        <item name="colorOutline">@color/outline</item>
+
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:enforceNavigationBarContrast" tools:targetApi="q">false</item>
+        <item name="materialAlertDialogTheme">@style/GlassDialog</item>
+        <item name="bottomSheetDialogTheme">@style/GlassBottomSheet</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+        <item name="android:windowAnimationStyle">@style/ActivityAnim</item>
+    </style>
+
+    <style name="Theme.GalleryX.Viewer">
+        <item name="android:windowBackground">@color/black</item>
+        <item name="android:statusBarColor">@color/black</item>
+        <item name="android:navigationBarColor">@color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- Просмотрщик фото: прозрачное окно, чтобы при свайпе вниз картинка
+         «улетала» поверх предыдущего экрана. Фон рисует сам экран. -->
+    <style name="Theme.GalleryX.Viewer.Photo">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@style/ViewerAnim</item>
+    </style>
+
+    <style name="ViewerAnim" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/fade_in</item>
+        <item name="android:activityOpenExitAnimation">@anim/none</item>
+        <item name="android:activityCloseEnterAnimation">@anim/none</item>
+        <item name="android:activityCloseExitAnimation">@anim/fade_out</item>
+    </style>
+
+    <style name="ActivityAnim" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/slide_in_right</item>
+        <item name="android:activityOpenExitAnimation">@anim/slide_out_left</item>
+        <item name="android:activityCloseEnterAnimation">@anim/slide_in_left</item>
+        <item name="android:activityCloseExitAnimation">@anim/slide_out_right</item>
+    </style>
+
+    <style name="PinKey">
+        <item name="android:layout_width">@dimen/pin_key_size</item>
+        <item name="android:layout_height">@dimen/pin_key_size</item>
+        <item name="android:layout_margin">8dp</item>
+        <item name="android:background">@drawable/bg_pin_key</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/textPrimary</item>
+        <item name="android:textSize">26sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <!-- Диалоги: мягкие углы 24dp, поверхность темы -->
+    <style name="GlassDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="shapeAppearanceOverlay">@style/GlassDialogShape</item>
+        <item name="colorSurface">?attr/gxSurface</item>
+        <item name="colorOnSurface">@color/textPrimary</item>
+        <item name="colorOnSurfaceVariant">@color/textSecondary</item>
+        <item name="colorPrimary">?attr/gxAccent</item>
+        <item name="android:backgroundDimAmount">0.5</item>
+    </style>
+
+    <style name="GlassDialogShape">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">24dp</item>
+    </style>
+
+    <!-- Нижние шторки: без фона у контейнера (фон рисует сама разметка bg_sheet) -->
+    <style name="GlassBottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/GlassBottomSheetStyle</item>
+        <item name="android:backgroundDimAmount">0.5</item>
+    </style>
+
+    <style name="GlassBottomSheetStyle" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="shapeAppearanceOverlay">@null</item>
+    </style>
+
+    <style name="InfoSectionTitle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/textTertiary</item>
+    </style>
+
+    <style name="SheetRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:paddingStart">@dimen/spacing_xl</item>
+        <item name="android:paddingEnd">@dimen/spacing_xl</item>
+        <item name="android:paddingTop">@dimen/spacing_l</item>
+        <item name="android:paddingBottom">@dimen/spacing_l</item>
+    </style>
+
+    <style name="SheetRowCheck">
+        <item name="android:layout_width">24dp</item>
+        <item name="android:layout_height">24dp</item>
+        <item name="android:src">@drawable/ic_check</item>
+        <item name="android:contentDescription">@string/ok</item>
+        <item name="android:visibility">gone</item>
+        <item name="android:tint">?attr/gxAccent</item>
+    </style>
+</resources>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Настройки: заголовок, поиск по настройкам и группы «стеклянных» карточек,
+     которые собираются в SettingsFragment -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/gxBg"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="-0.02"
+        android:paddingStart="@dimen/spacing_l"
+        android:paddingTop="@dimen/spacing_xl"
+        android:paddingEnd="@dimen/spacing_l"
+        android:paddingBottom="4dp"
+        android:text="@string/nav_settings"
+        android:textColor="@color/textPrimary"
+        android:textSize="34sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:layout_marginStart="@dimen/spacing_l"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="@dimen/spacing_l"
+        android:background="@drawable/bg_glass_pill"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingEnd="8dp">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_search"
+            app:tint="@color/textTertiary" />
+
+        <EditText
+            android:id="@+id/editSettingsSearch"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@null"
+            android:hint="@string/settings_search_hint"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:maxLines="1"
+            android:paddingStart="10dp"
+            android:paddingEnd="8dp"
+            android:textColor="@color/textPrimary"
+            android:textColorHint="@color/textTertiary"
+            android:textSize="15sp" />
+
+        <ImageView
+            android:id="@+id/btnSettingsSearchClear"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/cancel"
+            android:padding="7dp"
+            android:src="@drawable/ic_close"
+            android:visibility="gone"
+            app:tint="@color/textSecondary" />
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollSettings"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="104dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/layoutSettings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/spacing_l"
+            android:paddingTop="4dp"
+            android:paddingEnd="@dimen/spacing_l" />
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

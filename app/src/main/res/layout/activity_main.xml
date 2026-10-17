@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/gxBg">
+
+    <!-- РЕАЛЬНОЕ СОДЕРЖИМОЕ: вкладки занимают весь экран, снизу поверх них
+         плавает стеклянная панель навигации + круглая кнопка поиска. -->
+    <FrameLayout
+        android:id="@+id/layoutReal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <FrameLayout
+            android:id="@+id/fragmentContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <!-- Нижняя зона фиксированной высоты: панель вкладок меняется на
+             капсулу действий выделения без изменения высоты (без прыжков). -->
+        <FrameLayout
+            android:id="@+id/bottomArea"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:layout_gravity="bottom">
+
+            <FrameLayout
+                android:id="@+id/navArea"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="12dp">
+
+                <com.premiumlab.galleryx.ui.view.GlassNavBar
+                    android:id="@+id/bottomNav"
+                    android:layout_width="wrap_content"
+                    android:layout_height="64dp"
+                    android:layout_gravity="start|bottom"
+                    android:elevation="6dp" />
+
+                <ImageView
+                    android:id="@+id/btnSearchPill"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_gravity="end|bottom"
+                    android:background="@drawable/bg_glass_round"
+                    android:contentDescription="@string/search_hint"
+                    android:elevation="6dp"
+                    android:padding="20dp"
+                    android:src="@drawable/ic_search"
+                    app:tint="@color/navIcon" />
+            </FrameLayout>
+
+            <include
+                android:id="@+id/selectionActions"
+                layout="@layout/view_selection_actions"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
+        </FrameLayout>
+    </FrameLayout>
+
+    <!-- Верхняя контекстная панель выделения: перекрывает шапку фрагмента -->
+    <include
+        android:id="@+id/selectionTop"
+        layout="@layout/view_selection_bar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/header_h"
+        android:visibility="gone" />
+
+    <!-- ЭКРАН РАЗРЕШЕНИЙ -->
+    <LinearLayout
+        android:id="@+id/layoutPermission"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/gxBg"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="@dimen/spacing_xxl"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="110dp"
+            android:layout_height="110dp"
+            android:background="@drawable/bg_icon_circle_primary"
+            android:contentDescription="@string/permission_title"
+            android:padding="@dimen/spacing_xxl"
+            android:src="@drawable/ic_sd"
+            app:tint="?attr/gxAccent" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xxl"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:text="@string/permission_title"
+            android:textColor="@color/textPrimary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_m"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp"
+            android:text="@string/permission_desc"
+            android:textColor="@color/textSecondary"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/btnGrant"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="@dimen/spacing_xxxl"
+            android:background="@drawable/bg_button_primary"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:text="@string/permission_btn"
+            android:textColor="?attr/gxOnAccent"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_l"
+            android:text="@string/permission_note"
+            android:textColor="@color/textTertiary"
+            android:textSize="12sp" />
+    </LinearLayout>
+</FrameLayout>

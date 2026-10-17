@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Тег: масштаб «покоя» элемента для пружинного нажатия (Press) -->
+    <item name="press_rest" type="id" />
+    <item name="e2e_done" type="id" />
+</resources>
