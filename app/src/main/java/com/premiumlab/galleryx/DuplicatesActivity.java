@@ -358,10 +358,19 @@ public class DuplicatesActivity extends AppCompatActivity {
 
         void bind(Header h) {
             title.setText(getString(R.string.dup_group_title, h.number));
-            info.setText(getString(R.string.dup_group_info,
-                    Fmt.plural(DuplicatesActivity.this, R.plurals.items_count,
-                            h.group.items.size()),
-                    Fmt.size(h.group.size)));
+            String count = Fmt.plural(DuplicatesActivity.this, R.plurals.items_count,
+                    h.group.items.size());
+            if (h.group.exact) {
+                // Точные копии: размер у всех одинаковый — «по 1,1 МБ»
+                info.setText(getString(R.string.dup_group_info_exact,
+                        count, Fmt.size(h.group.size)));
+            } else {
+                // Похожие: размеры разные — показываем суммарный
+                long total = 0;
+                for (MediaItem it : h.group.items) total += it.size;
+                info.setText(getString(R.string.dup_group_info_similar,
+                        count, Fmt.size(total)));
+            }
         }
     }
 
@@ -386,10 +395,19 @@ public class DuplicatesActivity extends AppCompatActivity {
         void bind(MediaItem it) {
             name.setText(it.name);
             folder.setText(it.folderPath);
-            meta.setText(Fmt.size(it.size) + " · " + Fmt.dateTimeShort(it.dateModified));
+            // Разрешение (если известно) · размер · дата
+            String m = Fmt.size(it.size) + " · " + Fmt.dateTimeShort(it.dateModified);
+            if (it.width > 0 && it.height > 0) {
+                m = it.width + "×" + it.height + " · " + m;
+            }
+            meta.setText(m);
             DuplicateFinder.Group g = groupByPath.get(it.path);
-            boolean oldest = g != null && !g.items.isEmpty() && g.items.get(0) == it;
-            badge.setVisibility(oldest ? View.VISIBLE : View.GONE);
+            boolean best = g != null && !g.items.isEmpty() && g.items.get(0) == it;
+            badge.setVisibility(best ? View.VISIBLE : View.GONE);
+            if (best && g != null) {
+                // У точных копий лучший = самый старый; у похожих = лучшее качество
+                badge.setText(g.exact ? R.string.dup_badge_oldest : R.string.dup_badge_best);
+            }
 
             Glide.with(cover)
                     .load(new File(it.path))

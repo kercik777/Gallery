@@ -842,9 +842,9 @@
     <!-- Поиск дубликатов -->
     <string name="settings_duplicates">Поиск дубликатов</string>
     <string name="settings_duplicates_sub">Найти и удалить одинаковые фото</string>
-    <string name="dup_status_idle">Точные копии — сравнение по содержимому, а не по имени</string>
+    <string name="dup_status_idle">Точные и похожие копии — сравнение по содержимому, а не по имени</string>
     <string name="dup_intro_title">Найти дубликаты фото</string>
-    <string name="dup_intro_sub">Приложение сравнивает содержимое файлов, поэтому копии находятся даже с разными именами. Ничего не удаляется автоматически — вы просматриваете каждую группу и сами выбираете, что убрать.</string>
+    <string name="dup_intro_sub">Приложение сравнивает содержимое изображений, поэтому копии находятся даже с разными именами — в том числе то же фото в другом разрешении или качестве. Ничего не удаляется автоматически — вы просматриваете каждую группу и сами выбираете, что убрать.</string>
     <string name="dup_scan_btn">Сканировать изображения</string>
     <string name="dup_scanning">Сканирую изображения…</string>
     <string name="dup_preparing">Собираю список фото…</string>
@@ -853,12 +853,14 @@
     <string name="dup_empty_sub">Все фото уникальны — чистить нечего</string>
     <string name="dup_status_found">Групп: %1$d · лишних копий: %2$d (%3$s)</string>
     <string name="dup_group_title">Группа %1$d</string>
-    <string name="dup_group_info">%1$s · по %2$s</string>
+    <string name="dup_group_info_exact">%1$s · точные копии · по %2$s</string>
+    <string name="dup_group_info_similar">%1$s · похожие · всего %2$s</string>
     <string name="dup_auto_select">Выбрать лишние</string>
-    <string name="dup_auto_hint">В каждой группе оставлен самый старый файл</string>
+    <string name="dup_auto_hint">В каждой группе оставлен лучший файл</string>
     <string name="dup_clear_select">Снять выбор</string>
     <string name="dup_delete_btn">Удалить выбранные (%1$d · %2$s)</string>
     <string name="dup_badge_oldest">самый старый</string>
+    <string name="dup_badge_best">лучшее качество</string>
     <string name="dup_preview">Открыть фото</string>
     <string name="dup_select">Выбрать файл</string>
 </resources>

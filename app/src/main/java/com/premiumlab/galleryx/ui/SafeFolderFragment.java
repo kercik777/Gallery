@@ -151,9 +151,9 @@ public class SafeFolderFragment extends BaseMediaFragment {
             if (paths.contains(e.path)) toRestore.add(e);
         }
         if (toRestore.isEmpty()) return;
-        OpProgressDialog dlg = OpProgressDialog.show(requireActivity(),
-                getString(R.string.op_restore), null);
         FileOp op = new FileOp(requireActivity());
+        OpProgressDialog dlg = OpProgressDialog.show(requireActivity(),
+                getString(R.string.op_restore), op::cancel);
         op.restoreSafe(toRestore, dlg, (ok, fail, cancelled) -> {
             dlg.dismiss();
             if (!isAdded()) return;

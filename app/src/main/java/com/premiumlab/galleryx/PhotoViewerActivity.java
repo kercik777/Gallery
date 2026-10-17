@@ -892,9 +892,9 @@ public class PhotoViewerActivity extends AppCompatActivity {
     private void restoreCurrent() {
         String path = adapter.getPath(pager.getCurrentItem());
         if (path == null) return;
-        OpProgressDialog dlg = OpProgressDialog.show(this,
-                getString(R.string.op_restore), null);
         FileOp op = new FileOp(this);
+        OpProgressDialog dlg = OpProgressDialog.show(this,
+                getString(R.string.op_restore), op::cancel);
         if (mode == MODE_TRASH) {
             List<TrashStore.Entry> entries = new ArrayList<>();
             for (TrashStore.Entry e : TrashStore.get().entries()) {

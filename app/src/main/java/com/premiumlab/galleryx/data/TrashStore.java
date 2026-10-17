@@ -202,6 +202,20 @@ public class TrashStore {
         if (changed) save(list);
     }
 
+    /** Убирает записи, файлы которых уже не существуют (после массового удаления). */
+    public synchronized void clearMissing() {
+        List<Entry> list = load();
+        boolean changed = false;
+        Iterator<Entry> it = list.iterator();
+        while (it.hasNext()) {
+            if (!new File(it.next().path).exists()) {
+                it.remove();
+                changed = true;
+            }
+        }
+        if (changed) save(list);
+    }
+
     /** Полная очистка корзины: удаление файлов и метаданных. */
     public synchronized void clearAll() {
         List<Entry> list = load();

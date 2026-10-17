@@ -260,9 +260,9 @@ public class SafeKindFragment extends Fragment implements BackHandler {
                 .setMessage(getString(R.string.safe_reveal_text,
                         Fmt.plural(act, R.plurals.items_count, entries.size())))
                 .setPositiveButton(R.string.safe_reveal, (d, w) -> {
-                    OpProgressDialog dlg = OpProgressDialog.show(act,
-                            getString(R.string.op_restore), null);
                     FileOp op = new FileOp(act);
+                    OpProgressDialog dlg = OpProgressDialog.show(act,
+                            getString(R.string.op_restore), op::cancel);
                     op.restoreSafe(entries, dlg, (ok, fail, cancelled) -> {
                         dlg.dismiss();
                         if (!isAdded()) return;

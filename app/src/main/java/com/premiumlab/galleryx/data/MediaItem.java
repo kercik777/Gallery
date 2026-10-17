@@ -19,6 +19,9 @@ public class MediaItem {
     public boolean isVideo;
     /** Дополнительный бейдж (например, «27 дней» в корзине). */
     public String badge;
+    /** Размеры кадра в пикселях (0 — неизвестны; заполняет поиск дубликатов). */
+    public int width;
+    public int height;
 
     public MediaItem() {
     }
