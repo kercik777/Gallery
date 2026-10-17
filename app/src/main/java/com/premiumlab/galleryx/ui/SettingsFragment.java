@@ -23,7 +23,6 @@ import androidx.fragment.app.FragmentActivity;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.premiumlab.galleryx.MaskingSettingsActivity;
-import com.premiumlab.galleryx.PinActivity;
 import com.premiumlab.galleryx.R;
 import com.premiumlab.galleryx.RootPickerActivity;
 import com.premiumlab.galleryx.data.MaskGuard;
@@ -233,31 +232,11 @@ public class SettingsFragment extends Fragment {
             String p = Prefs.rootPath();
             root.sub.setText(p == null ? getString(R.string.root_not_set) : p);
         };
-        Row bio = toggle(privacy, R.drawable.ic_fingerprint,
-                getString(R.string.settings_biometric), getString(R.string.settings_biometric_sub),
-                Prefs::biometric, v -> {
-                    if (v && !Prefs.pinSet()) {
-                        new MaterialAlertDialogBuilder(act)
-                                .setTitle(R.string.pin_required_title)
-                                .setMessage(R.string.settings_biometric_need_pin)
-                                .setPositiveButton(R.string.ok, null)
-                                .show();
-                        refresh();
-                        return;
-                    }
-                    if (v && !PinActivity.biometricAvailable(act)) {
-                        com.premiumlab.galleryx.util.Toasts.makeText(act,
-                                R.string.settings_biometric_unavailable,
-                                android.widget.Toast.LENGTH_SHORT).show();
-                        refresh();
-                        return;
-                    }
-                    Prefs.setBiometric(v);
-                });
+        // «Вход по отпечатку или лицу» переехал в настройки маскировки:
+        // это часть защиты маскировки и сейфа
         // Эти строки выдают «секрет» — при закрытой маскировке прячем
         maskSensitive.add(masking);
         maskSensitive.add(root);
-        maskSensitive.add(bio);
 
         // ----- О приложении (при закрытой маскировке скрыт целиком) -----
         Group about = group(R.string.settings_about_section);

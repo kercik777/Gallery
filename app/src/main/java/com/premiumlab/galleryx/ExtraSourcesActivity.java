@@ -113,6 +113,9 @@ public class ExtraSourcesActivity extends AppCompatActivity {
         com.premiumlab.galleryx.util.EdgeToEdge.padBottom(rv);
 
         Prefs.setExtraSourcesSeenAt(System.currentTimeMillis());
+        // Включённые, но уже удалённые с диска папки выкидываем сразу —
+        // не дожидаясь фонового сканирования
+        ExtraSources.pruneMissing();
         // Кеш прошлого сканирования показываем сразу; свежее — тихо в фоне.
         // Загрузочный экран — только при самом первом входе, когда кеша ещё нет.
         List<ExtraSources.Source> cached = null;

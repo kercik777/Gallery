@@ -129,6 +129,31 @@ public final class ExtraSources {
     }
 
     /**
+     * Убирает из включённых папки, которых больше нет на диске (пользователь
+     * удалил альбом из «Альбомов» или файловым менеджером). Вызывается при
+     * показе счётчика и при входе на экран источников — список и счётчик
+     * становятся честными сразу, не дожидаясь фонового сканирования.
+     *
+     * @return true — что-то удалили.
+     */
+    public static boolean pruneMissing() {
+        Set<String> set = Prefs.extraFolders();
+        boolean changed = false;
+        java.util.Iterator<String> it = set.iterator();
+        while (it.hasNext()) {
+            if (!new File(it.next()).isDirectory()) {
+                it.remove();
+                changed = true;
+            }
+        }
+        if (changed) {
+            Prefs.setExtraFolders(set);
+            MediaEngine.invalidateAll();
+        }
+        return changed;
+    }
+
+    /**
      * Добавляет файлы включённых папок к общему списку (прямое содержимое,
      * без дубликатов с тем, что уже пришло из MediaStore).
      */
@@ -332,6 +357,9 @@ public final class ExtraSources {
             List<Source> out = new ArrayList<>(arr.length());
             for (int i = 0; i < arr.length(); i++) {
                 Source s = Source.fromJson(arr.getJSONObject(i));
+                // Папка могла быть удалена после прошлого сканирования —
+                // не показываем её даже из кеша
+                if (!new File(s.path).isDirectory()) continue;
                 s.enabled = enabled.contains(s.path);
                 out.add(s);
             }

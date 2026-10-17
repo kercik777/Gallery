@@ -33,12 +33,17 @@ import java.util.concurrent.Executors;
  *
  * ПОХОЖИЕ — то же изображение, но пересохранённое в другом разрешении или
  * качестве (сжатое мессенджером, уменьшенная копия и т. п.). Ищутся
- * перцептивным хешем (dHash): картинка уменьшается до 9×8 пикселей
- * в оттенках серого, из перепадов яркости строится 64-битный отпечаток
- * «как картинка выглядит». Отпечатки, отличающиеся не больше чем на
- * {@link #MAX_DISTANCE} бит, считаются одним изображением. Дополнительно
- * сверяются средняя яркость и пропорции кадра — это отсекает случайные
- * совпадения (например, однотонные картинки разного цвета).
+ * перцептивным хешем: картинка уменьшается до 9×9 пикселей в оттенках
+ * серого, и из перепадов яркости строятся ДВА 64-битных отпечатка —
+ * горизонтальный и вертикальный dHash (вместе 128 бит «как картинка
+ * выглядит»). Двойной отпечаток позволяет держать допуск щедрым для
+ * настоящих копий (сильно пересжатый мессенджером кадр всё равно
+ * совпадает) и при этом почти исключает случайные совпадения разных
+ * картинок: вероятность, что у чужих изображений сойдутся оба отпечатка,
+ * ничтожна. Похожими считаются файлы с суммарным расхождением не больше
+ * {@link #MAX_DISTANCE} бит из 128. Дополнительно сверяются средняя
+ * яркость и пропорции кадра, а для «плоских» малодетальных картинок
+ * (однотонные фоны, документы) правила жёстче — только полное совпадение.
  *
  * Отпечатки кешируются на диске (путь + размер + дата изменения),
  * поэтому повторное сканирование почти мгновенное. Вся работа в фоне,
@@ -73,14 +78,18 @@ public final class DuplicateFinder {
         }
     }
 
-    /** Максимум отличающихся бит dHash, чтобы считать изображения одинаковыми. */
-    private static final int MAX_DISTANCE = 3;
+    /** Максимум отличающихся бит из 128 (два dHash), чтобы считать копией. */
+    private static final int MAX_DISTANCE = 10;
     /** Максимальная разница средней яркости (0–255). */
     private static final int MAX_AVG_DIFF = 16;
     /** Максимальная относительная разница пропорций кадра. */
     private static final double MAX_ASPECT_DIFF = 0.05;
-    /** Файл кеша отпечатков в filesDir. */
-    private static final String CACHE_FILE = "dup_hash_cache.tsv";
+    /** Минимум «деталей» (единичных бит) — ниже картинка считается плоской. */
+    private static final int MIN_DETAIL = 10;
+    /** Файл кеша отпечатков в filesDir (v2 — двойной dHash). */
+    private static final String CACHE_FILE = "dup_hash_cache2.tsv";
+    /** Кеш старого формата — удаляется при первом сканировании. */
+    private static final String CACHE_FILE_V1 = "dup_hash_cache.tsv";
 
     private static final ExecutorService EXEC = Executors.newSingleThreadExecutor();
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
@@ -94,7 +103,8 @@ public final class DuplicateFinder {
 
     /** Отпечаток одного фото. */
     private static final class Print {
-        long dhash;
+        long dh;        // горизонтальный dHash (перепады слева направо)
+        long dv;        // вертикальный dHash (перепады сверху вниз)
         int avg;        // средняя яркость 0..255
         int w, h;       // размеры оригинала
         boolean valid;
@@ -217,17 +227,18 @@ public final class DuplicateFinder {
                 else union(parent, first, i);
             }
 
-            // Похожие: близкий dHash. Чтобы не сравнивать всех со всеми,
-            // 64-битный отпечаток режется на 4 полосы по 16 бит: при
-            // расхождении ≤3 бит хотя бы одна полоса совпадает целиком —
+            // Похожие: близкие dHash. Чтобы не сравнивать всех со всеми,
+            // 128-битный отпечаток режется на 16 полос по 8 бит: при
+            // расхождении ≤15 бит хотя бы одна полоса совпадает целиком —
             // сравниваются только файлы с общей полосой.
-            Map<Long, List<Integer>> bands = new HashMap<>();
+            Map<Integer, List<Integer>> bands = new HashMap<>();
             for (int i = 0; i < n; i++) {
                 Print p = prints[i];
                 if (p == null || !p.valid) continue;
-                for (int b = 0; b < 4; b++) {
-                    long band = (p.dhash >>> (b * 16)) & 0xFFFFL;
-                    long key = ((long) b << 16) | band;
+                for (int b = 0; b < 16; b++) {
+                    long src = b < 8 ? p.dh : p.dv;
+                    int band = (int) ((src >>> ((b & 7) * 8)) & 0xFFL);
+                    int key = (b << 8) | band;
                     List<Integer> bucket = bands.get(key);
                     if (bucket == null) {
                         bucket = new ArrayList<>(2);
@@ -299,10 +310,18 @@ public final class DuplicateFinder {
 
     // ---------- Сравнение отпечатков ----------
 
-    /** true — изображения выглядят одинаково (dHash + яркость + пропорции). */
+    /** true — изображения выглядят одинаково (два dHash + яркость + пропорции). */
     private static boolean similar(Print a, Print b) {
         if (a == null || b == null || !a.valid || !b.valid) return false;
-        if (Long.bitCount(a.dhash ^ b.dhash) > MAX_DISTANCE) return false;
+        int dist = Long.bitCount(a.dh ^ b.dh) + Long.bitCount(a.dv ^ b.dv);
+        // «Плоские» картинки (однотонный фон, мало деталей) легко путаются —
+        // для них засчитываем только полное совпадение отпечатков
+        int detailA = Long.bitCount(a.dh) + Long.bitCount(a.dv);
+        int detailB = Long.bitCount(b.dh) + Long.bitCount(b.dv);
+        if (detailA < MIN_DETAIL || detailB < MIN_DETAIL) {
+            return dist == 0 && Math.abs(a.avg - b.avg) <= 8;
+        }
+        if (dist > MAX_DISTANCE) return false;
         if (Math.abs(a.avg - b.avg) > MAX_AVG_DIFF) return false;
         if (a.w > 0 && a.h > 0 && b.w > 0 && b.h > 0) {
             double ra = (double) a.w / a.h;
@@ -329,7 +348,7 @@ public final class DuplicateFinder {
 
     // ---------- dHash ----------
 
-    /** Считает отпечаток изображения: dHash 64 бита + средняя яркость + размеры. */
+    /** Считает отпечаток: два dHash по 64 бита + средняя яркость + размеры. */
     private Print computePrint(String path) {
         Print p = new Print();
         try {
@@ -365,13 +384,13 @@ public final class DuplicateFinder {
                 }
             }
 
-            // 9×8 в оттенках серого
-            Bitmap small = Bitmap.createScaledBitmap(bmp, 9, 8, true);
+            // 9×9 в оттенках серого — хватает на оба направления
+            Bitmap small = Bitmap.createScaledBitmap(bmp, 9, 9, true);
             if (small != bmp) bmp.recycle();
-            int[] px = new int[9 * 8];
-            small.getPixels(px, 0, 9, 0, 0, 9, 8);
+            int[] px = new int[9 * 9];
+            small.getPixels(px, 0, 9, 0, 0, 9, 9);
             small.recycle();
-            int[] gray = new int[9 * 8];
+            int[] gray = new int[9 * 9];
             long sum = 0;
             for (int i = 0; i < px.length; i++) {
                 int c = px[i];
@@ -381,16 +400,26 @@ public final class DuplicateFinder {
             }
             p.avg = (int) (sum / px.length);
 
-            // Бит = ярче ли пиксель соседа справа
-            long hash = 0;
+            // Горизонтальный: ярче ли пиксель соседа справа (8 строк × 8 сравнений)
+            long dh = 0;
             int bit = 0;
             for (int y = 0; y < 8; y++) {
                 for (int x = 0; x < 8; x++) {
-                    if (gray[y * 9 + x] > gray[y * 9 + x + 1]) hash |= 1L << bit;
+                    if (gray[y * 9 + x] > gray[y * 9 + x + 1]) dh |= 1L << bit;
                     bit++;
                 }
             }
-            p.dhash = hash;
+            // Вертикальный: ярче ли пиксель соседа снизу (8 столбцов × 8 сравнений)
+            long dv = 0;
+            bit = 0;
+            for (int x = 0; x < 8; x++) {
+                for (int y = 0; y < 8; y++) {
+                    if (gray[y * 9 + x] > gray[(y + 1) * 9 + x]) dv |= 1L << bit;
+                    bit++;
+                }
+            }
+            p.dh = dh;
+            p.dv = dv;
             p.valid = true;
         } catch (Throwable ignored) {
         }
@@ -430,10 +459,12 @@ public final class DuplicateFinder {
             String[] parts = v.split(",");
             Print p = new Print();
             p.valid = "1".equals(parts[0]);
-            p.dhash = Long.parseLong(parts[1], 16);
-            p.avg = Integer.parseInt(parts[2]);
-            p.w = Integer.parseInt(parts[3]);
-            p.h = Integer.parseInt(parts[4]);
+            // parseUnsignedLong: toHexString пишет long как беззнаковый
+            p.dh = Long.parseUnsignedLong(parts[1], 16);
+            p.dv = Long.parseUnsignedLong(parts[2], 16);
+            p.avg = Integer.parseInt(parts[3]);
+            p.w = Integer.parseInt(parts[4]);
+            p.h = Integer.parseInt(parts[5]);
             return p;
         } catch (Exception e) {
             return null;
@@ -442,11 +473,15 @@ public final class DuplicateFinder {
 
     private static void putCache(Map<String, String> cache, MediaItem it, Print p) {
         cache.put(cacheKey(it), (p.valid ? "1" : "0") + ","
-                + Long.toHexString(p.dhash) + "," + p.avg + "," + p.w + "," + p.h);
+                + Long.toHexString(p.dh) + "," + Long.toHexString(p.dv) + ","
+                + p.avg + "," + p.w + "," + p.h);
     }
 
     private static Map<String, String> loadCache(Context ctx) {
         Map<String, String> out = new HashMap<>();
+        // Кеш старого формата (одиночный dHash) больше не нужен
+        //noinspection ResultOfMethodCallIgnored
+        new File(ctx.getFilesDir(), CACHE_FILE_V1).delete();
         File f = new File(ctx.getFilesDir(), CACHE_FILE);
         if (!f.isFile()) return out;
         try (BufferedReader r = new BufferedReader(new FileReader(f))) {

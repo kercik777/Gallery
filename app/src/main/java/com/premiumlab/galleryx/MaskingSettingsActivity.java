@@ -27,7 +27,7 @@ public class MaskingSettingsActivity extends AppCompatActivity {
     private static final int REQ_PIN_BEFORE_CHANGE = 205;
     private static final int REQ_PIN_MASK_OFF = 206;
 
-    private MaterialSwitch switchMasking, switchPin, switchSecure, switchMaskPin;
+    private MaterialSwitch switchMasking, switchPin, switchSecure, switchMaskPin, switchBiometric;
     private TextView txtHeroStatus;
     private View rowChangePin, rowMaskPin;
     private boolean guard = false;
@@ -50,6 +50,7 @@ public class MaskingSettingsActivity extends AppCompatActivity {
         rowChangePin = findViewById(R.id.rowChangePin);
         rowMaskPin = findViewById(R.id.rowMaskPin);
         switchMaskPin = findViewById(R.id.switchMaskPin);
+        switchBiometric = findViewById(R.id.switchBiometric);
 
         autoRows[0] = findViewById(R.id.rowAutoMinimize);
         autoRows[1] = findViewById(R.id.rowAuto1);
@@ -62,6 +63,7 @@ public class MaskingSettingsActivity extends AppCompatActivity {
 
         setupMaskingSwitch();
         setupPinSection();
+        setupBiometric();
         setupAutoHide();
         setupSecure();
         setupExtraSources();
@@ -80,6 +82,9 @@ public class MaskingSettingsActivity extends AppCompatActivity {
     private void refreshExtraSourcesCount() {
         android.widget.TextView t = findViewById(R.id.txtExtraSourcesCount);
         if (t == null) return;
+        // Папки, удалённые из «Альбомов» или файловым менеджером,
+        // выкидываются из включённых сразу — счётчик всегда честный
+        com.premiumlab.galleryx.data.ExtraSources.pruneMissing();
         int n = Prefs.extraFolders().size();
         t.setVisibility(n > 0 ? View.VISIBLE : View.GONE);
         if (n > 0) {
@@ -201,6 +206,36 @@ public class MaskingSettingsActivity extends AppCompatActivity {
         });
     }
 
+    // ---------- Биометрия ----------
+
+    /**
+     * Вход по отпечатку или лицу вместо PIN (перенесено из общих настроек:
+     * это часть защиты маскировки/сейфа, здесь ей самое место).
+     */
+    private void setupBiometric() {
+        switchBiometric.setChecked(Prefs.biometric());
+        switchBiometric.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (guard) return;
+            if (isChecked && !Prefs.pinSet()) {
+                // Биометрия — замена PIN, без него включать нечего
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle(R.string.pin_required_title)
+                        .setMessage(R.string.settings_biometric_need_pin)
+                        .setPositiveButton(R.string.ok, null)
+                        .show();
+                refreshStatus();
+                return;
+            }
+            if (isChecked && !PinActivity.biometricAvailable(this)) {
+                Toasts.makeText(this, R.string.settings_biometric_unavailable,
+                        Toast.LENGTH_SHORT).show();
+                refreshStatus();
+                return;
+            }
+            Prefs.setBiometric(isChecked);
+        });
+    }
+
     private void confirmPinOff() {
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.pin_disabled_confirm_title)
@@ -245,6 +280,7 @@ public class MaskingSettingsActivity extends AppCompatActivity {
         switchPin.setChecked(Prefs.pinSet());
         switchSecure.setChecked(Prefs.flagSecure());
         switchMaskPin.setChecked(Prefs.maskingUsesPin());
+        switchBiometric.setChecked(Prefs.biometric());
         guard = false;
 
         txtHeroStatus.setText(Prefs.masking()
