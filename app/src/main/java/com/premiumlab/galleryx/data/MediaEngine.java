@@ -792,8 +792,11 @@ public final class MediaEngine {
             return;
         }
         EXEC.execute(() -> {
-            // Холодный старт: альбомы мгновенно из дискового кеша, свежее — следом
-            if (!diskDirty) {
+            // Холодный старт: альбомы мгновенно из дискового кеша, свежее —
+            // следом. Только при холодном старте (как в loadAll): пара
+            // доставок на каждом возврате на экран меняла обложки и
+            // счётчики прямо на глазах
+            if (!diskDirty && allCache == null) {
                 List<MediaItem> disk = null;
                 try {
                     disk = loadDiskCache(app);

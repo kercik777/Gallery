@@ -815,7 +815,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
     }
 
     /**
-     * Текущий файл исчез из просмотра (удалён, перемещён, восстановлен,
+     * Текущий файл исчез из просмотра (удалён, восстановлен,
      * отправлен в сейф): КРАСИВО пролистываем к соседнему файлу — в ту
      * сторону, куда человек листал до этого (при первом входе — вперёд),
      * а если в той стороне файлов нет — в обратную. Старая страница
@@ -823,21 +823,12 @@ public class PhotoViewerActivity extends AppCompatActivity {
      * ручного свайпа. Закрываемся, только когда файлов не осталось.
      */
     private void afterCurrentRemoved() {
-        afterCurrentRemoved(false);
-    }
-
-    /**
-     * @param force true — файл остался на диске, но ушёл из текущего списка
-     *              (например, перемещение между папками сейфа: папки
-     *              виртуальные, файл физически не двигается)
-     */
-    private void afterCurrentRemoved(boolean force) {
         if (pendingRemovePath != null) return; // уже листаем после прошлого действия
         int pos = pager.getCurrentItem();
         String path = adapter.getPath(pos);
         if (path == null) return;
         // Операцию могли отменить или она не удалась — файл ещё на месте
-        if (!force && new File(path).exists()) return;
+        if (new File(path).exists()) return;
         if (adapter.getItemCount() <= 1) {
             finish();
             return;
@@ -883,20 +874,6 @@ public class PhotoViewerActivity extends AppCompatActivity {
         int count = adapter.getItemCount();
         if (swipeDir > 0) return pos < count - 1 ? pos + 1 : pos - 1;
         return pos > 0 ? pos - 1 : pos + 1;
-    }
-
-    /**
-     * Файл остался на месте (копирование и т.п.), но для продолжения
-     * работы красиво пролистываем к соседнему файлу — в ту же сторону,
-     * куда человек листал. Страница из списка НЕ убирается.
-     */
-    private void advanceToNext() {
-        if (adapter.getItemCount() <= 1 || pendingRemovePath != null) return;
-        autoAdvancing = true;
-        pager.setCurrentItem(neighborInSwipeDir(pager.getCurrentItem()), true);
-        pager.postDelayed(() -> {
-            if (pendingRemovePath == null) autoAdvancing = false;
-        }, 800);
     }
 
     /**
@@ -1077,9 +1054,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
                 dlg.dismiss();
                 Toasts.makeText(this, Fmt.plural(this, R.plurals.result_copied, ok),
                         Toast.LENGTH_SHORT).show();
-                // Файл остался здесь, но листаем дальше — удобно обрабатывать
-                // файлы один за другим, не свайпая вручную
-                if (ok > 0) advanceToNext();
+                // Копирование: остаёмся на этом файле, никуда не листаем
             });
         });
         sheet.show(getSupportFragmentManager(), "dest");
@@ -1094,8 +1069,8 @@ public class PhotoViewerActivity extends AppCompatActivity {
             dlg.dismiss();
             Toasts.makeText(this, Fmt.plural(this, R.plurals.result_moved, ok),
                     Toast.LENGTH_SHORT).show();
-            // Файл уехал в другую папку — красиво листаем к следующему
-            afterCurrentRemoved();
+            // Перемещение: не листаем дальше, а закрываем просмотр (как раньше)
+            if (ok > 0) finish();
         });
     }
 
@@ -1156,18 +1131,16 @@ public class PhotoViewerActivity extends AppCompatActivity {
                                             ? getString(R.string.op_cancelled)
                                             : Fmt.plural(this, R.plurals.result_copied, ok),
                                             Toast.LENGTH_SHORT).show();
-                                    // Как и обычное копирование: листаем дальше
-                                    if (ok > 0) advanceToNext();
+                                    // Копирование в сейфе: остаёмся на файле
                                 });
                     } else {
                         int n = SafeStore.get().moveToFolder(
                                 Collections.singletonList(entry.path), key);
                         Toasts.makeText(this, Fmt.plural(this, R.plurals.result_moved, n),
                                 Toast.LENGTH_SHORT).show();
-                        // Файл теперь в другой папке — из этого просмотра он
-                        // исчез (файл на диске остался: папки сейфа виртуальные,
-                        // поэтому force — без проверки существования файла)
-                        if (n > 0) afterCurrentRemoved(true);
+                        // Перемещение между папками сейфа: закрываем
+                        // просмотр, автопролистывания здесь не должно быть
+                        if (n > 0) finish();
                     }
                 });
     }

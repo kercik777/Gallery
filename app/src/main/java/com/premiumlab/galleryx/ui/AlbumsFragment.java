@@ -560,11 +560,26 @@ public class AlbumsFragment extends Fragment
     @Override
     public void onPause() {
         super.onPause();
+        selfieHandler.removeCallbacks(selfieReload);
         com.premiumlab.galleryx.data.SelfieIndex.removeListener(selfieListener);
     }
 
-    /** Фоновый анализ лиц нашёл новые селфи — обновляем счётчик «Селфи». */
+    private final android.os.Handler selfieHandler =
+            new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable selfieReload = () -> {
+        if (isAdded() && !isHidden() && adapter != null && !adapter.isSelection()) {
+            loadAlbums();
+        }
+    };
+
+    /**
+     * Фоновый анализ лиц нашёл новые селфи. Раньше каждое найденное лицо
+     * тут же перезагружало альбомы — цифра «Селфи» росла прямо на глазах.
+     * Теперь обновления собираются в одно тихое через полторы секунды
+     * после последнего события.
+     */
     private final com.premiumlab.galleryx.data.SelfieIndex.Listener selfieListener = () -> {
-        if (isAdded() && !isHidden() && adapter != null && !adapter.isSelection()) loadAlbums();
+        selfieHandler.removeCallbacks(selfieReload);
+        selfieHandler.postDelayed(selfieReload, 1500);
     };
 }
