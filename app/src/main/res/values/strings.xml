@@ -813,7 +813,7 @@
     <!-- Duplicate finder -->
     <string name="album_all">All</string>
     <string name="settings_duplicates">Duplicate finder</string>
-    <string name="settings_duplicates_sub">Find and remove identical photos and videos</string>
+    <string name="settings_duplicates_sub">Find and remove identical photos</string>
     <string name="dup_status_idle">Exact and similar copies — compared by content, not by name</string>
     <string name="dup_intro_title">Find duplicate photos</string>
     <string name="dup_intro_sub">The app compares image contents, so copies are found even under different names — including the same photo saved at a different resolution or quality. Nothing is deleted automatically — you review every group and choose what to remove.</string>

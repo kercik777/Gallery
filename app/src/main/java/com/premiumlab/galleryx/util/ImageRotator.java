@@ -20,20 +20,44 @@ import java.io.OutputStream;
  */
 public final class ImageRotator {
 
-    /** EXIF-теги, которые переносим в повёрнутый файл. */
-    private static final String[] KEEP_TAGS = {
-            ExifInterface.TAG_DATETIME, ExifInterface.TAG_DATETIME_ORIGINAL,
-            ExifInterface.TAG_DATETIME_DIGITIZED, ExifInterface.TAG_MAKE,
-            ExifInterface.TAG_MODEL, ExifInterface.TAG_SOFTWARE,
-            ExifInterface.TAG_IMAGE_DESCRIPTION, ExifInterface.TAG_ARTIST,
-            ExifInterface.TAG_COPYRIGHT, ExifInterface.TAG_GPS_LATITUDE,
-            ExifInterface.TAG_GPS_LATITUDE_REF, ExifInterface.TAG_GPS_LONGITUDE,
-            ExifInterface.TAG_GPS_LONGITUDE_REF, ExifInterface.TAG_GPS_ALTITUDE,
-            ExifInterface.TAG_GPS_ALTITUDE_REF, ExifInterface.TAG_F_NUMBER,
-            ExifInterface.TAG_EXPOSURE_TIME, ExifInterface.TAG_ISO_SPEED,
-            ExifInterface.TAG_FOCAL_LENGTH, ExifInterface.TAG_FLASH,
-            ExifInterface.TAG_WHITE_BALANCE, ExifInterface.TAG_MAKE,
-    };
+    /**
+     * Все EXIF-теги, какие есть в исходнике. Раньше был ручной список —
+     * и в нём не оказалось ISOSpeedRatings, поэтому после поворота
+     * пропадал ISO (а могли и другие поля). Теперь копируем каждый
+     * объявленный в ExifInterface тег, кроме служебных: ориентацию
+     * ставим обычную, размеры — новые, миниатюру EXIF не тащим
+     * (она осталась бы непровёрнутой).
+     */
+    private static void copyAllTags(ExifInterface from, ExifInterface to,
+                                    int newW, int newH) {
+        for (java.lang.reflect.Field f : ExifInterface.class.getFields()) {
+            if (!f.getName().startsWith("TAG_")) continue;
+            String tag;
+            try {
+                Object v = f.get(null);
+                if (!(v instanceof String)) continue;
+                tag = (String) v;
+            } catch (Exception e) {
+                continue;
+            }
+            if (tag.equals(ExifInterface.TAG_ORIENTATION)
+                    || tag.equals(ExifInterface.TAG_PIXEL_X_DIMENSION)
+                    || tag.equals(ExifInterface.TAG_PIXEL_Y_DIMENSION)
+                    || tag.contains("THUMBNAIL")
+                    || tag.contains("INTERCHANGE")) {
+                continue;
+            }
+            try {
+                String value = from.getAttribute(tag);
+                if (value != null) to.setAttribute(tag, value);
+            } catch (Exception ignored) {
+            }
+        }
+        to.setAttribute(ExifInterface.TAG_ORIENTATION,
+                String.valueOf(ExifInterface.ORIENTATION_NORMAL));
+        to.setAttribute(ExifInterface.TAG_PIXEL_X_DIMENSION, String.valueOf(newW));
+        to.setAttribute(ExifInterface.TAG_PIXEL_Y_DIMENSION, String.valueOf(newH));
+    }
 
     private ImageRotator() {
     }
@@ -51,13 +75,9 @@ public final class ImageRotator {
         File tmp = null;
         try {
             // Старые метаданные — до перезаписи файла
-            String[] saved = null;
+            ExifInterface oldExif = null;
             try {
-                ExifInterface old = new ExifInterface(file.getAbsolutePath());
-                saved = new String[KEEP_TAGS.length];
-                for (int i = 0; i < KEEP_TAGS.length; i++) {
-                    saved[i] = old.getAttribute(KEEP_TAGS[i]);
-                }
+                oldExif = new ExifInterface(file.getAbsolutePath());
             } catch (Throwable ignored) {
             }
 
@@ -79,19 +99,12 @@ public final class ImageRotator {
                 if (!rotated.compress(fmt, 92, out)) return false;
             }
 
-            // Метаданные обратно + обычная ориентация и новые размеры
-            if (fmt == Bitmap.CompressFormat.JPEG && saved != null) {
+            // Метаданные обратно: ВСЕ теги исходника (ISO, диафрагма,
+            // выдержка, GPS…) + обычная ориентация и новые размеры
+            if (fmt == Bitmap.CompressFormat.JPEG && oldExif != null) {
                 try {
                     ExifInterface exif = new ExifInterface(tmp.getAbsolutePath());
-                    for (int i = 0; i < KEEP_TAGS.length; i++) {
-                        if (saved[i] != null) exif.setAttribute(KEEP_TAGS[i], saved[i]);
-                    }
-                    exif.setAttribute(ExifInterface.TAG_ORIENTATION,
-                            String.valueOf(ExifInterface.ORIENTATION_NORMAL));
-                    exif.setAttribute(ExifInterface.TAG_PIXEL_X_DIMENSION,
-                            String.valueOf(rotated.getWidth()));
-                    exif.setAttribute(ExifInterface.TAG_PIXEL_Y_DIMENSION,
-                            String.valueOf(rotated.getHeight()));
+                    copyAllTags(oldExif, exif, rotated.getWidth(), rotated.getHeight());
                     exif.saveAttributes();
                 } catch (Throwable ignored) {
                 }

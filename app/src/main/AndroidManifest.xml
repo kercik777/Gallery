@@ -123,12 +123,7 @@
             android:name=".TrashActivity"
             android:exported="false" />
 
-        <!-- Поиск дубликатов (Настройки → Поиск дубликатов): выбор фото/видео -->
-        <activity
-            android:name=".DuplicatesHubActivity"
-            android:exported="false" />
-
-        <!-- Поиск дубликатов фото и видео (режим — extra "video") -->
+        <!-- Поиск дубликатов фото (Настройки → Поиск дубликатов) -->
         <activity
             android:name=".DuplicatesActivity"
             android:exported="false" />

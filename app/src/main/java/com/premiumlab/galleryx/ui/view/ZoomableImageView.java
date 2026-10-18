@@ -453,8 +453,11 @@ public class ZoomableImageView extends AppCompatImageView {
                         dragListener.onDragEnd(this, event.getRawX() - downRawX,
                                 event.getRawY() - downRawY, vy);
                     }
-                } else if (zoomAnimator == null || !zoomAnimator.isRunning()) {
-                    // Во время анимации двойного тапа матрицу не трогаем
+                } else if ((zoomAnimator == null || !zoomAnimator.isRunning())
+                        && (twistAnimator == null || !twistAnimator.isRunning())) {
+                    // Во время анимаций (двойной тап, доворот кручения) матрицу
+                    // не трогаем: раньше этот сброс убивал доводчик поворота
+                    // в момент отпускания пальцев, и картинка «зависала»
                     if (!isZoomed()) {
                         suppMatrix.reset();
                         apply();
@@ -557,11 +560,19 @@ public class ZoomableImageView extends AppCompatImageView {
             prev[0] = v;
             apply();
         });
+        final boolean[] wasCancelled = {false};
         a.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationCancel(Animator anim) {
+                // cancel() следом вызовет и onAnimationEnd — не даём ему
+                // применить поворот, если анимацию прервали новым касанием
+                wasCancelled[0] = true;
+            }
+
             @Override
             public void onAnimationEnd(Animator anim) {
                 if (twistAnimator == anim) twistAnimator = null;
-                if (end != null) end.run();
+                if (!wasCancelled[0] && end != null) end.run();
             }
         });
         twistAnimator = a;

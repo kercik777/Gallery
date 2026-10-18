@@ -48,13 +48,8 @@ import java.util.Set;
  */
 public class DuplicatesActivity extends AppCompatActivity {
 
-    /** Intent-extra: true — режим видео, иначе фото. */
-    public static final String EXTRA_VIDEO = "video";
-
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_FILE = 1;
-
-    private boolean videoMode;
 
     private final List<DuplicateFinder.Group> groups = new ArrayList<>();
     private final List<Object> rows = new ArrayList<>();          // Header | MediaItem
@@ -63,11 +58,8 @@ public class DuplicatesActivity extends AppCompatActivity {
 
     private Adapter adapter;
     private DuplicateFinder finder;
-    private com.premiumlab.galleryx.data.VideoDuplicateFinder videoFinder;
     private boolean scanning;
     private boolean scannedOnce;
-
-    private TextView txtTitle, txtIntroTitle, txtIntroSub, txtScanning, txtEmptySub, btnScanText;
 
     private TextView txtStatus, txtProgress, txtDelete;
     private View layoutIntro, layoutScanning, layoutEmpty, layoutActions, btnDelete;
@@ -94,22 +86,6 @@ public class DuplicatesActivity extends AppCompatActivity {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
         setContentView(R.layout.activity_duplicates);
-        videoMode = getIntent().getBooleanExtra(EXTRA_VIDEO, false);
-
-        txtTitle = findViewById(R.id.txtDupTitle);
-        txtIntroTitle = findViewById(R.id.txtDupIntroTitle);
-        txtIntroSub = findViewById(R.id.txtDupIntroSub);
-        txtScanning = findViewById(R.id.txtDupScanning);
-        txtEmptySub = findViewById(R.id.txtDupEmptySub);
-        btnScanText = findViewById(R.id.btnDupScan);
-        if (videoMode) {
-            txtTitle.setText(R.string.dup_hub_video);
-            txtIntroTitle.setText(R.string.dup_intro_title_video);
-            txtIntroSub.setText(R.string.dup_intro_sub_video);
-            txtScanning.setText(R.string.dup_scanning_video);
-            txtEmptySub.setText(R.string.dup_empty_sub_video);
-            btnScanText.setText(R.string.dup_scan_btn_video);
-        }
 
         txtStatus = findViewById(R.id.txtDupStatus);
         txtProgress = findViewById(R.id.txtDupProgress);
@@ -160,7 +136,6 @@ public class DuplicatesActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         if (finder != null) finder.cancel();
-        if (videoFinder != null) videoFinder.cancel();
     }
 
     // ---------- Сканирование ----------
@@ -172,19 +147,18 @@ public class DuplicatesActivity extends AppCompatActivity {
         groups.clear();
         rebuildRows();
         updateDeleteBar();
-        txtProgress.setText(videoMode ? R.string.dup_preparing_video : R.string.dup_preparing);
+        txtProgress.setText(R.string.dup_preparing);
         progressBar.setIndeterminate(true);
         showState();
 
-        // Общие колбэки прогресса/результата для обоих режимов
-        class Progress implements DuplicateFinder.Listener,
-                com.premiumlab.galleryx.data.VideoDuplicateFinder.Listener {
+        finder = new DuplicateFinder();
+        DuplicateFinder current = finder;
+        finder.scan(this, new DuplicateFinder.Listener() {
             @Override
             public void onProgress(int done, int total) {
-                if (isFinishing()) return;
+                if (current != finder || isFinishing()) return;
                 if (total <= 0) {
-                    txtProgress.setText(videoMode
-                            ? R.string.dup_preparing_video : R.string.dup_preparing);
+                    txtProgress.setText(R.string.dup_preparing);
                     return;
                 }
                 progressBar.setIndeterminate(false);
@@ -195,7 +169,7 @@ public class DuplicatesActivity extends AppCompatActivity {
 
             @Override
             public void onResult(List<DuplicateFinder.Group> result) {
-                if (isFinishing()) return;
+                if (current != finder || isFinishing()) return;
                 scanning = false;
                 scannedOnce = true;
                 groups.clear();
@@ -205,15 +179,7 @@ public class DuplicatesActivity extends AppCompatActivity {
                 updateDeleteBar();
                 showState();
             }
-        }
-        Progress progress = new Progress();
-        if (videoMode) {
-            videoFinder = new com.premiumlab.galleryx.data.VideoDuplicateFinder();
-            videoFinder.scan(this, progress);
-        } else {
-            finder = new DuplicateFinder();
-            finder.scan(this, progress);
-        }
+        });
     }
 
     // ---------- Список ----------
@@ -429,11 +395,8 @@ public class DuplicatesActivity extends AppCompatActivity {
         void bind(MediaItem it) {
             name.setText(it.name);
             folder.setText(it.folderPath);
-            // Разрешение (если известно) · размер · дата; у видео — ещё длительность
+            // Разрешение (если известно) · размер · дата
             String m = Fmt.size(it.size) + " · " + Fmt.dateTimeShort(it.dateModified);
-            if (it.isVideo && it.duration > 0) {
-                m = Fmt.duration(it.duration) + " · " + m;
-            }
             if (it.width > 0 && it.height > 0) {
                 m = it.width + "×" + it.height + " · " + m;
             }

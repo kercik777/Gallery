@@ -842,7 +842,7 @@
     <!-- Поиск дубликатов -->
     <string name="album_all">Все</string>
     <string name="settings_duplicates">Поиск дубликатов</string>
-    <string name="settings_duplicates_sub">Найти и удалить одинаковые фото и видео</string>
+    <string name="settings_duplicates_sub">Найти и удалить одинаковые фото</string>
     <string name="dup_status_idle">Точные и похожие копии — сравнение по содержимому, а не по имени</string>
     <string name="dup_intro_title">Найти дубликаты фото</string>
     <string name="dup_intro_sub">Приложение сравнивает содержимое изображений, поэтому копии находятся даже с разными именами — в том числе то же фото в другом разрешении или качестве. Ничего не удаляется автоматически — вы просматриваете каждую группу и сами выбираете, что убрать.</string>
