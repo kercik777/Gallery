@@ -10,13 +10,22 @@ android {
         applicationId "com.premiumlab.galleryx"
         minSdk 26
         targetSdk 37
-        versionCode 44
-        versionName "3.25.1"
+        versionCode 45
+        versionName "3.26.0"
     }
 
     buildTypes {
-        release {
+        // Отладочная сборка: видна в Android Studio (Build Variants → debug),
+        // ставится рядом с релизом не мешая ему, без сжатия — быстрая сборка.
+        debug {
+            debuggable true
             minifyEnabled false
+        }
+        release {
+            // Обфускация R8 по умолчанию ВЫКЛЮЧЕНА. Чтобы включить защиту кода,
+            // поменяйте обе строки ниже на true — правила уже готовы в proguard-rules.pro.
+            minifyEnabled false
+            shrinkResources false // работает только вместе с minifyEnabled true
             signingConfig signingConfigs.debug
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }

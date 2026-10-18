@@ -363,7 +363,8 @@ public class PhotoViewerActivity extends AppCompatActivity {
             btnDelete.setOnClickListener(v -> {
                 MediaItem it = current();
                 if (it == null) return;
-                Actions.confirmTrash(this, Collections.singletonList(it), this::finish);
+                Actions.confirmTrash(this, Collections.singletonList(it),
+                        this::afterCurrentRemoved);
             });
         } else {
             btnFav.setVisibility(View.GONE);
@@ -377,7 +378,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
                 MediaItem it = current();
                 if (it == null) return;
                 Actions.confirmDeleteForever(this, Collections.singletonList(decorateName(it)),
-                        this::finish);
+                        this::afterCurrentRemoved);
             });
         }
         findViewById(R.id.btnVwInfo).setOnClickListener(v -> showInfo());
@@ -601,7 +602,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
                             MediaItem cur = current();
                             if (cur == null) return;
                             Actions.confirmSafe(this, Collections.singletonList(cur),
-                                    this::finish);
+                                    this::afterCurrentRemoved);
                         }));
             }
             sheet.add(new OptionsSheet.Item(R.drawable.ic_note,
@@ -652,7 +653,8 @@ public class PhotoViewerActivity extends AppCompatActivity {
                     getString(R.string.delete), null, true, () -> {
                         MediaItem cur = current();
                         if (cur == null) return;
-                        Actions.confirmTrash(this, Collections.singletonList(cur), this::finish);
+                        Actions.confirmTrash(this, Collections.singletonList(cur),
+                                this::afterCurrentRemoved);
                     }));
         } else {
             // Сейф и корзина: удаление навсегда
@@ -661,7 +663,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
                         MediaItem cur = current();
                         if (cur == null) return;
                         Actions.confirmDeleteForever(this, Collections.singletonList(
-                                decorateName(cur)), this::finish);
+                                decorateName(cur)), this::afterCurrentRemoved);
                     }));
         }
         sheet.show(getSupportFragmentManager(), "options");
@@ -725,6 +727,30 @@ public class PhotoViewerActivity extends AppCompatActivity {
         String path = adapter.getPath(pager.getCurrentItem());
         if (path == null) return null;
         return MediaItem.fromFile(new File(path));
+    }
+
+    /**
+     * Текущий файл исчез из просмотра (удалён, восстановлен, отправлен в сейф):
+     * страница убирается и просмотр сам листается к следующему файлу
+     * (после последнего — к предыдущему). Закрываемся только когда
+     * файлов больше не осталось.
+     */
+    private void afterCurrentRemoved() {
+        int pos = pager.getCurrentItem();
+        String path = adapter.getPath(pos);
+        // Операцию могли отменить или она не удалась — файл ещё на месте
+        if (path != null && new File(path).exists()) return;
+        adapter.removeAt(pos);
+        if (adapter.getItemCount() == 0) {
+            finish();
+            return;
+        }
+        int next = Math.min(pos, adapter.getItemCount() - 1);
+        // Если убрали страницу из середины, следующий файл сдвигается на её
+        // место и onPageSelected не приходит — обновляем панель и страницу сами
+        pager.setCurrentItem(next, false);
+        updateToolbar(next);
+        pager.post(() -> attachPage(next));
     }
 
     /**
@@ -904,7 +930,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
                 dlg.dismiss();
                 Toasts.makeText(this, Fmt.plural(this, R.plurals.result_restored, ok),
                         Toast.LENGTH_SHORT).show();
-                finish();
+                afterCurrentRemoved();
             });
         } else {
             List<SafeStore.Entry> entries = new ArrayList<>();
@@ -915,7 +941,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
                 dlg.dismiss();
                 Toasts.makeText(this, Fmt.plural(this, R.plurals.result_restored, ok),
                         Toast.LENGTH_SHORT).show();
-                finish();
+                afterCurrentRemoved();
             });
         }
     }

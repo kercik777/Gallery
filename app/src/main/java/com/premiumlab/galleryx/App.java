@@ -24,6 +24,11 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         com.premiumlab.galleryx.util.CrashLog.install(this);
+        // Анти-тампер: чужая пересборка (с другим сертификатом) не запустится.
+        // Пока хэш в IntegrityGuard не вписан — проверка отключена.
+        if (!com.premiumlab.galleryx.util.IntegrityGuard.verify(this)) {
+            throw new IllegalStateException("signature mismatch");
+        }
         Prefs.init(this);
         SessionManager.init();
         // После переустановки PIN подхватывается из служебной папки корня
