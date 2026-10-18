@@ -127,8 +127,23 @@ public final class MediaEngine {
                 } catch (Throwable ignored) {
                 }
                 if (disk != null) {
-                    List<MediaItem> snap = disk;
-                    MAIN.post(() -> cb.onLoaded(snap));
+                    // Кеш мог быть записан до фильтра данных приложений —
+                    // чистим и его, чтобы чужие фото не мелькнули при старте
+                    java.util.List<String> roots = new ArrayList<>();
+                    for (File vol : ExtraSources.volumes(app)) {
+                        roots.add(new File(vol, "Android").getAbsolutePath() + "/");
+                    }
+                    java.util.Set<String> extras = ExtraSources.active();
+                    List<MediaItem> snap = new ArrayList<>();
+                    for (MediaItem it : disk) {
+                        String parent = new File(it.path).getParent();
+                        if (parent != null && isAppDataOrHidden(it.path, parent, roots, extras)) {
+                            continue;
+                        }
+                        snap.add(it);
+                    }
+                    List<MediaItem> clean = snap;
+                    MAIN.post(() -> cb.onLoaded(clean));
                 }
             }
             boolean hiddenNow = MaskGuard.hidden();
@@ -447,6 +462,17 @@ public final class MediaEngine {
             int iMime = c.getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE);
             int iDur = video && Build.VERSION.SDK_INT >= 29
                     ? c.getColumnIndex(MediaStore.MediaColumns.DURATION) : -1;
+            // Папки, которые в общую галерею НЕ должны попадать сами по себе:
+            // данные приложений (Android/…) и скрытые каталоги. Они видны
+            // только если пользователь сам включил их в «Дополнительных
+            // источниках» (тогда файлы добавит ExtraSources.appendActive).
+            // Раньше MediaStore отдавал, например, все фото Telegram из
+            // Android/media, хотя источник был выключен.
+            java.util.List<String> appDataRoots = new ArrayList<>();
+            for (File vol : ExtraSources.volumes(ctx)) {
+                appDataRoots.add(new File(vol, "Android").getAbsolutePath() + "/");
+            }
+            java.util.Set<String> extras = ExtraSources.active();
             while (c.moveToNext()) {
                 String path = c.getString(iPath);
                 if (path == null || path.isEmpty()) continue;
@@ -456,6 +482,7 @@ public final class MediaEngine {
                 // Исключаем служебные скрытые каталоги (корзина, сейф)
                 if (AppDirs.isServicePath(parent)) continue;
                 if (f.getName().startsWith(".")) continue;
+                if (isAppDataOrHidden(path, parent, appDataRoots, extras)) continue;
                 MediaItem item = new MediaItem();
                 item.id = iId >= 0 ? c.getLong(iId) : 0;
                 item.path = path;
@@ -472,6 +499,28 @@ public final class MediaEngine {
         } finally {
             c.close();
         }
+    }
+
+    /**
+     * true, если файл лежит в данных приложений (…/Android/…) или в скрытом
+     * каталоге (сегмент пути с точкой) и при этом его папка не включена
+     * вручную в дополнительных источниках.
+     */
+    private static boolean isAppDataOrHidden(String path, String parent,
+                                             java.util.List<String> appDataRoots,
+                                             java.util.Set<String> extras) {
+        // Включённый источник (или любая папка внутри него) — показываем
+        for (String ex : extras) {
+            if (parent.equals(ex) || parent.startsWith(ex + "/")) return false;
+        }
+        for (String root : appDataRoots) {
+            if (path.startsWith(root)) return true;
+        }
+        // Скрытый каталог в любом сегменте пути папки: /.hidden/…, /dir/.cache/…
+        for (String seg : parent.split("/")) {
+            if (seg.length() > 1 && seg.startsWith(".")) return true;
+        }
+        return false;
     }
 
     // ---------- Содержимое конкретной папки (File API) ----------

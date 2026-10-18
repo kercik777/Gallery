@@ -40,6 +40,10 @@ public class FolderFragment extends BaseMediaFragment {
     private File currentDir;
     private boolean isUserFolder;
     private final List<Album> subfolders = new ArrayList<>();
+    /** Позиция прокрутки каждой посещённой папки: [позиция, сдвиг px]. */
+    private final java.util.Map<String, int[]> scrollMem = new java.util.HashMap<>();
+    /** Папка, чьё содержимое сейчас на экране (позицию трогаем только при смене). */
+    private String loadedDirPath;
 
     @Override
     protected int layoutRes() {
@@ -173,6 +177,7 @@ public class FolderFragment extends BaseMediaFragment {
     }
 
     private void navigateTo(File dir) {
+        saveScroll();
         exitSelection();
         currentDir = dir;
         subfolders.clear();
@@ -204,45 +209,63 @@ public class FolderFragment extends BaseMediaFragment {
         return isUserFolder ? currentDir.getAbsolutePath() : null;
     }
 
+    /** Запоминает позицию прокрутки текущей папки перед уходом из неё. */
+    private void saveScroll() {
+        if (recycler == null || layoutManager == null || currentDir == null) return;
+        int pos = layoutManager.findFirstVisibleItemPosition();
+        if (pos < 0) return;
+        View child = layoutManager.findViewByPosition(pos);
+        int off = child != null ? child.getTop() - recycler.getPaddingTop() : 0;
+        scrollMem.put(currentDir.getAbsolutePath(), new int[]{pos, off});
+    }
+
+    /** Куда встать после загрузки: сохранённая позиция папки или самый верх. */
+    private void restoreScroll(File dir) {
+        if (recycler == null || layoutManager == null) return;
+        int[] mem = scrollMem.get(dir.getAbsolutePath());
+        if (mem != null) {
+            layoutManager.scrollToPositionWithOffset(mem[0], mem[1]);
+        } else {
+            // Свежий вход в папку — всегда с самого верха, где подпапки
+            layoutManager.scrollToPositionWithOffset(0, 0);
+        }
+    }
+
     @Override
     protected void loadMedia() {
         showLoading(true);
         final File dir = currentDir;
         final boolean user = isUserFolder;
         // Карточки подпапок — только внутри своих папок (в корневой);
-        // папки устройства показываются в «Альбомах» каждая отдельно
+        // папки устройства показываются в «Альбомах» каждая отдельно.
+        // Подпапки и файлы грузятся ОДНИМ пакетом в фоне и ставятся одним
+        // обновлением: раньше два потока приходили по очереди, список
+        // мигал, а сетка «якорилась» на первом файле мимо папок.
         new Thread(() -> {
             List<Album> subs = user ? MediaEngine.subfolderAlbums(dir, true)
                     : new ArrayList<>();
+            List<MediaItem> items = MediaEngine.listFolder(dir);
             if (getActivity() == null) return;
             getActivity().runOnUiThread(() -> {
                 if (!isAdded() || !dir.equals(currentDir)) return;
-                boolean firstShow = subfolders.isEmpty() && !subs.isEmpty();
+                showLoading(false);
+                // Позицию устанавливаем только при СМЕНЕ папки: при обычном
+                // обновлении того же экрана (вернулись из просмотрщика,
+                // создали папку) список должен стоять там, где стоял
+                boolean freshDir = !dir.getAbsolutePath().equals(loadedDirPath);
                 subfolders.clear();
                 subfolders.addAll(subs);
-                applyFilter();
-                if (firstShow && recycler != null && layoutManager != null) {
-                    // Подпапки догрузились позже файлов и вставились в начало
-                    // списка, а сетка сохранила якорь на первом файле —
-                    // экран оказывался «прокрученным мимо папок». Если
-                    // пользователь ещё не листает сам — возвращаемся наверх.
-                    recycler.post(() -> {
-                        if (!isAdded() || !dir.equals(currentDir)) return;
-                        int first = layoutManager.findFirstVisibleItemPosition();
-                        if (first >= 0 && first <= 1) recycler.scrollToPosition(0);
-                    });
+                setData(items);
+                if (freshDir) {
+                    restoreScroll(dir);
+                    loadedDirPath = dir.getAbsolutePath();
+                }
+                if (shownItems.isEmpty() && query.isEmpty()) {
+                    txtEmptyTitle.setText(R.string.folder_empty_title);
+                    txtEmptySub.setText(R.string.folder_empty_sub);
                 }
             });
-        }).start();
-        MediaEngine.loadFolder(currentDir, items -> {
-            if (!isAdded() || !dir.equals(currentDir)) return;
-            showLoading(false);
-            setData(items);
-            if (shownItems.isEmpty() && query.isEmpty()) {
-                txtEmptyTitle.setText(R.string.folder_empty_title);
-                txtEmptySub.setText(R.string.folder_empty_sub);
-            }
-        });
+        }, "folder-load").start();
     }
 
     @Override
