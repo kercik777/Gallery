@@ -412,7 +412,7 @@ public final class VideoDuplicateFinder {
         boolean hasAudio;
     }
 
-    private static AudioPrint audioFor(Map<String, AudioPrint> cache, String path) {
+    private AudioPrint audioFor(Map<String, AudioPrint> cache, String path) {
         AudioPrint p = cache.get(path);
         if (p == null) {
             p = computeAudio(path);
@@ -442,7 +442,7 @@ public final class VideoDuplicateFinder {
     }
 
     /** Декодирует аудиодорожку в PCM и строит огибающую. Долго, но кандидатов мало. */
-    private static AudioPrint computeAudio(String path) {
+    private AudioPrint computeAudio(String path) {
         AudioPrint out = new AudioPrint();
         android.media.MediaExtractor ex = new android.media.MediaExtractor();
         android.media.MediaCodec codec = null;
