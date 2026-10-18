@@ -214,11 +214,11 @@ public class SettingsFragment extends Fragment {
                 getString(R.string.settings_pip_sub), Prefs::pip, Prefs::setPip);
         toggle(general, R.drawable.ic_unfold_more, getString(R.string.settings_fast_scroll),
                 getString(R.string.settings_fast_scroll_sub), Prefs::fastScroll, Prefs::setFastScroll);
-        // Поиск дубликатов: точные и похожие копии фото по содержимому
+        // Поиск дубликатов: сначала выбор «фото или видео», дальше сканирование
         row(general, R.drawable.ic_copy, getString(R.string.settings_duplicates),
                 getString(R.string.settings_duplicates_sub),
                 () -> startActivity(new Intent(act,
-                        com.premiumlab.galleryx.DuplicatesActivity.class)));
+                        com.premiumlab.galleryx.DuplicatesHubActivity.class)));
 
         // ----- Приватность (наше: маскировка с PIN/сейфом внутри, корневая папка) -----
         Group privacy = group(R.string.settings_privacy);

@@ -812,7 +812,7 @@
 
     <!-- Duplicate finder -->
     <string name="settings_duplicates">Duplicate finder</string>
-    <string name="settings_duplicates_sub">Find and remove identical photos</string>
+    <string name="settings_duplicates_sub">Find and remove identical photos and videos</string>
     <string name="dup_status_idle">Exact and similar copies — compared by content, not by name</string>
     <string name="dup_intro_title">Find duplicate photos</string>
     <string name="dup_intro_sub">The app compares image contents, so copies are found even under different names — including the same photo saved at a different resolution or quality. Nothing is deleted automatically — you review every group and choose what to remove.</string>
@@ -832,6 +832,16 @@
     <string name="dup_delete_btn">Delete selected (%1$d · %2$s)</string>
     <string name="dup_badge_oldest">oldest</string>
     <string name="dup_badge_best">best quality</string>
+    <string name="dup_hub_photo">Photo duplicates</string>
+    <string name="dup_hub_photo_sub">Exact and similar image copies</string>
+    <string name="dup_hub_video">Video duplicates</string>
+    <string name="dup_hub_video_sub">Exact and recompressed video copies</string>
+    <string name="dup_intro_title_video">Find duplicate videos</string>
+    <string name="dup_intro_sub_video">The app compares three frames and the duration of each video, so copies are found even after recompression by messengers or at a different resolution. Nothing is deleted automatically — you review every group and choose what to remove.</string>
+    <string name="dup_scan_btn_video">Scan videos</string>
+    <string name="dup_scanning_video">Scanning videos…</string>
+    <string name="dup_preparing_video">Collecting video list…</string>
+    <string name="dup_empty_sub_video">Every video is unique — nothing to clean up</string>
     <string name="dup_preview">Open photo</string>
     <string name="dup_select">Select file</string>
 </resources>

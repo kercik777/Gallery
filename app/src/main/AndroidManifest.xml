@@ -79,18 +79,45 @@
             android:name=".RootPickerActivity"
             android:exported="false" />
 
+        <!-- Просмотрщик — лицо «галереи по умолчанию»: открывает фото/видео
+             из любых приложений (VIEW по content:// и file://) и кадры после
+             съёмки (REVIEW). Без этого система не предлагает приложение как
+             галерею по умолчанию. -->
         <activity
             android:name=".PhotoViewerActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden"
-            android:exported="false"
+            android:exported="true"
             android:supportsPictureInPicture="true"
-            android:theme="@style/Theme.GalleryX.Viewer.Photo" />
+            android:theme="@style/Theme.GalleryX.Viewer.Photo">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.provider.action.REVIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".TrashActivity"
             android:exported="false" />
 
-        <!-- Поиск дубликатов фото (Настройки → Поиск дубликатов) -->
+        <!-- Поиск дубликатов (Настройки → Поиск дубликатов): выбор фото/видео -->
+        <activity
+            android:name=".DuplicatesHubActivity"
+            android:exported="false" />
+
+        <!-- Поиск дубликатов фото и видео (режим — extra "video") -->
         <activity
             android:name=".DuplicatesActivity"
             android:exported="false" />

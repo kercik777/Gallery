@@ -841,7 +841,7 @@
 
     <!-- Поиск дубликатов -->
     <string name="settings_duplicates">Поиск дубликатов</string>
-    <string name="settings_duplicates_sub">Найти и удалить одинаковые фото</string>
+    <string name="settings_duplicates_sub">Найти и удалить одинаковые фото и видео</string>
     <string name="dup_status_idle">Точные и похожие копии — сравнение по содержимому, а не по имени</string>
     <string name="dup_intro_title">Найти дубликаты фото</string>
     <string name="dup_intro_sub">Приложение сравнивает содержимое изображений, поэтому копии находятся даже с разными именами — в том числе то же фото в другом разрешении или качестве. Ничего не удаляется автоматически — вы просматриваете каждую группу и сами выбираете, что убрать.</string>
@@ -861,6 +861,16 @@
     <string name="dup_delete_btn">Удалить выбранные (%1$d · %2$s)</string>
     <string name="dup_badge_oldest">самый старый</string>
     <string name="dup_badge_best">лучшее качество</string>
+    <string name="dup_hub_photo">Дубликаты фото</string>
+    <string name="dup_hub_photo_sub">Точные и похожие копии изображений</string>
+    <string name="dup_hub_video">Дубликаты видео</string>
+    <string name="dup_hub_video_sub">Точные и пережатые копии роликов</string>
+    <string name="dup_intro_title_video">Найти дубликаты видео</string>
+    <string name="dup_intro_sub_video">Приложение сравнивает три кадра и длительность каждого видео, поэтому копии находятся даже после пережатия мессенджерами или в другом разрешении. Ничего не удаляется автоматически — вы просматриваете каждую группу и сами выбираете, что убрать.</string>
+    <string name="dup_scan_btn_video">Сканировать видео</string>
+    <string name="dup_scanning_video">Сканирую видео…</string>
+    <string name="dup_preparing_video">Собираю список видео…</string>
+    <string name="dup_empty_sub_video">Все видео уникальны — чистить нечего</string>
     <string name="dup_preview">Открыть фото</string>
     <string name="dup_select">Выбрать файл</string>
 </resources>

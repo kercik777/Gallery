@@ -34,6 +34,7 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/txtDupTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-medium"
@@ -174,6 +175,7 @@
                 app:tint="?attr/gxAccent" />
 
             <TextView
+                android:id="@+id/txtDupIntroTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_l"
@@ -184,6 +186,7 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/txtDupIntroSub"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
@@ -228,6 +231,7 @@
                 android:layout_height="wrap_content" />
 
             <TextView
+                android:id="@+id/txtDupScanning"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing_m"
@@ -282,6 +286,7 @@
                 android:textSize="16sp" />
 
             <TextView
+                android:id="@+id/txtDupEmptySub"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"

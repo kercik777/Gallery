@@ -34,6 +34,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.premiumlab.galleryx.data.FavStore;
 import com.premiumlab.galleryx.data.MaskGuard;
+import com.premiumlab.galleryx.data.MediaEngine;
 import com.premiumlab.galleryx.data.MediaItem;
 import com.premiumlab.galleryx.data.NoteStore;
 import com.premiumlab.galleryx.data.Prefs;
@@ -186,11 +187,43 @@ public class PhotoViewerActivity extends AppCompatActivity {
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_photo_viewer);
 
-        ArrayList<String> paths = getIntent().getStringArrayListExtra("paths");
+        // Открытие СНАРУЖИ (проводник, мессенджер, «Открыть с помощью»,
+        // галерея по умолчанию): ACTION_VIEW / REVIEW с Uri файла. Строим
+        // список из файлов той же папки — можно листать, как обычно.
+        java.util.ArrayList<String> extPaths = null;
+        int extIndex = 0;
+        String inAction = getIntent().getAction();
+        if ((Intent.ACTION_VIEW.equals(inAction)
+                || "android.provider.action.REVIEW".equals(inAction))
+                && getIntent().getData() != null) {
+            String opened = resolveExternalPath(getIntent().getData());
+            if (opened == null) {
+                Toasts.makeText(this, R.string.no_app_to_open, Toast.LENGTH_SHORT).show();
+                finish();
+                return;
+            }
+            // Маскировка «закрыта» — скрытое не светим даже по внешней ссылке
+            if (MaskGuard.hidden() && MaskGuard.isHiddenPath(opened)) {
+                finish();
+                return;
+            }
+            extPaths = new ArrayList<>();
+            File parent = new File(opened).getParentFile();
+            if (parent != null) {
+                for (MediaItem sib : MediaEngine.listFolder(parent)) {
+                    if (opened.equals(sib.path)) extIndex = extPaths.size();
+                    extPaths.add(sib.path);
+                }
+            }
+            if (extPaths.isEmpty()) extPaths.add(opened);
+        }
+
+        ArrayList<String> paths = extPaths != null ? extPaths
+                : getIntent().getStringArrayListExtra("paths");
         if (paths == null && getIntent().getBooleanExtra("shared", false)) {
             paths = sharedPaths;
         }
-        int index = getIntent().getIntExtra("index", 0);
+        int index = extPaths != null ? extIndex : getIntent().getIntExtra("index", 0);
         mode = getIntent().getIntExtra("mode", MODE_NORMAL);
         if (paths == null || paths.isEmpty()) {
             finish();
@@ -749,6 +782,28 @@ public class PhotoViewerActivity extends AppCompatActivity {
         } catch (Exception e) {
             Toasts.makeText(this, R.string.no_app_to_open, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /** Путь файла по внешнему Uri (content:// из MediaStore, file:// и т.п.). */
+    private String resolveExternalPath(android.net.Uri uri) {
+        try {
+            if ("file".equals(uri.getScheme())) {
+                String p = uri.getPath();
+                return p != null && new File(p).exists() ? p : null;
+            }
+            try (android.database.Cursor c = getContentResolver().query(uri,
+                    new String[]{android.provider.MediaStore.MediaColumns.DATA},
+                    null, null, null)) {
+                if (c != null && c.moveToFirst()) {
+                    int col = c.getColumnIndex(
+                            android.provider.MediaStore.MediaColumns.DATA);
+                    String p = col >= 0 ? c.getString(col) : null;
+                    if (p != null && new File(p).exists()) return p;
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
     }
 
     private MediaItem current() {
