@@ -77,7 +77,11 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
         /** Блок вложенных папок (карточки как в «Альбомах») на всю ширину. */
         public static Row folders(String title, List<Album> folders) {
-            return new Row(false, title, null, null, folders);
+            // ВАЖНО: только копия! Если отдать живой список экрана, DiffUtil
+            // сравнит список сам с собой и не заметит созданную/удалённую
+            // папку — список не обновится до перезапуска приложения.
+            return new Row(false, title, null, null,
+                    folders == null ? null : new java.util.ArrayList<>(folders));
         }
     }
 

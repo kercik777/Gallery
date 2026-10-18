@@ -82,6 +82,16 @@ public class PhotoViewerActivity extends AppCompatActivity {
     private ImageView btnFav, btnRestore, btnDelete, btnShare, btnMore;
     private int mode = MODE_NORMAL;
     private boolean barsVisible = true;
+    // --- Направленное автопролистывание после действий с файлом ---
+    /** Последняя показанная страница (для определения направления листания). */
+    private int lastPos = -1;
+    /** Куда пользователь листает: +1 — вперёд (к следующим), -1 — назад. */
+    private int swipeDir = 1;
+    /** Идёт программное пролистывание (не путать с ручным свайпом). */
+    private boolean autoAdvancing = false;
+    /** Страница, которую надо убрать ПОСЛЕ анимации пролистывания. */
+    private String pendingRemovePath = null;
+    private int lastScrollState = ViewPager2.SCROLL_STATE_IDLE;
     private boolean dismissing = false;
     /** Кадр миниатюры на экране (left, top, width, height) — для анимации открытия/закрытия. */
     private int[] srcRect;
@@ -258,9 +268,16 @@ public class PhotoViewerActivity extends AppCompatActivity {
         pager.setOffscreenPageLimit(1);
         pager.setPageTransformer(new androidx.viewpager2.widget.MarginPageTransformer(
                 Math.round(16 * getResources().getDisplayMetrics().density)));
+        lastPos = pager.getCurrentItem();
         pager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
+                // Запоминаем, куда человек листает, — после действий с файлом
+                // автопролистывание продолжит движение в ту же сторону
+                if (!autoAdvancing && lastPos >= 0 && position != lastPos) {
+                    swipeDir = position > lastPos ? 1 : -1;
+                }
+                lastPos = position;
                 updateToolbar(position);
                 // Видео на новой странице стартует само; предыдущее — останавливается
                 pager.post(() -> attachPage(position));
@@ -272,6 +289,17 @@ public class PhotoViewerActivity extends AppCompatActivity {
                         l.prepareThumb(adapter.getPath(position));
                     } catch (Exception ignored) {
                     }
+                }
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                lastScrollState = state;
+                if (state == ViewPager2.SCROLL_STATE_IDLE) {
+                    // Анимация пролистывания закончилась — теперь можно тихо
+                    // убрать старую страницу из-под уже показанной новой
+                    if (pendingRemovePath != null) finalizePendingRemoval();
+                    else autoAdvancing = false;
                 }
             }
         });
@@ -730,27 +758,88 @@ public class PhotoViewerActivity extends AppCompatActivity {
     }
 
     /**
-     * Текущий файл исчез из просмотра (удалён, восстановлен, отправлен в сейф):
-     * страница убирается и просмотр сам листается к следующему файлу
-     * (после последнего — к предыдущему). Закрываемся только когда
-     * файлов больше не осталось.
+     * Текущий файл исчез из просмотра (удалён, перемещён, восстановлен,
+     * отправлен в сейф): КРАСИВО пролистываем к соседнему файлу — в ту
+     * сторону, куда человек листал до этого (при первом входе — вперёд),
+     * а если в той стороне файлов нет — в обратную. Старая страница
+     * убирается только после анимации, поэтому переход неотличим от
+     * ручного свайпа. Закрываемся, только когда файлов не осталось.
      */
     private void afterCurrentRemoved() {
+        afterCurrentRemoved(false);
+    }
+
+    /**
+     * @param force true — файл остался на диске, но ушёл из текущего списка
+     *              (например, перемещение между папками сейфа: папки
+     *              виртуальные, файл физически не двигается)
+     */
+    private void afterCurrentRemoved(boolean force) {
+        if (pendingRemovePath != null) return; // уже листаем после прошлого действия
         int pos = pager.getCurrentItem();
         String path = adapter.getPath(pos);
+        if (path == null) return;
         // Операцию могли отменить или она не удалась — файл ещё на месте
-        if (path != null && new File(path).exists()) return;
-        adapter.removeAt(pos);
+        if (!force && new File(path).exists()) return;
+        if (adapter.getItemCount() <= 1) {
+            finish();
+            return;
+        }
+        int target = neighborInSwipeDir(pos);
+        pendingRemovePath = path;
+        autoAdvancing = true;
+        // Сначала плавный скролл (как ручной свайп)...
+        pager.setCurrentItem(target, true);
+        // ...а страницу уберём в onPageScrollStateChanged, когда анимация
+        // встанет. Страховка, если событие покоя вдруг не придёт:
+        pager.postDelayed(() -> {
+            if (pendingRemovePath != null
+                    && lastScrollState == ViewPager2.SCROLL_STATE_IDLE) {
+                finalizePendingRemoval();
+            }
+        }, 800);
+    }
+
+    /** Убирает старую страницу после окончания анимации пролистывания. */
+    private void finalizePendingRemoval() {
+        String gone = pendingRemovePath;
+        pendingRemovePath = null;
+        autoAdvancing = false;
+        if (gone == null) return;
+        int idx = adapter.indexOf(gone);
+        if (idx >= 0) adapter.removeAt(idx);
         if (adapter.getItemCount() == 0) {
             finish();
             return;
         }
-        int next = Math.min(pos, adapter.getItemCount() - 1);
-        // Если убрали страницу из середины, следующий файл сдвигается на её
-        // место и onPageSelected не приходит — обновляем панель и страницу сами
-        pager.setCurrentItem(next, false);
-        updateToolbar(next);
-        pager.post(() -> attachPage(next));
+        int cur = pager.getCurrentItem();
+        lastPos = cur;
+        updateToolbar(cur);
+        pager.post(() -> attachPage(cur));
+    }
+
+    /**
+     * Соседняя страница в стороне листания пользователя; если там пусто —
+     * сосед с другой стороны. Вызывающий код гарантирует count >= 2.
+     */
+    private int neighborInSwipeDir(int pos) {
+        int count = adapter.getItemCount();
+        if (swipeDir > 0) return pos < count - 1 ? pos + 1 : pos - 1;
+        return pos > 0 ? pos - 1 : pos + 1;
+    }
+
+    /**
+     * Файл остался на месте (копирование и т.п.), но для продолжения
+     * работы красиво пролистываем к соседнему файлу — в ту же сторону,
+     * куда человек листал. Страница из списка НЕ убирается.
+     */
+    private void advanceToNext() {
+        if (adapter.getItemCount() <= 1 || pendingRemovePath != null) return;
+        autoAdvancing = true;
+        pager.setCurrentItem(neighborInSwipeDir(pager.getCurrentItem()), true);
+        pager.postDelayed(() -> {
+            if (pendingRemovePath == null) autoAdvancing = false;
+        }, 800);
     }
 
     /**
@@ -897,6 +986,9 @@ public class PhotoViewerActivity extends AppCompatActivity {
                 dlg.dismiss();
                 Toasts.makeText(this, Fmt.plural(this, R.plurals.result_copied, ok),
                         Toast.LENGTH_SHORT).show();
+                // Файл остался здесь, но листаем дальше — удобно обрабатывать
+                // файлы один за другим, не свайпая вручную
+                if (ok > 0) advanceToNext();
             });
         });
         sheet.show(getSupportFragmentManager(), "dest");
@@ -911,7 +1003,8 @@ public class PhotoViewerActivity extends AppCompatActivity {
             dlg.dismiss();
             Toasts.makeText(this, Fmt.plural(this, R.plurals.result_moved, ok),
                     Toast.LENGTH_SHORT).show();
-            finish();
+            // Файл уехал в другую папку — красиво листаем к следующему
+            afterCurrentRemoved();
         });
     }
 
@@ -972,14 +1065,18 @@ public class PhotoViewerActivity extends AppCompatActivity {
                                             ? getString(R.string.op_cancelled)
                                             : Fmt.plural(this, R.plurals.result_copied, ok),
                                             Toast.LENGTH_SHORT).show();
+                                    // Как и обычное копирование: листаем дальше
+                                    if (ok > 0) advanceToNext();
                                 });
                     } else {
                         int n = SafeStore.get().moveToFolder(
                                 Collections.singletonList(entry.path), key);
                         Toasts.makeText(this, Fmt.plural(this, R.plurals.result_moved, n),
                                 Toast.LENGTH_SHORT).show();
-                        // Файл теперь в другой папке — из этого просмотра он исчез
-                        finish();
+                        // Файл теперь в другой папке — из этого просмотра он
+                        // исчез (файл на диске остался: папки сейфа виртуальные,
+                        // поэтому force — без проверки существования файла)
+                        if (n > 0) afterCurrentRemoved(true);
                     }
                 });
     }
