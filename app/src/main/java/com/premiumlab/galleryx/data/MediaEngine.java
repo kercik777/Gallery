@@ -49,7 +49,7 @@ public final class MediaEngine {
      * библиотеки у GorillaGallery. true — кеш протух за сессию (были файловые
      * операции), на холодном старте всегда false.
      */
-    private static final String DISK_CACHE = "media_cache.json";
+    private static final String DISK_CACHE = "media_cache_v2.json";
     private static final long DISK_CACHE_MAX = 16L * 1024 * 1024;
     private static volatile boolean diskDirty = false;
     /** Штамп библиотеки на момент последнего полного запроса (для checkChanged). */
@@ -119,8 +119,11 @@ public final class MediaEngine {
         }
         EXEC.execute(() -> {
             // Холодный старт: мгновенно отдаём дисковый кеш прошлой сессии,
-            // свежее догрузится следом (экраны обновляются с DiffUtil-анимацией)
-            if (!diskDirty) {
+            // свежее догрузится следом. ТОЛЬКО при холодном старте: если
+            // кэш в памяти уже есть, второй (дисковой) доставки быть не
+            // должно — пара «снимок → свежий список» на каждом возвращении
+            // на экран заставляла DiffUtil перетасовывать ячейки туда-сюда.
+            if (!diskDirty && allCache == null) {
                 List<MediaItem> disk = null;
                 try {
                     disk = loadDiskCache(app);
@@ -267,8 +270,10 @@ public final class MediaEngine {
                 it.dateTaken = r.optLong(9);
                 out.add(it);
             }
-            int sort = root.optInt("sort", Prefs.sortMode());
-            if (sort != Prefs.sortMode()) sort(out, Prefs.sortMode());
+            // Всегда сортируем как свежий запрос: порядок снимка обязан
+            // совпадать с порядком свежего списка до единого файла, иначе
+            // вторая доставка «перемешает» сетку при холодном старте
+            sort(out, Prefs.sortMode());
             return out;
         } catch (Exception e) {
             return null;
@@ -577,18 +582,30 @@ public final class MediaEngine {
                 };
                 break;
             case Prefs.SORT_NAME_ASC:
-                cmp = (a, b) -> a.name.toLowerCase(Locale.US)
-                        .compareTo(b.name.toLowerCase(Locale.US));
+                cmp = (a, b) -> {
+                    int c = a.name.toLowerCase(Locale.US)
+                            .compareTo(b.name.toLowerCase(Locale.US));
+                    return c != 0 ? c : a.path.compareTo(b.path);
+                };
                 break;
             case Prefs.SORT_NAME_DESC:
-                cmp = (a, b) -> b.name.toLowerCase(Locale.US)
-                        .compareTo(a.name.toLowerCase(Locale.US));
+                cmp = (a, b) -> {
+                    int c = b.name.toLowerCase(Locale.US)
+                            .compareTo(a.name.toLowerCase(Locale.US));
+                    return c != 0 ? c : a.path.compareTo(b.path);
+                };
                 break;
             case Prefs.SORT_SIZE_DESC:
-                cmp = (a, b) -> Long.compare(b.size, a.size);
+                cmp = (a, b) -> {
+                    int c = Long.compare(b.size, a.size);
+                    return c != 0 ? c : a.path.compareTo(b.path);
+                };
                 break;
             case Prefs.SORT_SIZE_ASC:
-                cmp = (a, b) -> Long.compare(a.size, b.size);
+                cmp = (a, b) -> {
+                    int c = Long.compare(a.size, b.size);
+                    return c != 0 ? c : a.path.compareTo(b.path);
+                };
                 break;
             default:
                 cmp = (a, b) -> {

@@ -83,6 +83,17 @@ public class AlbumsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             selected.retainAll(present);
         }
         selectionMode = !selected.isEmpty();
+        // Идентичный список альбомов — не трогаем вообще (см. MediaAdapter)
+        if (rows.size() == data.size()) {
+            boolean same = true;
+            for (int i = 0; i < rows.size(); i++) {
+                if (!RowDiff.rowSame(rows.get(i), data.get(i))) {
+                    same = false;
+                    break;
+                }
+            }
+            if (same) return;
+        }
         if (rows.isEmpty() || data.isEmpty()) {
             submitGen++;
             rows.clear();

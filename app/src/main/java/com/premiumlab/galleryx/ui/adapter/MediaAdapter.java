@@ -157,6 +157,19 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             selectedFolders.retainAll(presentFolders);
         }
         selectionMode = !selected.isEmpty() || !selectedFolders.isEmpty();
+        // Полностью идентичные строки (та же выборка вернулась при onResume) —
+        // список не трогаем ВООБЩЕ: ни одного notify, ни одной перерисовки.
+        // Иначе каждая пауза/возврат «перемешивала» сетку анимациями DiffUtil.
+        if (rows.size() == newRows.size()) {
+            boolean same = true;
+            for (int i = 0; i < rows.size(); i++) {
+                if (!RowDiff.rowSame(rows.get(i), newRows.get(i))) {
+                    same = false;
+                    break;
+                }
+            }
+            if (same) return;
+        }
         // Первый показ и полное опустошение — без анимации, как раньше
         if (rows.isEmpty() || newRows.isEmpty()) {
             submitGen++;
