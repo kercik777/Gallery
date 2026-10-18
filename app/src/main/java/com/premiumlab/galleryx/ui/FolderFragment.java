@@ -217,9 +217,21 @@ public class FolderFragment extends BaseMediaFragment {
             if (getActivity() == null) return;
             getActivity().runOnUiThread(() -> {
                 if (!isAdded() || !dir.equals(currentDir)) return;
+                boolean firstShow = subfolders.isEmpty() && !subs.isEmpty();
                 subfolders.clear();
                 subfolders.addAll(subs);
                 applyFilter();
+                if (firstShow && recycler != null && layoutManager != null) {
+                    // Подпапки догрузились позже файлов и вставились в начало
+                    // списка, а сетка сохранила якорь на первом файле —
+                    // экран оказывался «прокрученным мимо папок». Если
+                    // пользователь ещё не листает сам — возвращаемся наверх.
+                    recycler.post(() -> {
+                        if (!isAdded() || !dir.equals(currentDir)) return;
+                        int first = layoutManager.findFirstVisibleItemPosition();
+                        if (first >= 0 && first <= 1) recycler.scrollToPosition(0);
+                    });
+                }
             });
         }).start();
         MediaEngine.loadFolder(currentDir, items -> {

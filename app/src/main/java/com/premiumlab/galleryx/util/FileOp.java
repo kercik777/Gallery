@@ -384,6 +384,9 @@ public class FileOp {
                     fail++;
                     continue;
                 }
+                // Этап сбора файлов тоже показываем: иначе на большой папке
+                // диалог долго висит пустым, будто прогресса нет вообще
+                postProgress(p, 0, 1, dir.getName(), 0);
                 File targetRoot = uniqueDir(destDir, dir.getName());
                 List<File> files = new ArrayList<>();
                 collectMedia(dir, files, 0);
@@ -450,9 +453,14 @@ public class FileOp {
                 perDir.add(files);
             }
             int totalFiles = 0;
-            for (List<File> l : perDir) totalFiles += l.size();
+            long totalBytes = 0;
+            for (List<File> l : perDir) {
+                totalFiles += l.size();
+                for (File f : l) totalBytes += f.length();
+            }
             int grand = Math.max(1, totalFiles);
             int done = 0;
+            long copiedBytes = 0;
             for (int i = 0; i < valid.size(); i++) {
                 if (cancelled) break;
                 File dir = valid.get(i);
@@ -462,37 +470,52 @@ public class FileOp {
                 for (File f : files) scan.add(f.getAbsolutePath());
 
                 if (dir.renameTo(target)) {
+                    // Переименование мгновенно, но прогресс обязан дойти по
+                    // каждому файлу: проходим список и честно отмечаем
+                    // перенесённые файлы (заодно регистрируем новые пути).
+                    // Раньше здесь был один скачок 0% → готово, и казалось,
+                    // что шкала в диалоге вообще не работает.
                     for (File f : files) {
                         scan.add(new File(target, relativePath(dir, f)).getAbsolutePath());
+                        done++;
+                        postProgress(p, done, grand, f.getName(),
+                                percentOf(done, grand));
                     }
                     FavStore.rewritePrefix(dir.getAbsolutePath(), target.getAbsolutePath());
                     NoteStore.rewritePrefix(dir.getAbsolutePath(), target.getAbsolutePath());
                     ok++;
-                    done += files.size();
                     continue;
                 }
-                // Разные разделы: копируем файл за файлом, затем удаляем источник
+                // Разные разделы: копируем файл за файлом (с побайтовым
+                // прогрессом внутри copyFile), затем удаляем источник
                 boolean allOk = true;
                 for (File f : files) {
                     if (cancelled) {
                         allOk = false;
                         break;
                     }
-                    postProgress(p, done, grand, f.getName(), percentOf(done, grand));
-                    done++;
+                    postProgress(p, done, grand, f.getName(),
+                            totalBytes > 0 ? percentOf(copiedBytes, totalBytes)
+                                    : percentOf(done, grand));
                     File t = new File(target, relativePath(dir, f));
                     File parent = t.getParentFile();
                     if (parent != null) {
                         //noinspection ResultOfMethodCallIgnored
                         parent.mkdirs();
                     }
-                    if (copyFile(f, t, -1, -1, null, 0, 0, null) >= 0) {
+                    if (copyFile(f, t, copiedBytes, totalBytes, p, done, grand,
+                            f.getName()) >= 0) {
+                        copiedBytes += f.length();
                         //noinspection ResultOfMethodCallIgnored
                         f.delete();
                         scan.add(t.getAbsolutePath());
                     } else {
                         allOk = false;
                     }
+                    done++;
+                    postProgress(p, done, grand, f.getName(),
+                            totalBytes > 0 ? percentOf(copiedBytes, totalBytes)
+                                    : percentOf(done, grand));
                 }
                 if (allOk) {
                     deleteTree(dir);
@@ -556,6 +579,9 @@ public class FileOp {
                         allOk = false;
                     }
                     done++;
+                    // Отметка ПОСЛЕ файла: шкала и процент доходят по-честному,
+                    // а имя следующего файла диалог покажет на следующей итерации
+                    postProgress(p, done, grand, f.getName(), percentOf(done, grand));
                 }
                 if (cancelled) {
                     fail++;
