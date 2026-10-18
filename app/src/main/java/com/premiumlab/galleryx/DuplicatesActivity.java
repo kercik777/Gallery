@@ -172,18 +172,19 @@ public class DuplicatesActivity extends AppCompatActivity {
         groups.clear();
         rebuildRows();
         updateDeleteBar();
-        txtProgress.setText(R.string.dup_preparing);
+        txtProgress.setText(videoMode ? R.string.dup_preparing_video : R.string.dup_preparing);
         progressBar.setIndeterminate(true);
         showState();
 
-        finder = new DuplicateFinder();
-        DuplicateFinder current = finder;
-        finder.scan(this, new DuplicateFinder.Listener() {
+        // Общие колбэки прогресса/результата для обоих режимов
+        class Progress implements DuplicateFinder.Listener,
+                com.premiumlab.galleryx.data.VideoDuplicateFinder.Listener {
             @Override
             public void onProgress(int done, int total) {
-                if (current != finder || isFinishing()) return;
+                if (isFinishing()) return;
                 if (total <= 0) {
-                    txtProgress.setText(R.string.dup_preparing);
+                    txtProgress.setText(videoMode
+                            ? R.string.dup_preparing_video : R.string.dup_preparing);
                     return;
                 }
                 progressBar.setIndeterminate(false);
@@ -194,7 +195,7 @@ public class DuplicatesActivity extends AppCompatActivity {
 
             @Override
             public void onResult(List<DuplicateFinder.Group> result) {
-                if (current != finder || isFinishing()) return;
+                if (isFinishing()) return;
                 scanning = false;
                 scannedOnce = true;
                 groups.clear();
@@ -204,7 +205,15 @@ public class DuplicatesActivity extends AppCompatActivity {
                 updateDeleteBar();
                 showState();
             }
-        });
+        }
+        Progress progress = new Progress();
+        if (videoMode) {
+            videoFinder = new com.premiumlab.galleryx.data.VideoDuplicateFinder();
+            videoFinder.scan(this, progress);
+        } else {
+            finder = new DuplicateFinder();
+            finder.scan(this, progress);
+        }
     }
 
     // ---------- Список ----------

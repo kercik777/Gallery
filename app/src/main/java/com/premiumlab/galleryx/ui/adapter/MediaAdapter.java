@@ -452,7 +452,7 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         if (position < 0 || position >= rows.size()) return null;
         Row r = rows.get(position);
         if (r.header) return r.title;
-        if (r.item != null) return Fmt.dateKey(ctx, r.item.dateModified);
+        if (r.item != null) return Fmt.dateKey(ctx, r.item.date()); // группировка по дате съёмки
         return null;
     }
 
@@ -745,7 +745,7 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         int groupStart = 0;
         for (int i = 0; i <= items.size(); i++) {
             boolean end = i == items.size();
-            String key = end ? null : Fmt.dateKey(ctx, items.get(i).dateModified);
+            String key = end ? null : Fmt.dateKey(ctx, items.get(i).date());
             boolean changed = end || !key.equals(lastKey);
             if (changed) {
                 if (lastKey != null) {

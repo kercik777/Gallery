@@ -840,6 +840,7 @@
     <string name="sources_new_found">Новых папок: %1$s</string>
 
     <!-- Поиск дубликатов -->
+    <string name="album_all">Все</string>
     <string name="settings_duplicates">Поиск дубликатов</string>
     <string name="settings_duplicates_sub">Найти и удалить одинаковые фото и видео</string>
     <string name="dup_status_idle">Точные и похожие копии — сравнение по содержимому, а не по имени</string>
@@ -873,4 +874,5 @@
     <string name="dup_empty_sub_video">Все видео уникальны — чистить нечего</string>
     <string name="dup_preview">Открыть фото</string>
     <string name="dup_select">Выбрать файл</string>
+    <string name="viewer_rotated">Фото повёрнуто и сохранено</string>
 </resources>

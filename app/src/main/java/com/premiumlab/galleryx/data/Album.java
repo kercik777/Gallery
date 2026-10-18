@@ -5,6 +5,9 @@ package com.premiumlab.galleryx.data;
  */
 public class Album {
 
+    /** Служебный путь псевдо-альбома «Все» (такой папки на диске нет). */
+    public static final String ALL_PATH = "@all";
+
     public String name;
     public String path;
     public String coverPath;

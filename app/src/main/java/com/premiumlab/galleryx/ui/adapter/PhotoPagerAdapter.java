@@ -78,6 +78,13 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
         this.videoPaths = paths;
     }
 
+    private ZoomableImageView.RotateListener rotateListener;
+
+    /** Жест «кручение двумя пальцами» для страниц-фото. */
+    public void setRotateListener(ZoomableImageView.RotateListener l) {
+        this.rotateListener = l;
+    }
+
     /** Параметры миниатюры сетки — для мгновенного первого кадра. */
     public void setHero(String path, long sig, int size) {
         heroPath = path;
@@ -241,6 +248,8 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
             zoom.setupGestureDetectors(itemView.getContext());
             zoom.setTapListener(tapListener);
             zoom.setDragListener(dragListener);
+            // Кручение двумя пальцами — только для фото (не для видео)
+            zoom.setRotateListener(isVideoPage ? null : rotateListener);
             // Видео масштабируется и панорамируется вместе с кадром-подложкой (как фото)
             video.setDisplayRect(null);
             zoom.setMatrixListener(() -> {

@@ -276,6 +276,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
         });
 
         adapter = new PhotoPagerAdapter(this, this::toggleBars, dragListener, videoListener);
+        adapter.setRotateListener((view, degrees) -> rotateCurrentPhoto(view, degrees));
         setupVideoControls();
         if (mode == MODE_SAFE) {
             java.util.HashSet<String> videos = new java.util.HashSet<>();
@@ -941,8 +942,8 @@ public class PhotoViewerActivity extends AppCompatActivity {
         MediaItem it = current();
         if (it == null) return;
         it = decorateName(it);
-        txtDay.setText(Fmt.dayOfWeek(it.dateModified));
-        txtTime.setText(Fmt.dateTimeShort(it.dateModified));
+        txtDay.setText(Fmt.dayOfWeek(it.date()));
+        txtTime.setText(Fmt.dateTimeShort(it.date()));
         updateFavIcon(it.path);
         updateNoteIcon(it.path);
     }
@@ -998,6 +999,40 @@ public class PhotoViewerActivity extends AppCompatActivity {
             pager.setCurrentItem(pos + 1, true);
         }
         updateToolbar(pager.getCurrentItem());
+    }
+
+    /**
+     * Жест «кручение двумя пальцами»: предпросмотр уже довернулся до
+     * ближайших 90° — теперь поворачиваем сам файл и сохраняем.
+     * Работает только в обычной галерее/папках: в сейфе и корзине файлы
+     * служебные, жест там просто отскочит обратно (вернём false).
+     */
+    private boolean rotateCurrentPhoto(android.view.View view, int degrees) {
+        if (mode != MODE_NORMAL) return false;
+        MediaItem it = current();
+        if (it == null || it.isVideo || adapter.isVideo(it.path)) return false;
+        final String path = it.path;
+        final int pos = pager.getCurrentItem();
+        pager.setUserInputEnabled(false);
+        new Thread(() -> {
+            boolean ok = com.premiumlab.galleryx.util.ImageRotator.rotate(
+                    getApplicationContext(), new File(path), degrees);
+            runOnUiThread(() -> {
+                pager.setUserInputEnabled(true);
+                if (isFinishing() || isDestroyed()) return;
+                if (ok) {
+                    MediaEngine.invalidateAll();
+                    Toasts.makeText(this, R.string.viewer_rotated, Toast.LENGTH_SHORT).show();
+                    // Страница перезагрузится уже повёрнутой (подпись Glide —
+                    // время изменения файла, оно обновилось)
+                    adapter.refreshAt(pos);
+                } else {
+                    Toasts.makeText(this, R.string.error_generic, Toast.LENGTH_SHORT).show();
+                    adapter.refreshAt(pos); // вернуть предпросмотр как было
+                }
+            });
+        }, "rotate-photo").start();
+        return true;
     }
 
     private void showNote() {

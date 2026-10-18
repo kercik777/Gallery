@@ -15,6 +15,8 @@ public class MediaItem {
     public String mime = "";
     public long size;
     public long dateModified;
+    /** Дата съёмки (EXIF/MediaStore DATE_TAKEN), 0 — неизвестна. */
+    public long dateTaken;
     public long duration;
     public boolean isVideo;
     /** Дополнительный бейдж (например, «27 дней» в корзине). */
@@ -26,6 +28,15 @@ public class MediaItem {
     public MediaItem() {
     }
 
+    /**
+     * Дата, по которой файл сортируется и группируется: дата СЪЁМКИ, если
+     * она известна, иначе дата изменения файла. Иначе старое фото,
+     * скачанное сегодня из облака, «всплывает» как сегодняшнее.
+     */
+    public long date() {
+        return dateTaken > 0 ? dateTaken : dateModified;
+    }
+
     public static MediaItem fromFile(File f) {
         MediaItem item = new MediaItem();
         item.path = f.getAbsolutePath();
@@ -35,7 +46,28 @@ public class MediaItem {
         item.dateModified = f.lastModified();
         item.isVideo = MediaEngine.isVideoName(f.getName());
         item.mime = item.isVideo ? "video/*" : "image/*";
+        if (!item.isVideo) item.dateTaken = exifTaken(f);
         return item;
+    }
+
+    /** Дата съёмки из EXIF (JPEG), 0 если нет. Формат EXIF: yyyy:MM:dd HH:mm:ss. */
+    private static long exifTaken(File f) {
+        try {
+            androidx.exifinterface.media.ExifInterface exif =
+                    new androidx.exifinterface.media.ExifInterface(f.getAbsolutePath());
+            String s = exif.getAttribute(
+                    androidx.exifinterface.media.ExifInterface.TAG_DATETIME_ORIGINAL);
+            if (s == null) {
+                s = exif.getAttribute(androidx.exifinterface.media.ExifInterface.TAG_DATETIME);
+            }
+            if (s == null) return 0;
+            java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat(
+                    "yyyy:MM:dd HH:mm:ss", java.util.Locale.US);
+            java.util.Date d = fmt.parse(s.trim());
+            return d == null ? 0 : d.getTime();
+        } catch (Throwable ignored) {
+            return 0;
+        }
     }
 
     @Override

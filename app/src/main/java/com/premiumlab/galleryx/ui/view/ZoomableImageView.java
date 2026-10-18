@@ -41,6 +41,17 @@ public class ZoomableImageView extends AppCompatImageView {
         void onSingleTap();
     }
 
+    /** Кручение двумя пальцами: картинка довернулась до ближайших 90°. */
+    public interface RotateListener {
+        /**
+         * @param degreesClockwise на сколько повернуть файл (90/180/270)
+         *        по часовой стрелке. Если слушатель не может применить
+         *        поворот (видео, сейф, корзина…) — вернуть false, и
+         *        предпросмотр красиво уедет обратно в исходное положение.
+         */
+        boolean onRotateSnapped(ZoomableImageView view, int degreesClockwise);
+    }
+
     /** Вертикальное перетаскивание невзумленной картинки. */
     public interface DragListener {
         void onDragStart(ZoomableImageView view);
@@ -62,6 +73,12 @@ public class ZoomableImageView extends AppCompatImageView {
     private GestureDetector gestureDetector;
     private TapListener tapListener;
     private DragListener dragListener;
+    private RotateListener rotateListener;
+    /** Накопленный угол кручения двумя пальцами, градусы. */
+    private float twistDeg = 0f;
+    private float lastTwistAngle = 0f;
+    private boolean twistActive = false;
+    private ValueAnimator twistAnimator;
     private ValueAnimator zoomAnimator;
     private VelocityTracker velocityTracker;
 
@@ -93,6 +110,10 @@ public class ZoomableImageView extends AppCompatImageView {
 
     public void setDragListener(DragListener l) {
         dragListener = l;
+    }
+
+    public void setRotateListener(RotateListener l) {
+        rotateListener = l;
     }
 
     private void init() {
@@ -308,9 +329,39 @@ public class ZoomableImageView extends AppCompatImageView {
                     if (dragListener != null) dragListener.onDragEnd(this, 0f, 0f, 0f);
                 }
                 dragCancelled = true;
+                // Начало возможного кручения: запоминаем угол пары пальцев
+                if (event.getPointerCount() == 2) {
+                    cancelTwistAnimation();
+                    lastTwistAngle = pointerAngle(event);
+                    twistDeg = 0f;
+                    twistActive = true;
+                }
+                return true;
+
+            case MotionEvent.ACTION_POINTER_UP:
+                // Один палец убрали — кручение завершено: доворот/откат
+                if (twistActive && event.getPointerCount() == 2) {
+                    finishTwist();
+                }
                 return true;
 
             case MotionEvent.ACTION_MOVE:
+                // Кручение двумя пальцами: картинка едет за пальцами
+                if (twistActive && event.getPointerCount() == 2) {
+                    float ang = pointerAngle(event);
+                    float delta = ang - lastTwistAngle;
+                    // Нормализация скачка через ±180°
+                    while (delta > 180f) delta -= 360f;
+                    while (delta < -180f) delta += 360f;
+                    lastTwistAngle = ang;
+                    if (delta != 0f) {
+                        twistDeg += delta;
+                        suppMatrix.postRotate(delta, getWidth() / 2f, getHeight() / 2f);
+                        apply();
+                    }
+                    disallowParentIntercept(true);
+                    return true;
+                }
                 if (scaleDetector != null && scaleDetector.isInProgress()) {
                     disallowParentIntercept(true);
                 } else if (event.getPointerCount() == 1 && isZoomed()) {
@@ -387,6 +438,77 @@ public class ZoomableImageView extends AppCompatImageView {
         if (dragging) dragListener.onDrag(this, totalDx, totalDy);
     }
 
+    /** Угол линии между двумя пальцами, градусы (-180..180). */
+    private static float pointerAngle(MotionEvent e) {
+        double dx = e.getX(1) - e.getX(0);
+        double dy = e.getY(1) - e.getY(0);
+        return (float) Math.toDegrees(Math.atan2(dy, dx));
+    }
+
+    /**
+     * Кручение отпустили: красиво доворачиваем до ближайших 90° и просим
+     * слушателя применить поворот к файлу. Слабый жест (<30°) — откат.
+     */
+    private void finishTwist() {
+        twistActive = false;
+        float total = twistDeg;
+        twistDeg = 0f;
+        if (rotateListener == null) {
+            animateRotationBy(-total, null);
+            return;
+        }
+        int snapped = Math.round(total / 90f) * 90;
+        int norm = ((snapped % 360) + 360) % 360;
+        float rest = snapped - total;
+        if (norm == 0) {
+            // До полного круга/исходного не хватило — мягкий откат
+            animateRotationBy(rest != 0f ? rest : -total, null);
+            return;
+        }
+        animateRotationBy(rest, () -> {
+            boolean applied = rotateListener.onRotateSnapped(this, norm);
+            if (!applied) {
+                // Повернуть файл нельзя — предпросмотр уезжает обратно
+                animateRotationBy(-norm, null);
+            }
+        });
+    }
+
+    /** Плавный доворот/откат предпросмотра на угол delta (градусы). */
+    private void animateRotationBy(float delta, Runnable end) {
+        cancelTwistAnimation();
+        if (delta == 0f) {
+            if (end != null) end.run();
+            return;
+        }
+        ValueAnimator a = ValueAnimator.ofFloat(0f, delta);
+        a.setDuration(220);
+        a.setInterpolator(new AccelerateDecelerateInterpolator());
+        final float[] prev = {0f};
+        a.addUpdateListener(anim -> {
+            float v = (float) anim.getAnimatedValue();
+            suppMatrix.postRotate(v - prev[0], getWidth() / 2f, getHeight() / 2f);
+            prev[0] = v;
+            apply();
+        });
+        a.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator anim) {
+                if (twistAnimator == anim) twistAnimator = null;
+                if (end != null) end.run();
+            }
+        });
+        twistAnimator = a;
+        a.start();
+    }
+
+    private void cancelTwistAnimation() {
+        if (twistAnimator != null) {
+            twistAnimator.cancel();
+            twistAnimator = null;
+        }
+    }
+
     private void disallowParentIntercept(boolean disallow) {
         ViewParent p = getParent();
         if (p != null) p.requestDisallowInterceptTouchEvent(disallow);
@@ -453,6 +575,9 @@ public class ZoomableImageView extends AppCompatImageView {
     /** Сброс зума (вызывается при привязке новой страницы). */
     public void reset() {
         cancelZoomAnimation();
+        cancelTwistAnimation();
+        twistActive = false;
+        twistDeg = 0f;
         suppMatrix.reset();
         apply();
     }

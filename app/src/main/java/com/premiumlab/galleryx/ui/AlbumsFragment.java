@@ -241,6 +241,14 @@ public class AlbumsFragment extends Fragment
 
     @Override
     public void onAlbumClick(Album album, int position) {
+        if (Album.ALL_PATH.equals(album.path)) {
+            // Псевдо-альбом «Все» — это вкладка «Галерея», а не папка
+            if (adapter.isSelection()) return;
+            if (getActivity() instanceof com.premiumlab.galleryx.MainActivity) {
+                ((com.premiumlab.galleryx.MainActivity) getActivity()).openGalleryTab();
+            }
+            return;
+        }
         if (adapter.isSelection()) {
             adapter.toggle(album.path);
             updateSelBar();
@@ -348,6 +356,7 @@ public class AlbumsFragment extends Fragment
 
     @Override
     public void onAlbumLongClick(Album album, int position) {
+        if (Album.ALL_PATH.equals(album.path)) return; // «Все» не папка — не выделяется
         if (!adapter.isSelection()) {
             adapter.toggle(album.path);
             updateSelBar();

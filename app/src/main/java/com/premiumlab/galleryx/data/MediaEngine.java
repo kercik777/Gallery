@@ -194,6 +194,7 @@ public final class MediaEngine {
                 r.put(it.size);
                 r.put(it.dateModified);
                 r.put(it.duration);
+                r.put(it.dateTaken);
                 r.put(it.isVideo);
                 arr.put(r);
             }
@@ -263,6 +264,7 @@ public final class MediaEngine {
                 it.dateModified = r.optLong(6);
                 it.duration = r.optLong(7);
                 it.isVideo = r.optBoolean(8);
+                it.dateTaken = r.optLong(9);
                 out.add(it);
             }
             int sort = root.optInt("sort", Prefs.sortMode());
@@ -447,6 +449,7 @@ public final class MediaEngine {
         proj.add(MediaStore.MediaColumns.DISPLAY_NAME);
         proj.add(MediaStore.MediaColumns.SIZE);
         proj.add(MediaStore.MediaColumns.DATE_MODIFIED);
+        proj.add("datetaken"); // DATE_TAKEN: дата съёмки, а не записи файла
         proj.add(MediaStore.MediaColumns.MIME_TYPE);
         if (video && Build.VERSION.SDK_INT >= 29) {
             proj.add(MediaStore.MediaColumns.DURATION);
@@ -459,6 +462,7 @@ public final class MediaEngine {
             int iName = c.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
             int iSize = c.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE);
             int iDate = c.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED);
+            int iTaken = c.getColumnIndex("datetaken");
             int iMime = c.getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE);
             int iDur = video && Build.VERSION.SDK_INT >= 29
                     ? c.getColumnIndex(MediaStore.MediaColumns.DURATION) : -1;
@@ -491,6 +495,7 @@ public final class MediaEngine {
                 item.folderPath = parent;
                 item.size = c.getLong(iSize);
                 item.dateModified = c.getLong(iDate) * 1000L;
+                item.dateTaken = iTaken >= 0 ? c.getLong(iTaken) : 0;
                 item.mime = c.getString(iMime);
                 item.isVideo = video;
                 item.duration = iDur >= 0 ? c.getLong(iDur) : 0;
@@ -564,7 +569,7 @@ public final class MediaEngine {
         Comparator<MediaItem> cmp;
         switch (mode) {
             case Prefs.SORT_DATE_ASC:
-                cmp = (a, b) -> Long.compare(a.dateModified, b.dateModified);
+                cmp = (a, b) -> Long.compare(a.date(), b.date());
                 break;
             case Prefs.SORT_NAME_ASC:
                 cmp = (a, b) -> a.name.toLowerCase(Locale.US)
@@ -581,7 +586,7 @@ public final class MediaEngine {
                 cmp = (a, b) -> Long.compare(a.size, b.size);
                 break;
             default:
-                cmp = (a, b) -> Long.compare(b.dateModified, a.dateModified);
+                cmp = (a, b) -> Long.compare(b.date(), a.date());
         }
         Collections.sort(list, cmp);
     }
@@ -651,6 +656,26 @@ public final class MediaEngine {
         }
         Collections.sort(device, (a, b) -> a.name.toLowerCase(Locale.US)
                 .compareTo(b.name.toLowerCase(Locale.US)));
+
+        // Псевдо-альбом «Все» первым в «Папках устройства»: такой папки
+        // на диске нет, это вид на всю галерею целиком (как вкладка
+        // «Галерея», только из альбомов). Счётчик и обложка — по тем же
+        // правилам видимости, что у общей ленты.
+        {
+            boolean anyLocked0 = LockStore.any();
+            int allCount = 0;
+            String allCover = null;
+            for (MediaItem it : all) {
+                if (rootHidden && MaskGuard.isHiddenPath(it.path)) continue;
+                if (anyLocked0 && LockStore.isUnderLocked(it.path)) continue;
+                if (allCover == null) allCover = it.path;
+                allCount++;
+            }
+            if (allCount > 0) {
+                device.add(0, new Album(ctx.getString(R.string.album_all),
+                        Album.ALL_PATH, allCover, allCount, false));
+            }
+        }
 
         if (!user.isEmpty()) {
             rows.add(Boolean.TRUE); // маркер секции «Мои папки»
@@ -805,7 +830,7 @@ public final class MediaEngine {
                 out.add(MediaItem.fromFile(f));
             }
         }
-        Collections.sort(out, (a, b) -> Long.compare(b.dateModified, a.dateModified));
+        Collections.sort(out, (a, b) -> Long.compare(b.date(), a.date()));
         return out;
     }
 
