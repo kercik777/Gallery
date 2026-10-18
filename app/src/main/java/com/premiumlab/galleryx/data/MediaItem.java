@@ -50,8 +50,10 @@ public class MediaItem {
         return item;
     }
 
-    /** Дата съёмки из EXIF (JPEG), 0 если нет. Формат EXIF: yyyy:MM:dd HH:mm:ss. */
+    /** Дата съёмки из EXIF (только JPEG), 0 если нет. Формат EXIF: yyyy:MM:dd HH:mm:ss. */
     private static long exifTaken(File f) {
+        String n = f.getName().toLowerCase(java.util.Locale.US);
+        if (!n.endsWith(".jpg") && !n.endsWith(".jpeg")) return 0;
         try {
             androidx.exifinterface.media.ExifInterface exif =
                     new androidx.exifinterface.media.ExifInterface(f.getAbsolutePath());

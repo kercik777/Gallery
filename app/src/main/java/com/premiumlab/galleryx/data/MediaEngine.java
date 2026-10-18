@@ -823,19 +823,42 @@ public final class MediaEngine {
         });
     }
 
-    /** Карточка папки: имя, обложка и число файлов (прямое содержимое, свежее из File API). */
+    /**
+     * Карточка папки: имя, обложка и число файлов (прямое содержимое).
+     * ЛЁГКИЙ проход только по именам и датам файлов: раньше здесь для
+     * каждого файла создавался MediaItem с чтением EXIF, и вход в папку
+     * с подпапками заметно тормозил (экран загрузки висел на глазах).
+     */
     public static Album albumFor(File dir, boolean isUser) {
-        List<MediaItem> direct = directMedia(dir);
-        int count = direct.size();
-        String cover = count > 0 ? direct.get(0).path : null;
-        if (cover == null) {
-            // Пустая папка с подпапками — возьмём обложку из первой непустой подпапки
-            for (File sub : listSubdirs(dir)) {
-                List<MediaItem> inner = directMedia(sub);
-                if (!inner.isEmpty()) {
-                    cover = inner.get(0).path;
-                    break;
+        int count = 0;
+        String cover = null;
+        long newest = -1;
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                if (f.isFile() && isMediaName(f.getName()) && !f.getName().startsWith(".")) {
+                    count++;
+                    long m = f.lastModified();
+                    if (m > newest) {
+                        newest = m;
+                        cover = f.getAbsolutePath();
+                    }
                 }
+            }
+        }
+        if (cover == null) {
+            // Пустая папка с подпапками — обложка из первой непустой подпапки
+            for (File sub : listSubdirs(dir)) {
+                File[] inner = sub.listFiles();
+                if (inner == null) continue;
+                for (File f : inner) {
+                    if (f.isFile() && isMediaName(f.getName())
+                            && !f.getName().startsWith(".")) {
+                        cover = f.getAbsolutePath();
+                        break;
+                    }
+                }
+                if (cover != null) break;
             }
         }
         return new Album(dir.getName(), dir.getAbsolutePath(), cover, count, isUser);
@@ -845,20 +868,6 @@ public final class MediaEngine {
     public static List<Album> subfolderAlbums(File dir, boolean isUser) {
         List<Album> out = new ArrayList<>();
         for (File d : listSubdirs(dir)) out.add(albumFor(d, isUser));
-        return out;
-    }
-
-    /** Прямые медиафайлы папки без сортировки по дате (свежие из File API). */
-    private static List<MediaItem> directMedia(File dir) {
-        List<MediaItem> out = new ArrayList<>();
-        File[] files = dir.listFiles();
-        if (files == null) return out;
-        for (File f : files) {
-            if (f.isFile() && isMediaName(f.getName()) && !f.getName().startsWith(".")) {
-                out.add(MediaItem.fromFile(f));
-            }
-        }
-        Collections.sort(out, (a, b) -> Long.compare(b.date(), a.date()));
         return out;
     }
 

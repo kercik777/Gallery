@@ -234,9 +234,21 @@ public class FolderFragment extends BaseMediaFragment {
         }
     }
 
+    /** Отложенный индикатор: быстрые папки открываются без «Загрузка…». */
+    private Runnable pendingSpinner;
+
     @Override
     protected void loadMedia() {
-        showLoading(true);
+        // Спиннер — только если загрузка затянулась (>180 мс): раньше он
+        // мигал при каждом входе в папку, хотя файлы уже были готовы
+        if (recycler != null) {
+            if (pendingSpinner != null) recycler.removeCallbacks(pendingSpinner);
+            final File spinDir = currentDir;
+            pendingSpinner = () -> {
+                if (isAdded() && spinDir.equals(currentDir)) showLoading(true);
+            };
+            recycler.postDelayed(pendingSpinner, 180);
+        }
         final File dir = currentDir;
         final boolean user = isUserFolder;
         // Карточки подпапок — только внутри своих папок (в корневой);
@@ -256,6 +268,9 @@ public class FolderFragment extends BaseMediaFragment {
             if (getActivity() == null) return;
             getActivity().runOnUiThread(() -> {
                 if (!isAdded() || !dir.equals(currentDir)) return;
+                if (recycler != null && pendingSpinner != null) {
+                    recycler.removeCallbacks(pendingSpinner);
+                }
                 showLoading(false);
                 // Позицию устанавливаем только при СМЕНЕ папки: при обычном
                 // обновлении того же экрана (вернулись из просмотрщика,
