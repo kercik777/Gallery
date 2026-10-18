@@ -106,6 +106,17 @@
                 <data android:mimeType="image/*" />
                 <data android:mimeType="video/*" />
             </intent-filter>
+            <!-- Просмотр только что снятого кадра из приложения камеры
+                 (тап по миниатюре в углу камеры): камеры шлют именно
+                 com.android.camera.action.REVIEW, без него нас в списке нет -->
+            <intent-filter>
+                <action android:name="com.android.camera.action.REVIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
+            </intent-filter>
         </activity>
 
         <activity

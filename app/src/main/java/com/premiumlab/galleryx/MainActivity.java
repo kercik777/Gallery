@@ -297,12 +297,6 @@ public class MainActivity extends AppCompatActivity implements SessionManager.Li
         return true;
     }
 
-    /** Перейти на вкладку «Галерея» (псевдо-альбом «Все» в Альбомах). */
-    public void openGalleryTab() {
-        if (bottomNav != null) bottomNav.select(0, true);
-        showFragment(0);
-    }
-
     private Fragment createFragment(int index) {
         switch (index) {
             case 1:

@@ -42,14 +42,14 @@ public final class VideoDuplicateFinder {
     }
 
     /** Макс. суммарное расхождение бит кадра (два dHash по 64), чтобы кадры совпали. */
-    private static final int MAX_FRAME_DISTANCE = 16;
+    private static final int MAX_FRAME_DISTANCE = 10;
     /** Максимальная разница средней яркости кадра (0–255). */
     private static final int MAX_AVG_DIFF = 18;
     /** Максимальная относительная разница пропорций кадра. */
     private static final double MAX_ASPECT_DIFF = 0.05;
-    /** Допуск по длительности: 3% длительности, но не меньше 1,2 с и не больше 4 с. */
-    private static final long DUR_TOL_MIN_MS = 1200;
-    private static final long DUR_TOL_MAX_MS = 4000;
+    /** Допуск по длительности: 2% длительности, но не меньше 1 с и не больше 3 с. */
+    private static final long DUR_TOL_MIN_MS = 1000;
+    private static final long DUR_TOL_MAX_MS = 3000;
     /** Минимум «деталей» кадра — ниже кадр плоский, нужно полное совпадение. */
     private static final int MIN_DETAIL = 10;
 
@@ -183,6 +183,10 @@ public final class VideoDuplicateFinder {
                 else union(parent, first, i);
             }
 
+            // Кеш звуковых отпечатков: считаются лениво, только для пар,
+            // прошедших визуальную проверку (их мало)
+            Map<String, AudioPrint> audioCache = new HashMap<>();
+
             // Кандидаты в похожие — по полосам первого кадра (как у фото)
             Map<Integer, List<Integer>> bands = new HashMap<>();
             for (int i = 0; i < n; i++) {
@@ -207,7 +211,19 @@ public final class VideoDuplicateFinder {
                     for (int b = a + 1; b < m; b++) {
                         int i = bucket.get(a), j = bucket.get(b);
                         if (find(parent, i) == find(parent, j)) continue;
-                        if (similar(prints[i], prints[j])) union(parent, i, j);
+                        if (!similar(prints[i], prints[j])) continue;
+                        // Визуально похоже — но одинаковая сцена с разной
+                        // речью (человек говорит разное на том же фоне)
+                        // дубликатом НЕ является: решающее слово за звуком
+                        AudioPrint aa = audioFor(audioCache, videos.get(i).path);
+                        AudioPrint bb = audioFor(audioCache, videos.get(j).path);
+                        if (aa.hasAudio && bb.hasAudio) {
+                            if (audioSimilar(aa, bb)) union(parent, i, j);
+                        } else if (similar(prints[i], prints[j], 5)) {
+                            // Звука нет хотя бы у одного — верим только
+                            // почти полному визуальному совпадению
+                            union(parent, i, j);
+                        }
                     }
                 }
                 if (cancelled) return;
@@ -261,12 +277,16 @@ public final class VideoDuplicateFinder {
     // ---------- Сравнение ----------
 
     private static boolean similar(Print a, Print b) {
+        return similar(a, b, MAX_FRAME_DISTANCE);
+    }
+
+    private static boolean similar(Print a, Print b, int maxFrameDist) {
         if (a == null || b == null || !a.valid || !b.valid) return false;
         if (a.frames < 2 || b.frames < 2) return false;
         // Длительность: та же сцена не может стать заметно длиннее/короче
         if (a.durMs > 0 && b.durMs > 0) {
             long max = Math.max(a.durMs, b.durMs);
-            long tol = Math.min(DUR_TOL_MAX_MS, Math.max(DUR_TOL_MIN_MS, max * 3 / 100));
+            long tol = Math.min(DUR_TOL_MAX_MS, Math.max(DUR_TOL_MIN_MS, max * 2 / 100));
             if (Math.abs(a.durMs - b.durMs) > tol) return false;
         }
         if (a.w > 0 && a.h > 0 && b.w > 0 && b.h > 0) {
@@ -283,7 +303,7 @@ public final class VideoDuplicateFinder {
                 // Плоский кадр (чёрный экран, заставка) — только полное совпадение
                 if (dist != 0 || Math.abs(a.avg[f] - b.avg[f]) > 8) return false;
             } else {
-                if (dist > MAX_FRAME_DISTANCE) return false;
+                if (dist > maxFrameDist) return false;
                 if (Math.abs(a.avg[f] - b.avg[f]) > MAX_AVG_DIFF) return false;
             }
         }
@@ -378,6 +398,164 @@ public final class VideoDuplicateFinder {
         } catch (Throwable t) {
             return null;
         }
+    }
+
+    // ---------- Звуковой отпечаток ----------
+
+    /**
+     * Огибающая громкости звука: 64 отрезка по длительности, RMS в каждом,
+     * нормировка к максимуму (0..255). Разная речь на одинаковом фоне даёт
+     * заметно разную огибающую, пережатая копия того же ролика — почти ту же.
+     */
+    private static final class AudioPrint {
+        final int[] env = new int[64];
+        boolean hasAudio;
+    }
+
+    private static AudioPrint audioFor(Map<String, AudioPrint> cache, String path) {
+        AudioPrint p = cache.get(path);
+        if (p == null) {
+            p = computeAudio(path);
+            cache.put(path, p);
+        }
+        return p;
+    }
+
+    /** Средняя абсолютная разница огибающих и «похожесть» не тихих мест. */
+    private static boolean audioSimilar(AudioPrint a, AudioPrint b) {
+        long diff = 0;
+        int loud = 0;
+        long loudDiff = 0;
+        for (int i = 0; i < 64; i++) {
+            int d = Math.abs(a.env[i] - b.env[i]);
+            diff += d;
+            if (a.env[i] > 24 || b.env[i] > 24) {
+                loud++;
+                loudDiff += d;
+            }
+        }
+        // Оба ролика почти беззвучны — звук ничего не решает, не блокируем
+        if (loud < 6) return true;
+        double mean = diff / 64.0;
+        double loudMean = loudDiff / (double) loud;
+        return mean <= 26 && loudMean <= 34;
+    }
+
+    /** Декодирует аудиодорожку в PCM и строит огибающую. Долго, но кандидатов мало. */
+    private static AudioPrint computeAudio(String path) {
+        AudioPrint out = new AudioPrint();
+        android.media.MediaExtractor ex = new android.media.MediaExtractor();
+        android.media.MediaCodec codec = null;
+        try {
+            ex.setDataSource(path);
+            int track = -1;
+            android.media.MediaFormat fmt = null;
+            for (int i = 0; i < ex.getTrackCount(); i++) {
+                android.media.MediaFormat f = ex.getTrackFormat(i);
+                String mime = f.getString(android.media.MediaFormat.KEY_MIME);
+                if (mime != null && mime.startsWith("audio/")) {
+                    track = i;
+                    fmt = f;
+                    break;
+                }
+            }
+            if (track < 0 || fmt == null) return out;
+            ex.selectTrack(track);
+            String mime = fmt.getString(android.media.MediaFormat.KEY_MIME);
+            long durUs = fmt.containsKey(android.media.MediaFormat.KEY_DURATION)
+                    ? fmt.getLong(android.media.MediaFormat.KEY_DURATION) : 0;
+            codec = android.media.MediaCodec.createDecoderByType(mime);
+            codec.configure(fmt, null, null, 0);
+            codec.start();
+
+            int rate = fmt.containsKey(android.media.MediaFormat.KEY_SAMPLE_RATE)
+                    ? fmt.getInteger(android.media.MediaFormat.KEY_SAMPLE_RATE) : 44100;
+            long totalSamples = durUs > 0 ? durUs * rate / 1_000_000L : 0;
+            double[] sumSq = new double[64];
+            long[] count = new long[64];
+            long sampleIdx = 0;
+            boolean inputEos = false;
+            android.media.MediaCodec.BufferInfo info = new android.media.MediaCodec.BufferInfo();
+            long deadline = SystemClock.elapsedRealtime() + 60_000; // страж на экзотике
+            while (!cancelled && SystemClock.elapsedRealtime() < deadline) {
+                if (!inputEos) {
+                    int inIdx = codec.dequeueInputBuffer(10_000);
+                    if (inIdx >= 0) {
+                        java.nio.ByteBuffer inBuf = codec.getInputBuffer(inIdx);
+                        int size = inBuf == null ? -1 : ex.readSampleData(inBuf, 0);
+                        if (size < 0) {
+                            codec.queueInputBuffer(inIdx, 0, 0, 0,
+                                    android.media.MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+                            inputEos = true;
+                        } else {
+                            codec.queueInputBuffer(inIdx, 0, size, ex.getSampleTime(), 0);
+                            ex.advance();
+                        }
+                    }
+                }
+                int outIdx = codec.dequeueOutputBuffer(info, 10_000);
+                if (outIdx >= 0) {
+                    java.nio.ByteBuffer buf = codec.getOutputBuffer(outIdx);
+                    android.media.MediaFormat of = codec.getOutputFormat();
+                    if (of.containsKey(android.media.MediaFormat.KEY_SAMPLE_RATE)) {
+                        rate = of.getInteger(android.media.MediaFormat.KEY_SAMPLE_RATE);
+                        if (totalSamples <= 0 && durUs > 0) {
+                            totalSamples = durUs * rate / 1_000_000L;
+                        }
+                    }
+                    int channels = of.containsKey(android.media.MediaFormat.KEY_CHANNEL_COUNT)
+                            ? Math.max(1, of.getInteger(android.media.MediaFormat.KEY_CHANNEL_COUNT)) : 1;
+                    if (buf != null && info.size > 0 && totalSamples > 0) {
+                        buf.position(info.offset);
+                        buf.limit(info.offset + info.size);
+                        java.nio.ShortBuffer sb = buf.order(
+                                java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer();
+                        int frames = sb.remaining() / channels;
+                        for (int fr = 0; fr < frames; fr++) {
+                            long acc = 0;
+                            for (int ch = 0; ch < channels; ch++) acc += sb.get();
+                            double v = acc / (double) channels / 32768.0;
+                            int bucket = (int) Math.min(63, sampleIdx * 64 / totalSamples);
+                            sumSq[bucket] += v * v;
+                            count[bucket]++;
+                            sampleIdx++;
+                        }
+                    }
+                    codec.releaseOutputBuffer(outIdx, false);
+                    if ((info.flags & android.media.MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) break;
+                } else if (outIdx == android.media.MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                    android.media.MediaFormat of = codec.getOutputFormat();
+                    if (of.containsKey(android.media.MediaFormat.KEY_SAMPLE_RATE)) {
+                        rate = of.getInteger(android.media.MediaFormat.KEY_SAMPLE_RATE);
+                        if (durUs > 0) totalSamples = durUs * rate / 1_000_000L;
+                    }
+                }
+            }
+            double max = 0;
+            double[] rms = new double[64];
+            for (int i = 0; i < 64; i++) {
+                rms[i] = count[i] > 0 ? Math.sqrt(sumSq[i] / count[i]) : 0;
+                if (rms[i] > max) max = rms[i];
+            }
+            if (max > 0.005) { // не полная тишина
+                out.hasAudio = true;
+                for (int i = 0; i < 64; i++) {
+                    out.env[i] = (int) Math.min(255, rms[i] / max * 255);
+                }
+            }
+        } catch (Throwable ignored) {
+            out.hasAudio = false;
+        } finally {
+            try {
+                if (codec != null) {
+                    codec.stop();
+                    codec.release();
+                }
+            } catch (Exception ignored) {
+            }
+            ex.release();
+        }
+        return out;
     }
 
     // ---------- SHA-256 / union-find ----------

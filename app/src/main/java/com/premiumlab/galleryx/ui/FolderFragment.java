@@ -39,6 +39,8 @@ public class FolderFragment extends BaseMediaFragment {
 
     private File currentDir;
     private boolean isUserFolder;
+    /** Псевдо-альбом «Все»: папки на диске нет, показываем всю галерею списком. */
+    private boolean isAll;
     private final List<Album> subfolders = new ArrayList<>();
     /** Позиция прокрутки каждой посещённой папки: [позиция, сдвиг px]. */
     private final java.util.Map<String, int[]> scrollMem = new java.util.HashMap<>();
@@ -54,8 +56,9 @@ public class FolderFragment extends BaseMediaFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         String path = requireArguments().getString("path");
+        isAll = Album.ALL_PATH.equals(path);
         currentDir = new File(path == null ? "/" : path);
-        isUserFolder = Prefs.rootPath() != null
+        isUserFolder = !isAll && Prefs.rootPath() != null
                 && MediaEngine.isUnder(currentDir.getAbsolutePath(), Prefs.rootPath());
     }
 
@@ -241,10 +244,15 @@ public class FolderFragment extends BaseMediaFragment {
         // Подпапки и файлы грузятся ОДНИМ пакетом в фоне и ставятся одним
         // обновлением: раньше два потока приходили по очереди, список
         // мигал, а сетка «якорилась» на первом файле мимо папок.
+        final android.content.Context appCtx = getContext() != null
+                ? getContext().getApplicationContext() : null;
         new Thread(() -> {
             List<Album> subs = user ? MediaEngine.subfolderAlbums(dir, true)
                     : new ArrayList<>();
-            List<MediaItem> items = MediaEngine.listFolder(dir);
+            // «Все» — не папка: список берём как общую галерею целиком
+            List<MediaItem> items = isAll
+                    ? (appCtx != null ? MediaEngine.queryAll(appCtx) : new ArrayList<>())
+                    : MediaEngine.listFolder(dir);
             if (getActivity() == null) return;
             getActivity().runOnUiThread(() -> {
                 if (!isAdded() || !dir.equals(currentDir)) return;

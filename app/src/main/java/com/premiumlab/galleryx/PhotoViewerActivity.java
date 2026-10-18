@@ -194,7 +194,8 @@ public class PhotoViewerActivity extends AppCompatActivity {
         int extIndex = 0;
         String inAction = getIntent().getAction();
         if ((Intent.ACTION_VIEW.equals(inAction)
-                || "android.provider.action.REVIEW".equals(inAction))
+                || "android.provider.action.REVIEW".equals(inAction)
+                || "com.android.camera.action.REVIEW".equals(inAction))
                 && getIntent().getData() != null) {
             String opened = resolveExternalPath(getIntent().getData());
             if (opened == null) {

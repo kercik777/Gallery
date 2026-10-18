@@ -242,11 +242,10 @@ public class AlbumsFragment extends Fragment
     @Override
     public void onAlbumClick(Album album, int position) {
         if (Album.ALL_PATH.equals(album.path)) {
-            // Псевдо-альбом «Все» — это вкладка «Галерея», а не папка
+            // Псевдо-альбом «Все» открывается как обычная папка (свой экран
+            // со всеми фото и видео), а не переходом на вкладку «Галерея»
             if (adapter.isSelection()) return;
-            if (getActivity() instanceof com.premiumlab.galleryx.MainActivity) {
-                ((com.premiumlab.galleryx.MainActivity) getActivity()).openGalleryTab();
-            }
+            openAlbum(album);
             return;
         }
         if (adapter.isSelection()) {

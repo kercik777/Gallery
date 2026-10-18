@@ -569,7 +569,12 @@ public final class MediaEngine {
         Comparator<MediaItem> cmp;
         switch (mode) {
             case Prefs.SORT_DATE_ASC:
-                cmp = (a, b) -> Long.compare(a.date(), b.date());
+                // При равной дате — по пути: иначе при каждой перезагрузке
+                // файлы одного дня «прыгали» друг относительно друга
+                cmp = (a, b) -> {
+                    int c = Long.compare(a.date(), b.date());
+                    return c != 0 ? c : a.path.compareTo(b.path);
+                };
                 break;
             case Prefs.SORT_NAME_ASC:
                 cmp = (a, b) -> a.name.toLowerCase(Locale.US)
@@ -586,7 +591,10 @@ public final class MediaEngine {
                 cmp = (a, b) -> Long.compare(a.size, b.size);
                 break;
             default:
-                cmp = (a, b) -> Long.compare(b.date(), a.date());
+                cmp = (a, b) -> {
+                    int c = Long.compare(b.date(), a.date());
+                    return c != 0 ? c : a.path.compareTo(b.path);
+                };
         }
         Collections.sort(list, cmp);
     }

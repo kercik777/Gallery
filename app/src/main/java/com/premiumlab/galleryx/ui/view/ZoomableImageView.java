@@ -79,6 +79,11 @@ public class ZoomableImageView extends AppCompatImageView {
     private float lastTwistAngle = 0f;
     private boolean twistActive = false;
     private ValueAnimator twistAnimator;
+    /** Режим двух пальцев: 0 — нет, 1 — ещё неясно (кручение или зум), 2 — кручение, 3 — зум. */
+    private int twoFingerMode = 0;
+    private float spanStart = 0f;
+    private float scaleAtTwistStart = 1f;
+    private final Matrix matrixAtTwistStart = new Matrix();
     private ValueAnimator zoomAnimator;
     private VelocityTracker velocityTracker;
 
@@ -228,7 +233,9 @@ public class ZoomableImageView extends AppCompatImageView {
     /** Текущий пользовательский зум относительно вписанного размера. */
     private float currentZoom() {
         suppMatrix.getValues(matrixValues);
-        return matrixValues[Matrix.MSCALE_X];
+        // При повороте MSCALE_X = масштаб·cos(угол) — считаем честный масштаб
+        return (float) Math.hypot(matrixValues[Matrix.MSCALE_X],
+                matrixValues[Matrix.MSKEW_Y]);
     }
 
     private void clampScale() {
@@ -296,6 +303,9 @@ public class ZoomableImageView extends AppCompatImageView {
         // двойной тап (срабатывает на втором ACTION_DOWN) был бы тут же отменён.
         if (action == MotionEvent.ACTION_DOWN) {
             cancelZoomAnimation();
+            // Новое касание прерывает доворот/откат — иначе предпросмотр
+            // могло «зависнуть» повёрнутым
+            cancelTwistAnimation();
             downX = lastX = event.getX();
             downY = lastY = event.getY();
             // Свайп закрытия считаем в ЭКРАННЫХ координатах: сама view во время жеста
@@ -329,24 +339,35 @@ public class ZoomableImageView extends AppCompatImageView {
                     if (dragListener != null) dragListener.onDragEnd(this, 0f, 0f, 0f);
                 }
                 dragCancelled = true;
-                // Начало возможного кручения: запоминаем угол пары пальцев
+                // Начало двух пальцев: пока не ясно — кручение или зум.
+                // Запоминаем угол, расстояние и матрицу, чтобы проигравшую
+                // составляющую можно было чисто откатить.
                 if (event.getPointerCount() == 2) {
                     cancelTwistAnimation();
                     lastTwistAngle = pointerAngle(event);
+                    spanStart = pointerSpan(event);
+                    scaleAtTwistStart = currentZoom();
+                    matrixAtTwistStart.set(suppMatrix);
                     twistDeg = 0f;
                     twistActive = true;
+                    twoFingerMode = 1;
                 }
                 return true;
 
             case MotionEvent.ACTION_POINTER_UP:
                 // Один палец убрали — кручение завершено: доворот/откат
-                if (twistActive && event.getPointerCount() == 2) {
-                    finishTwist();
+                if (twistActive) {
+                    if (twoFingerMode == 2) finishTwist();
+                    twistActive = false;
+                    twoFingerMode = 0;
                 }
                 return true;
 
             case MotionEvent.ACTION_MOVE:
-                // Кручение двумя пальцами: картинка едет за пальцами
+                // Два пальца: сначала определяем намерение — кручение или
+                // зум, — и дальше ведём только его. Раньше детектор зума
+                // работал параллельно, и медленное кручение «сильно
+                // увеличивало» картинку.
                 if (twistActive && event.getPointerCount() == 2) {
                     float ang = pointerAngle(event);
                     float delta = ang - lastTwistAngle;
@@ -354,13 +375,44 @@ public class ZoomableImageView extends AppCompatImageView {
                     while (delta > 180f) delta -= 360f;
                     while (delta < -180f) delta += 360f;
                     lastTwistAngle = ang;
-                    if (delta != 0f) {
-                        twistDeg += delta;
-                        suppMatrix.postRotate(delta, getWidth() / 2f, getHeight() / 2f);
-                        apply();
+                    twistDeg += delta;
+                    float spanFactor = spanStart > 0f
+                            ? pointerSpan(event) / spanStart : 1f;
+                    if (twoFingerMode == 1) {
+                        if (Math.abs(twistDeg) >= 14f) {
+                            // Победило кручение: откатываем успевший
+                            // примениться зум и ставим чистый поворот
+                            twoFingerMode = 2;
+                            suppMatrix.set(matrixAtTwistStart);
+                            suppMatrix.postRotate(twistDeg,
+                                    getWidth() / 2f, getHeight() / 2f);
+                            apply();
+                        } else if (spanFactor > 1.22f || spanFactor < 0.82f) {
+                            // Победил зум: поворот не применялся — просто
+                            // дальше работает обычный детектор масштаба
+                            twoFingerMode = 3;
+                        }
+                        disallowParentIntercept(true);
+                        return true;
                     }
-                    disallowParentIntercept(true);
-                    return true;
+                    if (twoFingerMode == 2) {
+                        if (delta != 0f) {
+                            suppMatrix.postRotate(delta,
+                                    getWidth() / 2f, getHeight() / 2f);
+                        }
+                        // Детектор зума параллельно мог изменить масштаб —
+                        // возвращаем масштаб к исходному, оставляем поворот
+                        float z = currentZoom();
+                        if (z > 0f && Math.abs(z - scaleAtTwistStart) > 0.001f) {
+                            suppMatrix.postScale(scaleAtTwistStart / z,
+                                    scaleAtTwistStart / z,
+                                    getWidth() / 2f, getHeight() / 2f);
+                        }
+                        apply();
+                        disallowParentIntercept(true);
+                        return true;
+                    }
+                    // twoFingerMode == 3 — обычный зум, идём дальше вниз
                 }
                 if (scaleDetector != null && scaleDetector.isInProgress()) {
                     disallowParentIntercept(true);
@@ -383,6 +435,13 @@ public class ZoomableImageView extends AppCompatImageView {
 
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
+                // Оба пальца убрали разом — кручение всё равно завершаем,
+                // иначе предпросмотр оставалось повёрнутым навсегда
+                if (twistActive) {
+                    if (twoFingerMode == 2) finishTwist();
+                    twistActive = false;
+                    twoFingerMode = 0;
+                }
                 if (dragging) {
                     dragging = false;
                     float vy = 0f;
@@ -436,6 +495,13 @@ public class ZoomableImageView extends AppCompatImageView {
             }
         }
         if (dragging) dragListener.onDrag(this, totalDx, totalDy);
+    }
+
+    /** Расстояние между двумя пальцами, px. */
+    private static float pointerSpan(MotionEvent e) {
+        double dx = e.getX(1) - e.getX(0);
+        double dy = e.getY(1) - e.getY(0);
+        return (float) Math.hypot(dx, dy);
     }
 
     /** Угол линии между двумя пальцами, градусы (-180..180). */
@@ -577,6 +643,7 @@ public class ZoomableImageView extends AppCompatImageView {
         cancelZoomAnimation();
         cancelTwistAnimation();
         twistActive = false;
+        twoFingerMode = 0;
         twistDeg = 0f;
         suppMatrix.reset();
         apply();

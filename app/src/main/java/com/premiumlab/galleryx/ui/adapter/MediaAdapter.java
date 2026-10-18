@@ -173,7 +173,9 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         DIFF.execute(() -> {
             final DiffUtil.DiffResult result;
             try {
-                result = DiffUtil.calculateDiff(new RowDiff(oldRows, target), false);
+                // detectMoves=true: перестановки (пересортировка) анимируются
+                // перемещением ячеек, а не мигающим удалить+вставить
+                result = DiffUtil.calculateDiff(new RowDiff(oldRows, target), true);
             } catch (Throwable t) {
                 MAIN.post(() -> {
                     if (gen != submitGen) return;
