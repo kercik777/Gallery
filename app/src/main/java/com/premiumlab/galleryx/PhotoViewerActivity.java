@@ -815,6 +815,27 @@ public class PhotoViewerActivity extends AppCompatActivity {
     }
 
     /**
+     * Текущий файл перемещён в другую папку: его страница убирается из
+     * просмотра МГНОВЕННО, без анимации пролистывания, а просмотрщик
+     * остаётся открытым на соседнем файле. Закрываемся только когда
+     * файлов в списке больше не осталось.
+     */
+    private void removeCurrentInstant() {
+        int pos = pager.getCurrentItem();
+        if (adapter.getPath(pos) == null) return;
+        adapter.removeAt(pos);
+        if (adapter.getItemCount() == 0) {
+            finish();
+            return;
+        }
+        int target = Math.min(pos, adapter.getItemCount() - 1);
+        pager.setCurrentItem(target, false);
+        lastPos = target;
+        updateToolbar(target);
+        pager.post(() -> attachPage(target));
+    }
+
+    /**
      * Текущий файл исчез из просмотра (удалён, восстановлен,
      * отправлен в сейф): КРАСИВО пролистываем к соседнему файлу — в ту
      * сторону, куда человек листал до этого (при первом входе — вперёд),
@@ -1069,8 +1090,11 @@ public class PhotoViewerActivity extends AppCompatActivity {
             dlg.dismiss();
             Toasts.makeText(this, Fmt.plural(this, R.plurals.result_moved, ok),
                     Toast.LENGTH_SHORT).show();
-            // Перемещение: не листаем дальше, а закрываем просмотр (как раньше)
-            if (ok > 0) finish();
+            // Перемещение: просмотрщик НЕ закрываем и не листаем с
+            // анимацией — страница перемещённого файла просто убирается,
+            // просмотр остаётся на соседнем файле. Закрытие — только
+            // если файлов в списке больше не осталось
+            if (ok > 0) removeCurrentInstant();
         });
     }
 
@@ -1138,9 +1162,10 @@ public class PhotoViewerActivity extends AppCompatActivity {
                                 Collections.singletonList(entry.path), key);
                         Toasts.makeText(this, Fmt.plural(this, R.plurals.result_moved, n),
                                 Toast.LENGTH_SHORT).show();
-                        // Перемещение между папками сейфа: закрываем
-                        // просмотр, автопролистывания здесь не должно быть
-                        if (n > 0) finish();
+                        // Перемещение между папками сейфа: просмотрщик
+                        // не закрываем — страница файла убирается без
+                        // анимации, остаёмся на соседнем файле
+                        if (n > 0) removeCurrentInstant();
                     }
                 });
     }
