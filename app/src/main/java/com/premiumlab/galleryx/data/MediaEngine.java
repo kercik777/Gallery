@@ -258,7 +258,7 @@ public final class MediaEngine {
             List<MediaItem> out = new ArrayList<>(arr.length());
             for (int i = 0; i < arr.length(); i++) {
                 JSONArray r = arr.optJSONArray(i);
-                if (r == null || r.length() < 9) continue;
+                if (r == null || r.length() < 10) continue;
                 String path = r.optString(1, "");
                 if (path.isEmpty() || !new File(path).exists()) continue;
                 MediaItem it = new MediaItem();
@@ -270,8 +270,13 @@ public final class MediaEngine {
                 it.size = r.optLong(5);
                 it.dateModified = r.optLong(6);
                 it.duration = r.optLong(7);
-                it.isVideo = r.optBoolean(8);
-                it.dateTaken = r.optLong(9);
+                // Порядок полей — как в saveDiskCache: 8 = dateTaken,
+                // 9 = isVideo. Здесь они были ПЕРЕПУТАНЫ: у снимка все
+                // dateTaken читались как 0, снимок сортировался по дате
+                // изменения, а свежий список — по дате съёмки, и при
+                // холодном старте фото на глазах «уезжали вниз»
+                it.dateTaken = r.optLong(8);
+                it.isVideo = r.optBoolean(9);
                 out.add(it);
             }
             // Всегда сортируем как свежий запрос: порядок снимка обязан
