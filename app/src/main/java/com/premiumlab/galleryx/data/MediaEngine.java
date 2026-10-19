@@ -147,6 +147,10 @@ public final class MediaEngine {
                     }
                     List<MediaItem> clean = snap;
                     MAIN.post(() -> cb.onLoaded(clean));
+                    // Даты съёмки снимка становятся «закреплёнными»: свежий
+                    // запрос ниже встанет ровно в том же порядке, и вторая
+                    // доставка не перетасует сетку
+                    rememberTakenPins(clean);
                 }
             }
             boolean hiddenNow = MaskGuard.hidden();
@@ -387,6 +391,36 @@ public final class MediaEngine {
         });
     }
 
+    /**
+     * «Закреплённые» даты съёмки прошлого запроса: путь → {dateModified,
+     * dateTaken}. MediaStore имеет привычку уточнять DATE_TAKEN между
+     * запусками (дозаполняет из EXIF), и файлы от этого «прыгали» по сетке
+     * при каждом входе в приложение. Как в GorillaGallery, где интерфейс
+     * читает сохранённые строки базы, а не сырой ответ MediaStore: пока
+     * файл не изменился (dateModified тот же), его дата съёмки и место в
+     * списке не меняются.
+     */
+    private static volatile java.util.Map<String, long[]> takenPins;
+
+    private static void applyTakenPins(List<MediaItem> items) {
+        java.util.Map<String, long[]> pins = takenPins;
+        if (pins == null || pins.isEmpty()) return;
+        for (MediaItem it : items) {
+            long[] p = pins.get(it.path);
+            if (p != null && p[0] == it.dateModified && p[1] > 0 && it.dateTaken != p[1]) {
+                it.dateTaken = p[1];
+            }
+        }
+    }
+
+    private static void rememberTakenPins(List<MediaItem> items) {
+        java.util.Map<String, long[]> pins = new java.util.HashMap<>(items.size() * 2);
+        for (MediaItem it : items) {
+            if (it.dateTaken > 0) pins.put(it.path, new long[]{it.dateModified, it.dateTaken});
+        }
+        takenPins = pins;
+    }
+
     public static List<MediaItem> queryAll(Context ctx) {
         List<MediaItem> out = queryAllBase(ctx);
         // Дополнительные источники: папки, включённые вручную в настройках
@@ -395,10 +429,13 @@ public final class MediaEngine {
         if (!ExtraSources.active().isEmpty()) {
             java.util.HashSet<String> known = new java.util.HashSet<>();
             for (MediaItem it : out) known.add(it.path);
-            int before = out.size();
             ExtraSources.appendActive(known, out);
-            if (out.size() != before) sort(out, Prefs.sortMode());
         }
+        // Закрепляем даты съёмки неизменных файлов и приводим список к
+        // единому детерминированному порядку перед показом
+        applyTakenPins(out);
+        sort(out, Prefs.sortMode());
+        rememberTakenPins(out);
         return out;
     }
 

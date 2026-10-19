@@ -186,9 +186,10 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         DIFF.execute(() -> {
             final DiffUtil.DiffResult result;
             try {
-                // detectMoves=true: перестановки (пересортировка) анимируются
-                // перемещением ячеек, а не мигающим удалить+вставить
-                result = DiffUtil.calculateDiff(new RowDiff(oldRows, target), true);
+                // detectMoves=false (как в оригинальной версии): при true
+                // DiffUtil анимирует перестановки ПЕРЕМЕЩЕНИЕМ ячеек, и
+                // любое обновление списка превращается в «летающие фото»
+                result = DiffUtil.calculateDiff(new RowDiff(oldRows, target), false);
             } catch (Throwable t) {
                 MAIN.post(() -> {
                     if (gen != submitGen) return;
