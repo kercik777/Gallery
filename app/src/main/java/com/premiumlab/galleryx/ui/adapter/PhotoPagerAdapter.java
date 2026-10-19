@@ -136,6 +136,14 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
         if (index >= 0 && index < paths.size()) notifyItemChanged(index);
     }
 
+    /** Файл переместили в другую папку: страница показывает его с нового места. */
+    public void replacePath(int index, String newPath) {
+        if (index >= 0 && index < paths.size() && newPath != null) {
+            paths.set(index, newPath);
+            notifyItemChanged(index);
+        }
+    }
+
     public int indexOf(String path) {
         return paths.indexOf(path);
     }
