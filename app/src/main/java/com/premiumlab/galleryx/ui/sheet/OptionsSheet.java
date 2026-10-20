@@ -52,6 +52,7 @@ public class OptionsSheet extends BottomSheetDialogFragment {
 
     private CharSequence title, sub;
     private final List<Item> items = new ArrayList<>();
+    private View scrollRows;
 
     public OptionsSheet setHeader(CharSequence title, @Nullable CharSequence sub) {
         this.title = title;
@@ -78,6 +79,7 @@ public class OptionsSheet extends BottomSheetDialogFragment {
 
         TextView txtTitle = v.findViewById(R.id.txtMenuTitle);
         TextView txtSub = v.findViewById(R.id.txtMenuSub);
+        scrollRows = v.findViewById(R.id.scrollMenuRows);
         LinearLayout rows = v.findViewById(R.id.layoutMenuRows);
         txtTitle.setText(title == null ? getString(R.string.viewer_options) : title);
         if (sub == null || sub.length() == 0) {
@@ -137,6 +139,20 @@ public class OptionsSheet extends BottomSheetDialogFragment {
                 behavior.setPeekHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
                 behavior.setSkipCollapsed(true);
                 behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                // Если пунктов больше, чем влезает (ландшафт!): листу —
+                // максимум 88% высоты экрана, остальное добирается
+                // прокруткой списка внутри
+                bottom.post(() -> {
+                    if (scrollRows == null) return;
+                    int max = (int) (bottom.getResources().getDisplayMetrics()
+                            .heightPixels * 0.88f);
+                    int total = bottom.getHeight();
+                    if (total > max && scrollRows.getHeight() > 0) {
+                        ViewGroup.LayoutParams slp = scrollRows.getLayoutParams();
+                        slp.height = Math.max(0, max - (total - scrollRows.getHeight()));
+                        scrollRows.setLayoutParams(slp);
+                    }
+                });
             }
         }
     }

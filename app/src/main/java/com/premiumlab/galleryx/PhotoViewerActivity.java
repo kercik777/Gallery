@@ -79,6 +79,10 @@ public class PhotoViewerActivity extends AppCompatActivity {
     private ViewPager2 pager;
     private PhotoPagerAdapter adapter;
     private View topBar, bottomBar, pillDate;
+    /** Второй ряд верхней панели: скорость и поворот (только видео). */
+    private View viewerVideoTools;
+    /** Закрытие после возврата ориентации в портретную (из ландшафта). */
+    private boolean returningToPortrait;
     private TextView txtDay, txtTime;
     private ImageView btnFav, btnRestore, btnDelete, btnShare, btnMore;
     private int mode = MODE_NORMAL;
@@ -251,6 +255,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
         root = findViewById(R.id.viewerRoot);
         pager = findViewById(R.id.pager);
         topBar = findViewById(R.id.viewerTopBar);
+        viewerVideoTools = findViewById(R.id.viewerVideoTools);
         bottomBar = findViewById(R.id.viewerBottomBar);
         pillDate = findViewById(R.id.pillViewerDate);
         txtDay = findViewById(R.id.txtViewerDay);
@@ -418,7 +423,16 @@ public class PhotoViewerActivity extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
             Insets sb = insets.getInsets(WindowInsetsCompat.Type.systemBars()
                     | WindowInsetsCompat.Type.displayCutout());
-            topBar.setPadding(topBarPadSide + sb.left, topBarPadTop + sb.top,
+            // В ландшафте верхний отступ от системных панелей бывает
+            // заметно больше, и кнопки «висели» далеко от статус-бара —
+            // ограничиваем его разумной высотой
+            int topInset = sb.top;
+            boolean landscape = v.getWidth() > v.getHeight() && v.getHeight() > 0;
+            if (landscape) {
+                int cap = Math.round(28 * getResources().getDisplayMetrics().density);
+                topInset = Math.min(topInset, cap);
+            }
+            topBar.setPadding(topBarPadSide + sb.left, topBarPadTop + topInset,
                     topBarPadSide + sb.right, topBar.getPaddingBottom());
             bottomBar.setPadding(bottomBarPadSide + sb.left, bottomBar.getPaddingTop(),
                     bottomBarPadSide + sb.right, bottomBarPadBottom + sb.bottom);
@@ -531,9 +545,10 @@ public class PhotoViewerActivity extends AppCompatActivity {
         handler.removeCallbacks(progressTick);
         boolean video = page.isVideoPage();
         layoutVideoCtl.setVisibility(video ? View.VISIBLE : View.GONE);
-        // Круги скорости и поворота живут только на видео
-        if (btnVwSpeed != null) btnVwSpeed.setVisibility(video ? View.VISIBLE : View.GONE);
-        if (btnVwRotate != null) btnVwRotate.setVisibility(video ? View.VISIBLE : View.GONE);
+        // Ряд «скорость/поворот» в верхней панели живёт только на видео
+        if (viewerVideoTools != null) {
+            viewerVideoTools.setVisibility(video ? View.VISIBLE : View.GONE);
+        }
         if (!video) {
             // Ушли с видео на фото — экран обратно в портретную ориентацию
             if (getRequestedOrientation()
@@ -1487,6 +1502,26 @@ public class PhotoViewerActivity extends AppCompatActivity {
     /** Закрытие кнопкой «назад»/системным жестом: сжимаемся к миниатюре, если она известна. */
     private void close() {
         if (dismissing) return;
+        // Из ландшафта сначала возвращаем ориентацию в портретную и даём
+        // экрану повернуться ПОД просмотрщиком — иначе галерея под нами
+        // секунду висела в горизонтальном положении и доворачивалась
+        // на глазах у пользователя
+        int o = getRequestedOrientation();
+        boolean landscape = o == android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                || o == android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                || o == android.content.pm.ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+                || o == android.content.pm.ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE;
+        if (landscape && !returningToPortrait) {
+            returningToPortrait = true;
+            setRequestedOrientation(
+                    android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            new android.os.Handler(android.os.Looper.getMainLooper())
+                    .postDelayed(() -> {
+                        returningToPortrait = false;
+                        close();
+                    }, 320);
+            return;
+        }
         PhotoPagerAdapter.VH page = currentPage != null ? currentPage
                 : pageAt(pager.getCurrentItem());
         if (page != null && thumbRectFor(pager.getCurrentItem()) != null) {

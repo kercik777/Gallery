@@ -37,9 +37,19 @@
         android:textColor="@color/textSecondary"
         android:textSize="13sp" />
 
-    <LinearLayout
-        android:id="@+id/layoutMenuRows"
+    <!-- Список пунктов прокручивается: в ландшафте лист ниже экрана,
+         и без прокрутки последние пункты были недоступны -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollMenuRows"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical" />
+        android:overScrollMode="never"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/layoutMenuRows"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </androidx.core.widget.NestedScrollView>
 </LinearLayout>
