@@ -531,6 +531,9 @@ public class PhotoViewerActivity extends AppCompatActivity {
         handler.removeCallbacks(progressTick);
         boolean video = page.isVideoPage();
         layoutVideoCtl.setVisibility(video ? View.VISIBLE : View.GONE);
+        // Круги скорости и поворота живут только на видео
+        if (btnVwSpeed != null) btnVwSpeed.setVisibility(video ? View.VISIBLE : View.GONE);
+        if (btnVwRotate != null) btnVwRotate.setVisibility(video ? View.VISIBLE : View.GONE);
         if (!video) {
             // Ушли с видео на фото — экран обратно в портретную ориентацию
             if (getRequestedOrientation()

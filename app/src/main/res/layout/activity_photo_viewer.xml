@@ -87,10 +87,10 @@
         android:orientation="vertical"
         android:padding="12dp">
 
-        <!-- Капсула плеера в две строки: сверху — воспроизведение и
-             широкий прогресс на всю ширину (в портрете одной строкой
-             ползунок сжимался кнопками звука/скорости/поворота и им
-             было невозможно пользоваться), снизу — звук, скорость, поворот -->
+        <!-- Капсула плеера одной строкой, как раньше: play, время,
+             широкий прогресс и звук справа от него. Скорость и поворот
+             вынесены вниз отдельными стеклянными кругами по бокам от
+             капсулы действий, поэтому ползунок никто не сжимает -->
         <LinearLayout
             android:id="@+id/layoutVideoCtl"
             android:layout_width="match_parent"
@@ -99,111 +99,97 @@
             android:layout_marginEnd="4dp"
             android:layout_marginBottom="10dp"
             android:background="@drawable/bg_glass_capsule"
-            android:orientation="vertical"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
             android:paddingStart="12dp"
             android:paddingTop="8dp"
             android:paddingEnd="12dp"
             android:paddingBottom="8dp"
             android:visibility="gone">
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <ImageView
+                android:id="@+id/btnVwPlay"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:contentDescription="@string/play"
+                android:padding="4dp"
+                android:src="@drawable/ic_pause"
+                app:tint="@color/white" />
+
+            <TextView
+                android:id="@+id/txtVwCur"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_marginStart="6dp"
+                android:fontFamily="sans-serif-medium"
+                android:minWidth="38dp"
+                android:gravity="center"
+                android:textColor="@color/viewerTextSecondary"
+                android:textSize="12sp" />
 
-                <ImageView
-                    android:id="@+id/btnVwPlay"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:contentDescription="@string/play"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_pause"
-                    app:tint="@color/white" />
-
-                <TextView
-                    android:id="@+id/txtVwCur"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:fontFamily="sans-serif-medium"
-                    android:minWidth="38dp"
-                    android:gravity="center"
-                    android:textColor="@color/viewerTextSecondary"
-                    android:textSize="12sp" />
-
-                <SeekBar
-                    android:id="@+id/seekVw"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginEnd="4dp"
-                    android:layout_weight="1"
-                    android:maxHeight="3dp"
-                    android:minHeight="3dp"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
-                    android:progressBackgroundTint="#4DFFFFFF"
-                    android:progressTint="@color/white"
-                    android:thumbTint="@color/white" />
-
-                <TextView
-                    android:id="@+id/txtVwDur"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif-medium"
-                    android:minWidth="38dp"
-                    android:gravity="center"
-                    android:textColor="@color/viewerTextSecondary"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
+            <SeekBar
+                android:id="@+id/seekVw"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:gravity="end|center_vertical"
-                android:orientation="horizontal">
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:maxHeight="3dp"
+                android:minHeight="3dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:progressBackgroundTint="#4DFFFFFF"
+                android:progressTint="@color/white"
+                android:thumbTint="@color/white" />
 
-                <ImageView
-                    android:id="@+id/btnVwMute"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:contentDescription="@string/video_sound"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_volume_off"
-                    app:tint="@color/white" />
+            <TextView
+                android:id="@+id/txtVwDur"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:minWidth="38dp"
+                android:gravity="center"
+                android:textColor="@color/viewerTextSecondary"
+                android:textSize="12sp" />
 
-                <TextView
-                    android:id="@+id/btnVwSpeed"
-                    android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:layout_marginStart="10dp"
-                    android:contentDescription="@string/speed_title"
-                    android:fontFamily="sans-serif-medium"
-                    android:gravity="center"
-                    android:minWidth="40dp"
-                    android:paddingStart="6dp"
-                    android:paddingEnd="6dp"
-                    android:textColor="@color/white"
-                    android:textSize="13sp" />
-
-                <ImageView
-                    android:id="@+id/btnVwRotate"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginStart="10dp"
-                    android:contentDescription="@string/viewer_rotate_screen"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_rotate"
-                    app:tint="@color/white" />
-            </LinearLayout>
+            <ImageView
+                android:id="@+id/btnVwMute"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="6dp"
+                android:contentDescription="@string/video_sound"
+                android:padding="4dp"
+                android:src="@drawable/ic_volume_off"
+                app:tint="@color/white" />
         </LinearLayout>
 
+        <!-- Нижний ряд: капсула действий по центру, а скорость и поворот —
+             ОТДЕЛЬНЫМИ стеклянными кругами слева и справа от неё
+             (только для видео, на фото скрыты) -->
         <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/btnVwSpeed"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_glass_circle"
+                android:contentDescription="@string/speed_title"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
+            <LinearLayout
             android:id="@+id/pillViewerActions"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
             android:background="@drawable/bg_glass_capsule"
             android:gravity="center_vertical"
             android:orientation="horizontal"
@@ -265,6 +251,18 @@
                 android:contentDescription="@string/action_info"
                 android:padding="12dp"
                 android:src="@drawable/ic_info"
+                app:tint="@color/white" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/btnVwRotate"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_glass_circle"
+                android:contentDescription="@string/viewer_rotate_screen"
+                android:padding="12dp"
+                android:src="@drawable/ic_rotate"
+                android:visibility="gone"
                 app:tint="@color/white" />
         </LinearLayout>
     </LinearLayout>
