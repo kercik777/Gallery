@@ -161,12 +161,20 @@ public class PhotoViewerActivity extends AppCompatActivity {
     private ImageView btnVwPlay, btnVwMute, btnVwRotate, btnNote;
     private TextView btnVwSpeed;
 
-    /** Подпись кнопки скорости: текущая скорость воспроизведения. */
+    /** Подпись кнопки скорости: временная скорость текущего видео. */
     private void updateSpeedButton() {
-        if (btnVwSpeed != null) {
+        if (btnVwSpeed != null && adapter != null) {
             btnVwSpeed.setText(com.premiumlab.galleryx.ui.sheet.SpeedSheet.label(
-                    com.premiumlab.galleryx.data.Prefs.videoSpeed()));
+                    adapter.getSpeed()));
         }
+    }
+
+    /** Скорость временная: новое видео всегда начинается с обычной 1×. */
+    private void resetSpeed() {
+        if (adapter != null && Math.abs(adapter.getSpeed() - 1f) > 0.01f) {
+            adapter.setSpeed(1f);
+        }
+        updateSpeedButton();
     }
     private TextView txtVwCur, txtVwDur;
     private SeekBar seekVw;
@@ -321,6 +329,8 @@ public class PhotoViewerActivity extends AppCompatActivity {
                 if (!autoAdvancing && lastPos >= 0 && position != lastPos) {
                     swipeDir = position > lastPos ? 1 : -1;
                 }
+                // Перелистнули на другой файл — временная скорость сброшена
+                if (position != lastPos) resetSpeed();
                 lastPos = position;
                 updateToolbar(position);
                 // Видео на новой странице стартует само; предыдущее — останавливается
@@ -558,7 +568,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
             // Скорость воспроизведения, как в YouTube: лист с вариантами,
             // выбор запоминается для всех видео
             com.premiumlab.galleryx.ui.sheet.SpeedSheet sheet =
-                    new com.premiumlab.galleryx.ui.sheet.SpeedSheet();
+                    com.premiumlab.galleryx.ui.sheet.SpeedSheet.newInstance(adapter.getSpeed());
             sheet.setListener(speed -> {
                 adapter.setSpeed(speed);
                 if (currentPage != null && currentPage.isVideoPage()) {
@@ -910,6 +920,8 @@ public class PhotoViewerActivity extends AppCompatActivity {
         if (gone == null) return;
         int idx = adapter.indexOf(gone);
         if (idx >= 0) adapter.removeAt(idx);
+        // На экране теперь другой файл — временная скорость не наследуется
+        resetSpeed();
         if (adapter.getItemCount() == 0) {
             finish();
             return;

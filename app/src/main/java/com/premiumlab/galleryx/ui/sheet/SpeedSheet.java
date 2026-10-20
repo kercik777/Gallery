@@ -11,11 +11,12 @@ import androidx.annotation.NonNull;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.premiumlab.galleryx.R;
-import com.premiumlab.galleryx.data.Prefs;
 
 /**
  * Скорость воспроизведения видео (как в YouTube): 0.25× … 2×.
- * Выбор запоминается и применяется ко всем видео просмотрщика.
+ * Выбор ВРЕМЕННЫЙ — только для текущего видео, нигде не сохраняется:
+ * при пролистывании на следующее видео и при закрытии плеера скорость
+ * сама возвращается к обычной 1×.
  */
 public class SpeedSheet extends BottomSheetDialogFragment {
 
@@ -25,10 +26,20 @@ public class SpeedSheet extends BottomSheetDialogFragment {
 
     public static final float[] SPEEDS = {0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f};
 
+    private static final String ARG_CURRENT = "current";
+
     private Listener listener;
 
     public void setListener(Listener listener) {
         this.listener = listener;
+    }
+
+    public static SpeedSheet newInstance(float current) {
+        SpeedSheet s = new SpeedSheet();
+        Bundle b = new Bundle();
+        b.putFloat(ARG_CURRENT, current);
+        s.setArguments(b);
+        return s;
     }
 
     /** «1×», «0.5×», «1.25×» — без лишних нулей. */
@@ -53,7 +64,7 @@ public class SpeedSheet extends BottomSheetDialogFragment {
         int[] txtIds = {R.id.txtSpeed0, R.id.txtSpeed1, R.id.txtSpeed2, R.id.txtSpeed3,
                 R.id.txtSpeed4, R.id.txtSpeed5, R.id.txtSpeed6, R.id.txtSpeed7};
 
-        float current = Prefs.videoSpeed();
+        float current = requireArguments().getFloat(ARG_CURRENT, 1f);
         for (int i = 0; i < SPEEDS.length; i++) {
             final float speed = SPEEDS[i];
             int resId = rowIds[i];
@@ -68,7 +79,7 @@ public class SpeedSheet extends BottomSheetDialogFragment {
             v.findViewById(chkId).setVisibility(
                     Math.abs(speed - current) < 0.01f ? View.VISIBLE : View.GONE);
             v.findViewById(resId).setOnClickListener(row -> {
-                Prefs.setVideoSpeed(speed);
+                // Ничего не сохраняем — скорость временная, для этого видео
                 dismiss();
                 if (listener != null) listener.onSpeedPicked(speed);
             });

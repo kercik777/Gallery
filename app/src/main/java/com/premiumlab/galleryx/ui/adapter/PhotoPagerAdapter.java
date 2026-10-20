@@ -66,8 +66,9 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
     private java.util.Set<String> videoPaths;
     /** Видео стартуют без звука, пока пользователь не включит его кнопкой. */
     private boolean muted = !com.premiumlab.galleryx.data.Prefs.videoSoundDefault();
-    /** Скорость воспроизведения всех видео (настройка в панели плеера). */
-    private float speed = com.premiumlab.galleryx.data.Prefs.videoSpeed();
+    /** Временная скорость текущего видео (выбор из плеера; по умолчанию 1×,
+     *  при смене страницы сбрасывается плеером обратно). */
+    private float speed = 1f;
 
     public void setSpeed(float s) {
         speed = s;
