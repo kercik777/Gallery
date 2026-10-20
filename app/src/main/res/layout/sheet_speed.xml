@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_sheet"
+    android:orientation="vertical"
+    android:paddingTop="@dimen/spacing_l">
+
+    <View
+        android:layout_width="36dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/bg_handle" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/spacing_xl"
+        android:paddingTop="@dimen/spacing_l"
+        android:paddingEnd="@dimen/spacing_xl"
+        android:paddingBottom="@dimen/spacing_s"
+        android:text="@string/speed_title"
+        android:textColor="@color/textPrimary"
+        android:textSize="17sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/spacing_l">
+
+        <LinearLayout
+            android:id="@+id/rowSpeed0"
+            style="@style/SheetRow">
+
+            <TextView
+                android:id="@+id/txtSpeed0"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/chkSpeed0"
+                style="@style/SheetRowCheck" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/rowSpeed1"
+            style="@style/SheetRow">
+
+            <TextView
+                android:id="@+id/txtSpeed1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/chkSpeed1"
+                style="@style/SheetRowCheck" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/rowSpeed2"
+            style="@style/SheetRow">
+
+            <TextView
+                android:id="@+id/txtSpeed2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/chkSpeed2"
+                style="@style/SheetRowCheck" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/rowSpeed3"
+            style="@style/SheetRow">
+
+            <TextView
+                android:id="@+id/txtSpeed3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/chkSpeed3"
+                style="@style/SheetRowCheck" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/rowSpeed4"
+            style="@style/SheetRow">
+
+            <TextView
+                android:id="@+id/txtSpeed4"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/chkSpeed4"
+                style="@style/SheetRowCheck" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/rowSpeed5"
+            style="@style/SheetRow">
+
+            <TextView
+                android:id="@+id/txtSpeed5"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/chkSpeed5"
+                style="@style/SheetRowCheck" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/rowSpeed6"
+            style="@style/SheetRow">
+
+            <TextView
+                android:id="@+id/txtSpeed6"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/chkSpeed6"
+                style="@style/SheetRowCheck" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/rowSpeed7"
+            style="@style/SheetRow">
+
+            <TextView
+                android:id="@+id/txtSpeed7"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/textPrimary"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:id="@+id/chkSpeed7"
+                style="@style/SheetRowCheck" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

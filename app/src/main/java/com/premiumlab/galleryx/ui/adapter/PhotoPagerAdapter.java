@@ -66,6 +66,16 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
     private java.util.Set<String> videoPaths;
     /** Видео стартуют без звука, пока пользователь не включит его кнопкой. */
     private boolean muted = !com.premiumlab.galleryx.data.Prefs.videoSoundDefault();
+    /** Скорость воспроизведения всех видео (настройка в панели плеера). */
+    private float speed = com.premiumlab.galleryx.data.Prefs.videoSpeed();
+
+    public void setSpeed(float s) {
+        speed = s;
+    }
+
+    public float getSpeed() {
+        return speed;
+    }
 
     public PhotoPagerAdapter(Context ctx, ZoomableImageView.TapListener tapListener,
                              ZoomableImageView.DragListener dragListener,
@@ -211,17 +221,19 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
         private boolean holdForward = true;
         private boolean holdWasPlaying = false;
         private float holdPrevSpeed = 1f;
+        /** Собственная позиция перемотки назад: плеер на паузе не успевает
+         *  завершать seek и getPosition() возвращает старое значение —
+         *  шаги топтались на месте. Ведём цель сами, только уменьшаем. */
+        private int holdRewindPos = -1;
         private final Runnable holdTick = new Runnable() {
             @Override
             public void run() {
-                if (!holding || !isVideoPage) return;
-                // Назад MediaPlayer играть не умеет — шагаем позицией:
-                // 200 мс видео каждые 100 мс реального времени = 2×
-                int dur = video.getDuration();
-                int target = Math.max(0, video.getPosition() - 200);
-                video.seekTo(target);
+                if (!holding || !isVideoPage || holdRewindPos < 0) return;
+                // Плеер на паузе, поэтому −200 мс каждые 100 мс = честные 2×
+                holdRewindPos = Math.max(0, holdRewindPos - 200);
+                video.seekTo(holdRewindPos);
                 if (videoListener != null) videoListener.onSeeked(VH.this);
-                if (target > 0 && dur > 0) seekHandler.postDelayed(this, 100);
+                if (holdRewindPos > 0) seekHandler.postDelayed(this, 100);
             }
         };
         private final Runnable seekAccumReset = () -> seekAccumMs = 0;
@@ -460,9 +472,10 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
                 video.setSpeed(2f);
                 if (!holdWasPlaying) video.play();
             } else {
-                // Назад: ставим плеер на паузу и шагаем позицией. Иначе
-                // воспроизведение тянет вперёд, шаги — назад, и видео
-                // фактически стоит на месте
+                // Назад: ставим плеер на паузу и шагаем СВОЕЙ позицией.
+                // Иначе воспроизведение тянет вперёд, а getPosition() на
+                // паузе врёт — перемотка фактически стояла на месте
+                holdRewindPos = video.getPosition();
                 if (holdWasPlaying) video.pause();
                 seekHandler.removeCallbacks(holdTick);
                 seekHandler.post(holdTick);
@@ -474,6 +487,7 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
             if (!holding) return;
             holding = false;
             seekHandler.removeCallbacks(holdTick);
+            holdRewindPos = -1;
             if (isVideoPage && video.isPrepared()) {
                 if (holdForward) {
                     video.setSpeed(holdPrevSpeed);
@@ -505,6 +519,7 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
             // до первого кадра она прозрачна — под ней остаётся кадр-превью
             video.setVisibility(View.VISIBLE);
             video.setMuted(muted);
+            video.setSpeed(speed);
             video.setSource(path);
             video.play();
         }

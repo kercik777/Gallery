@@ -177,6 +177,8 @@
     <string name="video_sound">Звук</string>
     <string name="viewer_rotate_screen">Повернуть экран</string>
     <string name="seek_hold_forward">2× вперёд</string>
+    <string name="speed_title">Скорость воспроизведения</string>
+    <string name="speed_normal">Обычная</string>
     <string name="seek_hold_back">2× назад</string>
     <plurals name="seek_seconds">
         <item quantity="one">%d секунда</item>

@@ -159,6 +159,15 @@ public class PhotoViewerActivity extends AppCompatActivity {
     /** Управление видео на текущей странице. */
     private View layoutVideoCtl;
     private ImageView btnVwPlay, btnVwMute, btnVwRotate, btnNote;
+    private TextView btnVwSpeed;
+
+    /** Подпись кнопки скорости: текущая скорость воспроизведения. */
+    private void updateSpeedButton() {
+        if (btnVwSpeed != null) {
+            btnVwSpeed.setText(com.premiumlab.galleryx.ui.sheet.SpeedSheet.label(
+                    com.premiumlab.galleryx.data.Prefs.videoSpeed()));
+        }
+    }
     private TextView txtVwCur, txtVwDur;
     private SeekBar seekVw;
     private PhotoPagerAdapter.VH currentPage;
@@ -542,6 +551,22 @@ public class PhotoViewerActivity extends AppCompatActivity {
             adapter.setMuted(!adapter.isMuted());
             if (currentPage != null) currentPage.video.setMuted(adapter.isMuted());
             updateMuteIcon();
+        });
+        btnVwSpeed = findViewById(R.id.btnVwSpeed);
+        updateSpeedButton();
+        btnVwSpeed.setOnClickListener(v -> {
+            // Скорость воспроизведения, как в YouTube: лист с вариантами,
+            // выбор запоминается для всех видео
+            com.premiumlab.galleryx.ui.sheet.SpeedSheet sheet =
+                    new com.premiumlab.galleryx.ui.sheet.SpeedSheet();
+            sheet.setListener(speed -> {
+                adapter.setSpeed(speed);
+                if (currentPage != null && currentPage.isVideoPage()) {
+                    currentPage.video.setSpeed(speed);
+                }
+                updateSpeedButton();
+            });
+            sheet.show(getSupportFragmentManager(), "speed");
         });
         btnVwRotate = findViewById(R.id.btnVwRotate);
         btnVwRotate.setOnClickListener(v -> {

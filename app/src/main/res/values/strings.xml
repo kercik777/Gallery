@@ -180,6 +180,8 @@
     <string name="video_sound">Sound</string>
     <string name="viewer_rotate_screen">Rotate screen</string>
     <string name="seek_hold_forward">2x forward</string>
+    <string name="speed_title">Playback speed</string>
+    <string name="speed_normal">Normal</string>
     <string name="seek_hold_back">2x rewind</string>
     <plurals name="seek_seconds">
         <item quantity="one">%d second</item>

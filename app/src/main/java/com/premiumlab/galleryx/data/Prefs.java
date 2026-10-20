@@ -294,6 +294,15 @@ public class Prefs {
         sp.edit().putBoolean("loop_videos", v).apply();
     }
 
+    /** Скорость воспроизведения видео в просмотрщике (1 — обычная). */
+    public static float videoSpeed() {
+        return sp.getFloat("video_speed", 1f);
+    }
+
+    public static void setVideoSpeed(float v) {
+        sp.edit().putFloat("video_speed", v).apply();
+    }
+
     /** Видео в просмотрщике стартует со звуком (по умолчанию — без). */
     public static boolean videoSoundDefault() {
         return sp.getBoolean("video_sound", false);

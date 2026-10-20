@@ -10,8 +10,8 @@ android {
         applicationId "tkm.tmgallery.pro"
         minSdk 26
         targetSdk 37
-        versionCode 65
-        versionName "3.40.1"
+        versionCode 66
+        versionName "3.41.0"
     }
 
     buildTypes {
