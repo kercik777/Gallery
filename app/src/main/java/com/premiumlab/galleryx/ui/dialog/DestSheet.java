@@ -67,7 +67,19 @@ public class DestSheet extends BottomSheetDialogFragment {
         dialog.setOnShowListener(d -> {
             android.widget.FrameLayout sheet = dialog.findViewById(
                     com.google.android.material.R.id.design_bottom_sheet);
-            if (sheet != null) BottomSheetBehavior.from(sheet).setDraggable(false);
+            if (sheet != null) {
+                // Сразу полностью развёрнут на всю высоту (как лист
+                // заметок): иначе без перетаскивания лист оставался
+                // полуоткрытым, а список папок внутри не прокручивался
+                android.view.ViewGroup.LayoutParams lp = sheet.getLayoutParams();
+                lp.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+                sheet.setLayoutParams(lp);
+                BottomSheetBehavior<android.widget.FrameLayout> b =
+                        BottomSheetBehavior.from(sheet);
+                b.setSkipCollapsed(true);
+                b.setDraggable(false);
+                b.setState(BottomSheetBehavior.STATE_EXPANDED);
+            }
         });
         v.findViewById(R.id.btnDestClose).setOnClickListener(x -> dismissAllowingStateLoss());
 
@@ -200,7 +212,7 @@ public class DestSheet extends BottomSheetDialogFragment {
         if (d != null && d.getWindow() != null) {
             d.getWindow().setLayout(
                     WindowManager.LayoutParams.MATCH_PARENT,
-                    WindowManager.LayoutParams.WRAP_CONTENT);
+                    WindowManager.LayoutParams.MATCH_PARENT);
         }
     }
 
