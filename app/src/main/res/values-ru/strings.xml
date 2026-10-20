@@ -176,6 +176,14 @@
     <string name="album_dest_inside_itself">Нельзя переместить папку в саму себя</string>
     <string name="video_sound">Звук</string>
     <string name="viewer_rotate_screen">Повернуть экран</string>
+    <string name="seek_hold_forward">2× вперёд</string>
+    <string name="seek_hold_back">2× назад</string>
+    <plurals name="seek_seconds">
+        <item quantity="one">%d секунда</item>
+        <item quantity="few">%d секунды</item>
+        <item quantity="many">%d секунд</item>
+        <item quantity="other">%d секунд</item>
+    </plurals>
     <string name="note_title">Заметка</string>
     <string name="note_title_hint">Заголовок</string>
     <string name="note_body_hint">Текст заметки…</string>

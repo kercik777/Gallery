@@ -41,6 +41,23 @@ public class ZoomableImageView extends AppCompatImageView {
         void onSingleTap();
     }
 
+    /**
+     * Жесты перемотки видео (как в YouTube): двойной тап по левой/правой
+     * половине — перемотка на 10 секунд, долгое удержание — перемотка 2×.
+     * Ставится только страницам видео; у фото слушателя нет и двойной тап
+     * по-прежнему работает как зум.
+     */
+    public interface SeekGestureListener {
+        /** Двойной тап: forward=false — левая половина (назад), true — правая. */
+        void onSeekTap(boolean forward);
+
+        /** Палец удержан: перемотка 2× в выбранную сторону началась. */
+        void onSeekHoldStart(boolean forward);
+
+        /** Палец убран — перемотка 2× закончилась. */
+        void onSeekHoldEnd();
+    }
+
     /** Кручение двумя пальцами: картинка довернулась до ближайших 90°. */
     public interface RotateListener {
         /**
@@ -74,6 +91,9 @@ public class ZoomableImageView extends AppCompatImageView {
     private TapListener tapListener;
     private DragListener dragListener;
     private RotateListener rotateListener;
+    private SeekGestureListener seekGestureListener;
+    /** Идёт удержание-перемотка 2× (страница видео). */
+    private boolean seekHoldActive = false;
     /** Накопленный угол кручения двумя пальцами, градусы. */
     private float twistDeg = 0f;
     private float lastTwistAngle = 0f;
@@ -121,6 +141,14 @@ public class ZoomableImageView extends AppCompatImageView {
         rotateListener = l;
     }
 
+    /** Жесты перемотки (только страницы видео; null — обычный двойной тап-зум). */
+    public void setSeekGestureListener(SeekGestureListener l) {
+        seekGestureListener = l;
+        if (l == null && seekHoldActive) {
+            seekHoldActive = false;
+        }
+    }
+
     private void init() {
         setScaleType(ScaleType.MATRIX);
         setImageMatrix(new Matrix());
@@ -163,8 +191,26 @@ public class ZoomableImageView extends AppCompatImageView {
 
                         @Override
                         public boolean onDoubleTap(MotionEvent e) {
-                            animateDoubleTap(e.getX(), e.getY());
+                            if (seekGestureListener != null) {
+                                // Видео: двойной тап — перемотка ∓/±10 сек
+                                // по половине экрана, а не зум
+                                seekGestureListener.onSeekTap(
+                                        e.getX() >= getWidth() / 2f);
+                            } else {
+                                animateDoubleTap(e.getX(), e.getY());
+                            }
                             return true;
+                        }
+
+                        @Override
+                        public void onLongPress(MotionEvent e) {
+                            if (seekGestureListener != null && !seekHoldActive) {
+                                // Видео: удержание — перемотка 2× по
+                                // половине экрана, пока палец не уберут
+                                seekHoldActive = true;
+                                seekGestureListener.onSeekHoldStart(
+                                        e.getX() >= getWidth() / 2f);
+                            }
                         }
 
                         @Override
@@ -333,6 +379,13 @@ public class ZoomableImageView extends AppCompatImageView {
                 return true;
 
             case MotionEvent.ACTION_POINTER_DOWN:
+                // Второй палец отменяет удержание-перемотку 2×
+                if (seekHoldActive) {
+                    seekHoldActive = false;
+                    if (seekGestureListener != null) {
+                        seekGestureListener.onSeekHoldEnd();
+                    }
+                }
                 // Второй палец — это зум, а не свайп
                 if (dragging) {
                     dragging = false;
@@ -435,6 +488,13 @@ public class ZoomableImageView extends AppCompatImageView {
 
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
+                // Палец убрали — удержание-перемотка 2× закончена
+                if (seekHoldActive) {
+                    seekHoldActive = false;
+                    if (seekGestureListener != null) {
+                        seekGestureListener.onSeekHoldEnd();
+                    }
+                }
                 // Оба пальца убрали разом — кручение всё равно завершаем,
                 // иначе предпросмотр оставалось повёрнутым навсегда
                 if (twistActive) {

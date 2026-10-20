@@ -48,6 +48,9 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
         void onVideoPlayState(VH page, boolean playing);
 
         void onVideoCompleted(VH page);
+
+        /** Позиция изменилась перемоткой жестом — обновить ползунок. */
+        void onSeeked(VH page);
     }
 
     private final List<String> paths = new ArrayList<>();
@@ -190,8 +193,56 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
         public final InlineVideoView video;
         final ImageView btnPlay;
         final ProgressBar buffer;
+        final View seekFlashLeft, seekFlashRight, holdBadge;
+        final ImageView seekIconLeft, seekIconRight, holdBadgeIcon;
+        final android.widget.TextView seekTextLeft, seekTextRight, holdBadgeText;
         String path;
         boolean isVideoPage;
+
+        // --- Перемотка жестами (как в YouTube) ---
+        private final android.os.Handler seekHandler =
+                new android.os.Handler(android.os.Looper.getMainLooper());
+        /** Накопление серий двойных тапов: 10, 20, 30… секунд подряд. */
+        private int seekAccumMs = 0;
+        private boolean seekAccumForward = true;
+        private long seekAccumAt = 0L;
+        /** Идёт удержание-перемотка 2×. */
+        private boolean holding = false;
+        private boolean holdForward = true;
+        private boolean holdWasPlaying = false;
+        private float holdPrevSpeed = 1f;
+        private final Runnable holdTick = new Runnable() {
+            @Override
+            public void run() {
+                if (!holding || !isVideoPage) return;
+                // Назад MediaPlayer играть не умеет — шагаем позицией:
+                // 200 мс видео каждые 100 мс реального времени = 2×
+                int dur = video.getDuration();
+                int target = Math.max(0, video.getPosition() - 200);
+                video.seekTo(target);
+                if (videoListener != null) videoListener.onSeeked(VH.this);
+                if (target > 0 && dur > 0) seekHandler.postDelayed(this, 100);
+            }
+        };
+        private final Runnable seekAccumReset = () -> seekAccumMs = 0;
+
+        private final ZoomableImageView.SeekGestureListener seekGestures =
+                new ZoomableImageView.SeekGestureListener() {
+                    @Override
+                    public void onSeekTap(boolean forward) {
+                        seekByTap(forward);
+                    }
+
+                    @Override
+                    public void onSeekHoldStart(boolean forward) {
+                        startHold(forward);
+                    }
+
+                    @Override
+                    public void onSeekHoldEnd() {
+                        endHold();
+                    }
+                };
 
         VH(@NonNull View itemView) {
             super(itemView);
@@ -200,6 +251,15 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
             video = itemView.findViewById(R.id.pageVideo);
             btnPlay = itemView.findViewById(R.id.btnPagePlay);
             buffer = itemView.findViewById(R.id.pageBuffer);
+            seekFlashLeft = itemView.findViewById(R.id.seekFlashLeft);
+            seekFlashRight = itemView.findViewById(R.id.seekFlashRight);
+            seekIconLeft = itemView.findViewById(R.id.seekIconLeft);
+            seekIconRight = itemView.findViewById(R.id.seekIconRight);
+            seekTextLeft = itemView.findViewById(R.id.seekTextLeft);
+            seekTextRight = itemView.findViewById(R.id.seekTextRight);
+            holdBadge = itemView.findViewById(R.id.holdBadge);
+            holdBadgeIcon = itemView.findViewById(R.id.holdBadgeIcon);
+            holdBadgeText = itemView.findViewById(R.id.holdBadgeText);
             btnPlay.setOnClickListener(v -> togglePlay());
             video.setListener(new InlineVideoView.Listener() {
                 @Override
@@ -258,6 +318,9 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
             zoom.setDragListener(dragListener);
             // Кручение двумя пальцами — только для фото (не для видео)
             zoom.setRotateListener(isVideoPage ? null : rotateListener);
+            // Жесты перемотки (двойной тап ±10 сек, удержание 2×) — только видео;
+            // у фото двойной тап остаётся зумом
+            zoom.setSeekGestureListener(isVideoPage ? seekGestures : null);
             // Видео масштабируется и панорамируется вместе с кадром-подложкой (как фото)
             video.setDisplayRect(null);
             zoom.setMatrixListener(() -> {
@@ -332,6 +395,93 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
             }
         }
 
+        /** Двойной тап по половине экрана: перемотка на 10 сек (серия тапов — 20, 30…). */
+        private void seekByTap(boolean forward) {
+            if (!isVideoPage || !video.isPrepared()) return;
+            long now = android.os.SystemClock.uptimeMillis();
+            if (seekAccumMs == 0 || seekAccumForward != forward
+                    || now - seekAccumAt > 900) {
+                seekAccumMs = 0;
+                seekAccumForward = forward;
+            }
+            seekAccumAt = now;
+            seekAccumMs += 10_000;
+            int dur = video.getDuration();
+            // Каждый тап серии — ещё ±10 сек от текущей позиции
+            int target = video.getPosition() + (forward ? 10_000 : -10_000);
+            if (dur > 0) target = Math.max(0, Math.min(dur, target));
+            else target = Math.max(0, target);
+            video.seekTo(target);
+            if (videoListener != null) videoListener.onSeeked(this);
+            flashSeek(forward, seekAccumMs / 1000);
+            seekHandler.removeCallbacks(seekAccumReset);
+            seekHandler.postDelayed(seekAccumReset, 900);
+        }
+
+        /** Красивая вспышка перемотки: кружок с двойными стрелками и секунды. */
+        private void flashSeek(boolean forward, int seconds) {
+            View zone = forward ? seekFlashRight : seekFlashLeft;
+            ImageView icon = forward ? seekIconRight : seekIconLeft;
+            android.widget.TextView text = forward ? seekTextRight : seekTextLeft;
+            text.setText(page.getResources().getQuantityString(
+                    R.plurals.seek_seconds, seconds, seconds));
+            zone.animate().cancel();
+            zone.setVisibility(View.VISIBLE);
+            zone.setAlpha(0f);
+            icon.setScaleX(0.6f);
+            icon.setScaleY(0.6f);
+            zone.animate().alpha(1f).setDuration(120).withEndAction(() ->
+                    zone.animate().alpha(0f).setStartDelay(260).setDuration(340)
+                            .withEndAction(() -> zone.setVisibility(View.GONE))
+                            .start()).start();
+            icon.animate().scaleX(1f).scaleY(1f).setDuration(220)
+                    .setInterpolator(new android.view.animation.OvershootInterpolator(2f))
+                    .start();
+        }
+
+        /** Удержание пальца: перемотка 2× (вперёд — скоростью плеера, назад — шагами). */
+        private void startHold(boolean forward) {
+            if (!isVideoPage || !video.isPrepared() || holding) return;
+            holding = true;
+            holdForward = forward;
+            holdWasPlaying = video.isPlaying();
+            holdPrevSpeed = video.getSpeed();
+            holdBadgeText.setText(forward
+                    ? R.string.seek_hold_forward : R.string.seek_hold_back);
+            holdBadgeIcon.setImageResource(forward
+                    ? R.drawable.ic_seek_forward : R.drawable.ic_seek_back);
+            holdBadge.animate().cancel();
+            holdBadge.setVisibility(View.VISIBLE);
+            holdBadge.setAlpha(0f);
+            holdBadge.setScaleX(0.85f);
+            holdBadge.setScaleY(0.85f);
+            holdBadge.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(160).start();
+            if (forward) {
+                video.setSpeed(2f);
+                if (!holdWasPlaying) video.play();
+            } else {
+                seekHandler.removeCallbacks(holdTick);
+                seekHandler.post(holdTick);
+            }
+        }
+
+        /** Палец убран: вернуть скорость и состояние воспроизведения как было. */
+        private void endHold() {
+            if (!holding) return;
+            holding = false;
+            seekHandler.removeCallbacks(holdTick);
+            if (isVideoPage && video.isPrepared()) {
+                if (holdForward) {
+                    video.setSpeed(holdPrevSpeed);
+                    if (!holdWasPlaying) video.pause();
+                }
+            }
+            holdBadge.animate().cancel();
+            holdBadge.animate().alpha(0f).setDuration(160)
+                    .withEndAction(() -> holdBadge.setVisibility(View.GONE))
+                    .start();
+        }
+
         public boolean isVideoPage() {
             return isVideoPage;
         }
@@ -371,6 +521,9 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
 
         /** Останавливает и освобождает плеер (страница ушла с экрана). */
         public void stopVideo() {
+            endHold();
+            seekHandler.removeCallbacks(seekAccumReset);
+            seekAccumMs = 0;
             video.release();
             video.setVisibility(View.GONE);
             buffer.setVisibility(View.GONE);

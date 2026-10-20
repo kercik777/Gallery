@@ -145,6 +145,10 @@ public class InlineVideoView extends TextureView implements TextureView.SurfaceT
         if (player != null && prepared && isPlaying()) applySpeed();
     }
 
+    public float getSpeed() {
+        return speed;
+    }
+
     private void applySpeed() {
         if (player == null || !prepared) return;
         try {

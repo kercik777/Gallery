@@ -464,6 +464,12 @@ public class PhotoViewerActivity extends AppCompatActivity {
                 }
 
                 @Override
+                public void onSeeked(PhotoPagerAdapter.VH page) {
+                    if (page != currentPage) return;
+                    updateVideoProgress();
+                }
+
+                @Override
                 public void onVideoPlayState(PhotoPagerAdapter.VH page, boolean playing) {
                     if (page != currentPage) return;
                     btnVwPlay.setImageResource(playing ? R.drawable.ic_pause : R.drawable.ic_play);

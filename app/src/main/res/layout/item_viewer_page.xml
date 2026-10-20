@@ -41,4 +41,96 @@
         android:src="@drawable/ic_play"
         android:visibility="gone"
         app:tint="@color/white" />
+
+    <!-- Вспышка перемотки двойным тапом (как в YouTube): сторона, иконка, секунды -->
+    <LinearLayout
+        android:id="@+id/seekFlashLeft"
+        android:layout_width="220dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/seekIconLeft"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="@drawable/bg_gate_circle"
+            android:contentDescription="@string/seek_hold_back"
+            android:padding="16dp"
+            android:src="@drawable/ic_seek_back"
+            app:tint="@color/white" />
+
+        <TextView
+            android:id="@+id/seekTextLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/seekFlashRight"
+        android:layout_width="220dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/seekIconRight"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="@drawable/bg_gate_circle"
+            android:contentDescription="@string/seek_hold_forward"
+            android:padding="16dp"
+            android:src="@drawable/ic_seek_forward"
+            app:tint="@color/white" />
+
+        <TextView
+            android:id="@+id/seekTextRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <!-- Таблетка удержания-перемотки 2× -->
+    <LinearLayout
+        android:id="@+id/holdBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="104dp"
+        android:background="@drawable/bg_glass_capsule"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/holdBadgeIcon"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/ic_seek_forward"
+            app:tint="@color/white" />
+
+        <TextView
+            android:id="@+id/holdBadgeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+    </LinearLayout>
 </FrameLayout>

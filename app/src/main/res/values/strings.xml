@@ -179,6 +179,12 @@
     <string name="album_dest_inside_itself">A folder can’t be moved into itself</string>
     <string name="video_sound">Sound</string>
     <string name="viewer_rotate_screen">Rotate screen</string>
+    <string name="seek_hold_forward">2x forward</string>
+    <string name="seek_hold_back">2x rewind</string>
+    <plurals name="seek_seconds">
+        <item quantity="one">%d second</item>
+        <item quantity="other">%d seconds</item>
+    </plurals>
     <string name="note_title">Note</string>
     <string name="note_title_hint">Title</string>
     <string name="note_body_hint">Note text…</string>
