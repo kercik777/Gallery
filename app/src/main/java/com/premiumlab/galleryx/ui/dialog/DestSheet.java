@@ -59,11 +59,10 @@ public class DestSheet extends BottomSheetDialogFragment {
         View v = LayoutInflater.from(getContext())
                 .inflate(R.layout.sheet_dest, null, false);
         dialog.setContentView(v);
-        // Лист НЕ закрывается сам: ни свайпом вниз, ни тапом мимо, ни
-        // кнопкой «Назад» (как лист заметок) — только выбором папки или
-        // явным закрытием по крестику, чтобы случайный жест не срывал
-        // копирование/перемещение на полпути выбора
-        setCancelable(false);
+        // Лист не закрывается случайным жестом: ни свайпом вниз, ни тапом
+        // мимо. Закрытие — выбором папки, крестиком или кнопкой «Назад»
+        setCancelable(true);
+        dialog.setCanceledOnTouchOutside(false);
         dialog.setOnShowListener(d -> {
             android.widget.FrameLayout sheet = dialog.findViewById(
                     com.google.android.material.R.id.design_bottom_sheet);

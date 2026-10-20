@@ -159,8 +159,6 @@ public class PhotoViewerActivity extends AppCompatActivity {
     /** Управление видео на текущей странице. */
     private View layoutVideoCtl;
     private ImageView btnVwPlay, btnVwMute, btnVwRotate, btnNote;
-    /** Ориентацию выбрал сам пользователь кнопкой — авто-поворот не спорит. */
-    private boolean manualOrientation = false;
     private TextView txtVwCur, txtVwDur;
     private SeekBar seekVw;
     private PhotoPagerAdapter.VH currentPage;
@@ -461,20 +459,8 @@ public class PhotoViewerActivity extends AppCompatActivity {
                     seekVw.setMax(Math.max(1, durationMs));
                     txtVwDur.setText(Fmt.duration(durationMs));
                     updateVideoProgress();
-                    // Горизонтальное видео (фильм) само разворачивается
-                    // горизонтально, вертикальное — обратно; если человек
-                    // сам нажал кнопку поворота, не спорим с ним
-                    if (!manualOrientation && page.video != null) {
-                        int w = page.video.getVideoWidth();
-                        int h = page.video.getVideoHeight();
-                        if (w > h) {
-                            setRequestedOrientation(
-                                    android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-                        } else if (h > w) {
-                            setRequestedOrientation(
-                                    android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                        }
-                    }
+                    // Без автоповорота: экран поворачивается только вручную,
+                    // кнопкой поворота в панели плеера
                 }
 
                 @Override
@@ -522,7 +508,6 @@ public class PhotoViewerActivity extends AppCompatActivity {
         layoutVideoCtl.setVisibility(video ? View.VISIBLE : View.GONE);
         if (!video) {
             // Ушли с видео на фото — экран обратно в портретную ориентацию
-            manualOrientation = false;
             if (getRequestedOrientation()
                     != android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
                 setRequestedOrientation(
@@ -555,7 +540,6 @@ public class PhotoViewerActivity extends AppCompatActivity {
         btnVwRotate = findViewById(R.id.btnVwRotate);
         btnVwRotate.setOnClickListener(v -> {
             // Ручной поворот экрана для видео: горизонтально ↔ вертикально
-            manualOrientation = true;
             int cur = getRequestedOrientation();
             boolean landscape = cur
                     == android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
