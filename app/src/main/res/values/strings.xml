@@ -178,6 +178,7 @@
     <string name="deselect_all">Deselect all</string>
     <string name="album_dest_inside_itself">A folder can’t be moved into itself</string>
     <string name="video_sound">Sound</string>
+    <string name="viewer_rotate_screen">Rotate screen</string>
     <string name="note_title">Note</string>
     <string name="note_title_hint">Title</string>
     <string name="note_body_hint">Note text…</string>

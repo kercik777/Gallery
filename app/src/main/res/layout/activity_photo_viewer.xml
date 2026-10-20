@@ -157,6 +157,16 @@
                 android:padding="4dp"
                 android:src="@drawable/ic_volume_off"
                 app:tint="@color/white" />
+
+            <ImageView
+                android:id="@+id/btnVwRotate"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="6dp"
+                android:contentDescription="@string/viewer_rotate_screen"
+                android:padding="4dp"
+                android:src="@drawable/ic_rotate"
+                app:tint="@color/white" />
         </LinearLayout>
 
         <LinearLayout

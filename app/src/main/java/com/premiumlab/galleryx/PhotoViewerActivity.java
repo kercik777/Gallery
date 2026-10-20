@@ -158,7 +158,9 @@ public class PhotoViewerActivity extends AppCompatActivity {
 
     /** Управление видео на текущей странице. */
     private View layoutVideoCtl;
-    private ImageView btnVwPlay, btnVwMute, btnNote;
+    private ImageView btnVwPlay, btnVwMute, btnVwRotate, btnNote;
+    /** Ориентацию выбрал сам пользователь кнопкой — авто-поворот не спорит. */
+    private boolean manualOrientation = false;
     private TextView txtVwCur, txtVwDur;
     private SeekBar seekVw;
     private PhotoPagerAdapter.VH currentPage;
@@ -459,6 +461,20 @@ public class PhotoViewerActivity extends AppCompatActivity {
                     seekVw.setMax(Math.max(1, durationMs));
                     txtVwDur.setText(Fmt.duration(durationMs));
                     updateVideoProgress();
+                    // Горизонтальное видео (фильм) само разворачивается
+                    // горизонтально, вертикальное — обратно; если человек
+                    // сам нажал кнопку поворота, не спорим с ним
+                    if (!manualOrientation && page.video != null) {
+                        int w = page.video.getVideoWidth();
+                        int h = page.video.getVideoHeight();
+                        if (w > h) {
+                            setRequestedOrientation(
+                                    android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+                        } else if (h > w) {
+                            setRequestedOrientation(
+                                    android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                        }
+                    }
                 }
 
                 @Override
@@ -504,6 +520,15 @@ public class PhotoViewerActivity extends AppCompatActivity {
         handler.removeCallbacks(progressTick);
         boolean video = page.isVideoPage();
         layoutVideoCtl.setVisibility(video ? View.VISIBLE : View.GONE);
+        if (!video) {
+            // Ушли с видео на фото — экран обратно в портретную ориентацию
+            manualOrientation = false;
+            if (getRequestedOrientation()
+                    != android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+                setRequestedOrientation(
+                        android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            }
+        }
         if (video) {
             seekVw.setProgress(0);
             txtVwCur.setText(Fmt.duration(0));
@@ -526,6 +551,19 @@ public class PhotoViewerActivity extends AppCompatActivity {
             adapter.setMuted(!adapter.isMuted());
             if (currentPage != null) currentPage.video.setMuted(adapter.isMuted());
             updateMuteIcon();
+        });
+        btnVwRotate = findViewById(R.id.btnVwRotate);
+        btnVwRotate.setOnClickListener(v -> {
+            // Ручной поворот экрана для видео: горизонтально ↔ вертикально
+            manualOrientation = true;
+            int cur = getRequestedOrientation();
+            boolean landscape = cur
+                    == android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                    || cur == android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    || cur == android.content.pm.ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+            setRequestedOrientation(landscape
+                    ? android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                    : android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
         });
         seekVw.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override

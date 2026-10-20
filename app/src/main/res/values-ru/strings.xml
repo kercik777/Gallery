@@ -175,6 +175,7 @@
     <string name="deselect_all">Снять выделение</string>
     <string name="album_dest_inside_itself">Нельзя переместить папку в саму себя</string>
     <string name="video_sound">Звук</string>
+    <string name="viewer_rotate_screen">Повернуть экран</string>
     <string name="note_title">Заметка</string>
     <string name="note_title_hint">Заголовок</string>
     <string name="note_body_hint">Текст заметки…</string>

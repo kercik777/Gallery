@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.premiumlab.galleryx.R;
@@ -58,6 +59,17 @@ public class DestSheet extends BottomSheetDialogFragment {
         View v = LayoutInflater.from(getContext())
                 .inflate(R.layout.sheet_dest, null, false);
         dialog.setContentView(v);
+        // Лист НЕ закрывается сам: ни свайпом вниз, ни тапом мимо, ни
+        // кнопкой «Назад» (как лист заметок) — только выбором папки или
+        // явным закрытием по крестику, чтобы случайный жест не срывал
+        // копирование/перемещение на полпути выбора
+        setCancelable(false);
+        dialog.setOnShowListener(d -> {
+            android.widget.FrameLayout sheet = dialog.findViewById(
+                    com.google.android.material.R.id.design_bottom_sheet);
+            if (sheet != null) BottomSheetBehavior.from(sheet).setDraggable(false);
+        });
+        v.findViewById(R.id.btnDestClose).setOnClickListener(x -> dismissAllowingStateLoss());
 
         // Пока маскировка «закрыта», корневой папки как будто нет
         String rootPath = MaskGuard.hidden() ? null : Prefs.rootPath();
