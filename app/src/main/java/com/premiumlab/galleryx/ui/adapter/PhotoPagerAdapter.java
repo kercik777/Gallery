@@ -460,6 +460,10 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
                 video.setSpeed(2f);
                 if (!holdWasPlaying) video.play();
             } else {
+                // Назад: ставим плеер на паузу и шагаем позицией. Иначе
+                // воспроизведение тянет вперёд, шаги — назад, и видео
+                // фактически стоит на месте
+                if (holdWasPlaying) video.pause();
                 seekHandler.removeCallbacks(holdTick);
                 seekHandler.post(holdTick);
             }
@@ -474,6 +478,9 @@ public class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.VH
                 if (holdForward) {
                     video.setSpeed(holdPrevSpeed);
                     if (!holdWasPlaying) video.pause();
+                } else if (holdWasPlaying) {
+                    // Перемотка назад держала плеер на паузе — продолжить
+                    video.play();
                 }
             }
             holdBadge.animate().cancel();

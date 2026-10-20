@@ -42,63 +42,70 @@
         android:visibility="gone"
         app:tint="@color/white" />
 
-    <!-- Вспышка перемотки двойным тапом (как в YouTube): сторона, иконка, секунды -->
+    <!-- Вспышки перемотки двойным тапом (как в YouTube): иконки ровно по
+         центру высоты, на 1/4 и 3/4 ширины — по бокам от кнопки паузы -->
     <LinearLayout
-        android:id="@+id/seekFlashLeft"
-        android:layout_width="220dp"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone">
+        android:orientation="horizontal">
 
-        <ImageView
-            android:id="@+id/seekIconLeft"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:background="@drawable/bg_gate_circle"
-            android:contentDescription="@string/seek_hold_back"
-            android:padding="16dp"
-            android:src="@drawable/ic_seek_back"
-            app:tint="@color/white" />
+        <FrameLayout
+            android:id="@+id/seekFlashLeft"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:visibility="gone">
 
-        <TextView
-            android:id="@+id/seekTextLeft"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:fontFamily="sans-serif-medium"
-            android:textColor="@color/white"
-            android:textSize="14sp" />
-    </LinearLayout>
+            <ImageView
+                android:id="@+id/seekIconLeft"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_gate_circle"
+                android:contentDescription="@string/seek_hold_back"
+                android:padding="16dp"
+                android:src="@drawable/ic_seek_back"
+                app:tint="@color/white" />
 
-    <LinearLayout
-        android:id="@+id/seekFlashRight"
-        android:layout_width="220dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="end"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone">
+            <TextView
+                android:id="@+id/seekTextLeft"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="92dp"
+                android:fontFamily="sans-serif-medium"
+                android:textColor="@color/white"
+                android:textSize="14sp" />
+        </FrameLayout>
 
-        <ImageView
-            android:id="@+id/seekIconRight"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:background="@drawable/bg_gate_circle"
-            android:contentDescription="@string/seek_hold_forward"
-            android:padding="16dp"
-            android:src="@drawable/ic_seek_forward"
-            app:tint="@color/white" />
+        <FrameLayout
+            android:id="@+id/seekFlashRight"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:visibility="gone">
 
-        <TextView
-            android:id="@+id/seekTextRight"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:fontFamily="sans-serif-medium"
-            android:textColor="@color/white"
-            android:textSize="14sp" />
+            <ImageView
+                android:id="@+id/seekIconRight"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_gate_circle"
+                android:contentDescription="@string/seek_hold_forward"
+                android:padding="16dp"
+                android:src="@drawable/ic_seek_forward"
+                app:tint="@color/white" />
+
+            <TextView
+                android:id="@+id/seekTextRight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="92dp"
+                android:fontFamily="sans-serif-medium"
+                android:textColor="@color/white"
+                android:textSize="14sp" />
+        </FrameLayout>
     </LinearLayout>
 
     <!-- Таблетка удержания-перемотки 2× -->
