@@ -163,33 +163,10 @@
                 app:tint="@color/white" />
         </LinearLayout>
 
-        <!-- Нижний ряд: капсула действий по центру, а скорость и поворот —
-             ОТДЕЛЬНЫМИ стеклянными кругами слева и справа от неё
-             (только для видео, на фото скрыты) -->
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/btnVwSpeed"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@drawable/bg_glass_circle"
-                android:contentDescription="@string/speed_title"
-                android:fontFamily="sans-serif-medium"
-                android:gravity="center"
-                android:textColor="@color/white"
-                android:textSize="13sp"
-                android:visibility="gone" />
-
-            <LinearLayout
             android:id="@+id/pillViewerActions"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp"
             android:background="@drawable/bg_glass_capsule"
             android:gravity="center_vertical"
             android:orientation="horizontal"
@@ -252,18 +229,39 @@
                 android:padding="12dp"
                 android:src="@drawable/ic_info"
                 app:tint="@color/white" />
-            </LinearLayout>
-
-            <ImageView
-                android:id="@+id/btnVwRotate"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@drawable/bg_glass_circle"
-                android:contentDescription="@string/viewer_rotate_screen"
-                android:padding="12dp"
-                android:src="@drawable/ic_rotate"
-                android:visibility="gone"
-                app:tint="@color/white" />
         </LinearLayout>
     </LinearLayout>
+
+    <!-- Скорость и поворот видео: отдельные стеклянные круги вверху —
+         скорость слева под кнопкой «назад», поворот справа под кнопкой
+         меню. Внизу в портрете им не хватало места рядом с капсулой
+         действий, и они обрезались краями экрана -->
+    <TextView
+        android:id="@+id/btnVwSpeed"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="84dp"
+        android:background="@drawable/bg_glass_circle"
+        android:contentDescription="@string/speed_title"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center"
+        android:textColor="@color/white"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/btnVwRotate"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="84dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/bg_glass_circle"
+        android:contentDescription="@string/viewer_rotate_screen"
+        android:padding="12dp"
+        android:src="@drawable/ic_rotate"
+        android:visibility="gone"
+        app:tint="@color/white" />
 </FrameLayout>

@@ -55,10 +55,65 @@ public class TrashStore {
         if (changed) save(list);
     }
 
+    /**
+     * Файл индекса корзины внутри самой папки корзины. Раньше метаданные
+     * (даты удаления!) жили только в SharedPreferences, которые стираются
+     * при удалении приложения: файлы в .GalleryX/trash оставались, а даты
+     * терялись, и после переустановки все файлы «находились заново» со
+     * свежими 30 днями — обратный отсчёт и автоудаление никогда не
+     * срабатывали. Теперь индекс лежит рядом с файлами и переживает
+     * переустановку (корень выбирается тот же). SharedPreferences
+     * остались зеркалом на случай, пока корень не выбран.
+     */
+    private static java.io.File indexFile(boolean createDirs) {
+        try {
+            java.io.File dir = createDirs ? AppDirs.trashDir() : null;
+            if (dir == null) {
+                java.io.File hidden = AppDirs.hiddenRoot();
+                if (hidden == null) return null;
+                dir = new java.io.File(hidden, "trash");
+            }
+            return new java.io.File(dir, ".trash_index.json");
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static String readIndexFile() {
+        try {
+            java.io.File f = indexFile(false);
+            if (f == null || !f.isFile() || f.length() <= 0 || f.length() > 16L * 1024 * 1024) {
+                return null;
+            }
+            byte[] buf = new byte[(int) f.length()];
+            java.io.FileInputStream in = new java.io.FileInputStream(f);
+            try {
+                int read = 0;
+                while (read < buf.length) {
+                    int n = in.read(buf, read, buf.length - read);
+                    if (n < 0) break;
+                    read += n;
+                }
+                if (read != buf.length) return null;
+            } finally {
+                in.close();
+            }
+            return new String(buf, java.nio.charset.StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private synchronized List<Entry> load() {
         List<Entry> out = new ArrayList<>();
         try {
-            JSONArray arr = new JSONArray(Prefs.sp().getString("trash_json", "[]"));
+            String json = readIndexFile();
+            if (json == null) {
+                // Файла ещё нет (старая версия) — берём из SharedPreferences,
+                // при первой же записи индекс переедет в файл
+                json = Prefs.sp().getString("trash_json", "[]");
+            }
+            JSONArray arr = new JSONArray(json);
             for (int i = 0; i < arr.length(); i++) {
                 JSONObject o = arr.getJSONObject(i);
                 Entry e = new Entry();
@@ -90,7 +145,21 @@ public class TrashStore {
             } catch (Exception ignored) {
             }
         }
-        Prefs.sp().edit().putString("trash_json", arr.toString()).apply();
+        String json = arr.toString();
+        // Основное хранилище — файл в папке корзины (переживает переустановку)
+        try {
+            java.io.File f = indexFile(true);
+            if (f != null) {
+                java.io.FileOutputStream out = new java.io.FileOutputStream(f);
+                try {
+                    out.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                } finally {
+                    out.close();
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        Prefs.sp().edit().putString("trash_json", json).apply();
     }
 
     public synchronized void add(String origPath, File trashedFile, String name, long size, boolean video) {
