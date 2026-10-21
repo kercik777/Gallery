@@ -1149,6 +1149,15 @@ public class ResizerActivity extends AppCompatActivity
             }
             i.setType(opts.mime());
             i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            if (uris.size() > 1) {
+                // Все URI в ClipData: получатели читают именно его
+                android.content.ClipData clip =
+                        android.content.ClipData.newRawUri("", uris.get(0));
+                for (int k = 1; k < uris.size(); k++) {
+                    clip.addItem(new android.content.ClipData.Item(uris.get(k)));
+                }
+                i.setClipData(clip);
+            }
             startActivity(Intent.createChooser(i, getString(R.string.action_share)));
         } catch (Exception e) {
             Toasts.makeText(this, R.string.no_app_to_open, Toast.LENGTH_SHORT).show();

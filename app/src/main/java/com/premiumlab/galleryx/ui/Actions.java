@@ -56,8 +56,14 @@ public final class Actions {
             intent.setType(mixed ? "*/*" : mime);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             if (uris.size() > 1) {
-                intent.setClipData(ClipData.newRawUri("", uris.get(0)));
-                for (Uri u : uris) intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                // ClipData обязан содержать ВСЕ файлы: WhatsApp/Telegram и др.
+                // читают именно ClipData, а не EXTRA_STREAM. Раньше здесь был
+                // только первый URI — и отправлялся всегда один файл
+                ClipData clip = ClipData.newRawUri("", uris.get(0));
+                for (int i = 1; i < uris.size(); i++) {
+                    clip.addItem(new ClipData.Item(uris.get(i)));
+                }
+                intent.setClipData(clip);
             }
             act.startActivity(Intent.createChooser(intent, act.getString(R.string.share_via)));
         } catch (Exception e) {
