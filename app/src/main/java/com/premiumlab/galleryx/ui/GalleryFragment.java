@@ -42,6 +42,9 @@ public class GalleryFragment extends BaseMediaFragment {
 
     @Override
     protected void onViewsReady(@NonNull View root) {
+        // Главная галерея «прилипает» к верху: новые файлы, появившиеся
+        // пока приложение было закрыто, сразу оказываются на экране
+        if (adapter != null) adapter.setPinToTop(true);
         chipAll = root.findViewById(R.id.chipAll);
         chipPhotos = root.findViewById(R.id.chipPhotos);
         chipVideos = root.findViewById(R.id.chipVideos);

@@ -118,6 +118,19 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     /** Поколение submitRows: устаревшие результаты сравнения отбрасываются. */
     private int submitGen = 0;
     private boolean selectionMode = false;
+    /** Сетка, к которой подключён адаптер (для «прилипания» к верху). */
+    private RecyclerView attachedRv;
+    /**
+     * «Прилипание к верху» (главная галерея): если человек стоит в самом
+     * верху списка, после фонового обновления список остаётся прилеплен
+     * к верху — новые фото, сделанные пока приложение было закрыто,
+     * видны сразу, а не «над экраном». RecyclerView сам по себе держит
+     * якорь на старом первом элементе и прячет новые файлы сверху; у
+     * GorillaGallery состояние списка позиционное, и верх остаётся
+     * верхом — делаем так же. Если список прокручен вниз, позиция
+     * не трогается.
+     */
+    private boolean pinToTop = false;
     /**
      * Экранный кадр последней нажатой ячейки (left, top, width, height) — просмотрщик
      * «вырастает» из неё и возвращается в неё при закрытии.
@@ -141,6 +154,45 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         this.listener = listener;
         int w = ctx.getResources().getDisplayMetrics().widthPixels;
         this.thumbSize = w / 2;
+    }
+
+    public void setPinToTop(boolean pin) {
+        this.pinToTop = pin;
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        attachedRv = recyclerView;
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView);
+        if (attachedRv == recyclerView) attachedRv = null;
+    }
+
+    /** Сейчас список стоит в самом верху (можно прилипать к верху после обновления). */
+    private boolean computePinTop() {
+        if (!pinToTop || attachedRv == null || rows.isEmpty()) return false;
+        RecyclerView.LayoutManager lm = attachedRv.getLayoutManager();
+        if (!(lm instanceof androidx.recyclerview.widget.LinearLayoutManager)) return false;
+        androidx.recyclerview.widget.LinearLayoutManager llm =
+                (androidx.recyclerview.widget.LinearLayoutManager) lm;
+        if (llm.findFirstVisibleItemPosition() != 0) return false;
+        View first = llm.findViewByPosition(0);
+        // Первая ячейка почти целиком у верхней кромки (допуск на микродвижения)
+        return first == null || first.getTop() >= attachedRv.getPaddingTop() - 4;
+    }
+
+    /** После применения обновления: если стояли вверху — встать ровно наверх. */
+    private void applyPinTop(boolean pin) {
+        if (!pin || attachedRv == null) return;
+        RecyclerView.LayoutManager lm = attachedRv.getLayoutManager();
+        if (lm instanceof androidx.recyclerview.widget.LinearLayoutManager) {
+            ((androidx.recyclerview.widget.LinearLayoutManager) lm)
+                    .scrollToPositionWithOffset(0, 0);
+        }
     }
 
     public void submitRows(List<Row> newRows) {
@@ -180,6 +232,7 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         }
         // Обновление — через DiffUtil: удаления/добавления анимируются
         // (ячейки плавно схлопываются/сдвигаются, а не мигают всем списком)
+        final boolean pin = computePinTop();
         final List<Row> oldRows = new ArrayList<>(rows);
         final List<Row> target = newRows;
         final int gen = ++submitGen;
@@ -196,6 +249,7 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                     rows.clear();
                     rows.addAll(target);
                     notifyDataSetChanged();
+                    applyPinTop(pin);
                 });
                 return;
             }
@@ -208,6 +262,9 @@ public class MediaAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
                 } catch (Throwable t) {
                     notifyDataSetChanged();
                 }
+                // Стояли в самом верху — после обновления остаёмся на самом
+                // верху, и новые файлы видны сразу (механика GorillaGallery)
+                applyPinTop(pin);
             });
         });
     }
