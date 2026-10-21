@@ -66,19 +66,23 @@
 
         <activity
             android:name=".MaskingSettingsActivity"
-            android:exported="false" />
+            android:exported="false" 
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".ExtraSourcesActivity"
-            android:exported="false" />
+            android:exported="false" 
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".FolderActivity"
-            android:exported="false" />
+            android:exported="false" 
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".RootPickerActivity"
-            android:exported="false" />
+            android:exported="false" 
+            android:screenOrientation="portrait" />
 
         <!-- Просмотрщик — лицо «галереи по умолчанию»: открывает фото/видео
              из любых приложений (VIEW по content:// и file://) и кадры после
@@ -122,48 +126,57 @@
 
         <activity
             android:name=".TrashActivity"
-            android:exported="false" />
+            android:exported="false" 
+            android:screenOrientation="portrait" />
 
         <!-- Поиск дубликатов фото (Настройки → Поиск дубликатов) -->
         <activity
             android:name=".DuplicatesActivity"
-            android:exported="false" />
+            android:exported="false" 
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".editor.EditorActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden"
             android:exported="false"
             android:theme="@style/Theme.GalleryX.Viewer.Photo"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustResize" 
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".editor.VideoEditorActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden"
             android:exported="false"
-            android:theme="@style/Theme.GalleryX.Viewer.Photo" />
+            android:theme="@style/Theme.GalleryX.Viewer.Photo" 
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".SmartActivity"
-            android:exported="false" />
+            android:exported="false" 
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".SearchActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustResize|stateVisible" />
+            android:windowSoftInputMode="adjustResize|stateVisible" 
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".SafeActivity"
-            android:exported="false" />
+            android:exported="false" 
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".resizer.ResizerActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden"
             android:exported="false"
-            android:windowSoftInputMode="adjustResize|stateHidden" />
+            android:windowSoftInputMode="adjustResize|stateHidden" 
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".resizer.PickPhotosActivity"
-            android:exported="false" />
+            android:exported="false" 
+            android:screenOrientation="portrait" />
 
         <!-- «Галерея» как источник фото/видео для других приложений
              (кнопка «Выбрать фото» в мессенджерах, почте, браузере и т.д.) -->
@@ -171,7 +184,8 @@
             android:name=".PickerActivity"
             android:excludeFromRecents="true"
             android:exported="true"
-            android:label="@string/app_name">
+            android:label="@string/app_name"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.GET_CONTENT" />
                 <category android:name="android.intent.category.DEFAULT" />
