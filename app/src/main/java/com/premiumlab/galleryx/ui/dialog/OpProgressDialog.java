@@ -35,13 +35,7 @@ public class OpProgressDialog implements FileOp.Progress {
     private final android.os.Handler showHandler =
             new android.os.Handler(android.os.Looper.getMainLooper());
     private boolean dismissed = false;
-    private final Runnable showRunnable = () -> {
-        if (dismissed) return;
-        try {
-            dialog.show();
-        } catch (Exception ignored) {
-        }
-    };
+    private final Runnable showRunnable;
     private static final long SHOW_DELAY_MS = 400;
 
     private OpProgressDialog(AlertDialog dialog, TextView txtTitle, TextView txtFile,
@@ -51,6 +45,17 @@ public class OpProgressDialog implements FileOp.Progress {
         this.txtFile = txtFile;
         this.txtPercent = txtPercent;
         this.progress = progress;
+        // Создаётся здесь и захватывает параметр конструктора: инициализатор
+        // поля с лямбдой, читающей blank final поле dialog, строгие
+        // компиляторы (ecj в Tyron) отклоняют как «поле не инициализировано»
+        final AlertDialog dlg = dialog;
+        this.showRunnable = () -> {
+            if (dismissed) return;
+            try {
+                dlg.show();
+            } catch (Exception ignored) {
+            }
+        };
     }
 
     public static OpProgressDialog show(Context ctx, String title, CancelHook hook) {
