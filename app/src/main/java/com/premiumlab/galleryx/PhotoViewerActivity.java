@@ -788,6 +788,18 @@ public class PhotoViewerActivity extends AppCompatActivity {
                                 cur.path);
                         startActivity(ri);
                     }));
+            // Текстовая копия фото (Base64) — для чатов нейросетей,
+            // которые не принимают сами файлы
+            sheet.add(new OptionsSheet.Item(R.drawable.ic_code,
+                    getString(R.string.viewer_b64), getString(R.string.viewer_b64_sub),
+                    () -> {
+                        MediaItem cur = current();
+                        if (cur == null) return;
+                        MediaItem shown = decorateName(cur);
+                        com.premiumlab.galleryx.ui.sheet.Base64Sheet.newInstance(
+                                cur.path, shown.name)
+                                .show(getSupportFragmentManager(), "base64");
+                    }));
         }
         sheet.add(new OptionsSheet.Item(R.drawable.ic_info,
                 getString(R.string.action_info), getString(R.string.viewer_info_sub),
