@@ -26,9 +26,26 @@ public class OpProgressDialog implements FileOp.Progress {
     private final TextView txtFile;
     private final TextView txtPercent;
     private final ProgressBar progress;
+    /**
+     * Отложенный показ: мгновенные операции (один файл в корзину и т.п.)
+     * не должны мигать диалогом на долю секунды. Диалог появится, только
+     * если операция длится дольше паузы; у массовых операций прогресс
+     * виден как раньше.
+     */
+    private final android.os.Handler showHandler =
+            new android.os.Handler(android.os.Looper.getMainLooper());
+    private boolean dismissed = false;
+    private final Runnable showRunnable = () -> {
+        if (dismissed) return;
+        try {
+            dialog.show();
+        } catch (Exception ignored) {
+        }
+    };
+    private static final long SHOW_DELAY_MS = 400;
 
     private OpProgressDialog(AlertDialog dialog, TextView txtTitle, TextView txtFile,
-                              TextView txtPercent, ProgressBar progress) {
+                             TextView txtPercent, ProgressBar progress) {
         this.dialog = dialog;
         this.txtTitle = txtTitle;
         this.txtFile = txtFile;
@@ -52,8 +69,12 @@ public class OpProgressDialog implements FileOp.Progress {
         if (hook != null) {
             btnCancel.setOnClickListener(x -> hook.onCancelRequested());
         }
-        dialog.show();
-        return new OpProgressDialog(dialog, txtTitle, txtFile, txtPercent, progress);
+        OpProgressDialog result = new OpProgressDialog(dialog, txtTitle, txtFile,
+                txtPercent, progress);
+        // Покажем чуть позже: если операция успеет закончиться — диалог
+        // вообще не появится, и экран не мигнёт вторым окном
+        result.showHandler.postDelayed(result.showRunnable, SHOW_DELAY_MS);
+        return result;
     }
 
     public void updateTitle(String title) {
@@ -74,6 +95,8 @@ public class OpProgressDialog implements FileOp.Progress {
     }
 
     public void dismiss() {
+        dismissed = true;
+        showHandler.removeCallbacks(showRunnable);
         try {
             dialog.dismiss();
         } catch (Exception ignored) {
