@@ -100,28 +100,33 @@ public class SafeFolderFragment extends BaseMediaFragment {
     @Override
     protected void loadMedia() {
         showLoading(true);
-        recycler.post(() -> {
-            if (!isAdded()) return;
-            showLoading(false);
-            entries.clear();
-            entries.addAll(SafeStore.get().entries(video, folder));
-            List<MediaItem> items = new ArrayList<>();
-            for (SafeStore.Entry e : entries) {
-                MediaItem it = new MediaItem();
-                it.path = e.path;
-                it.name = e.name;
-                it.size = e.size;
-                it.dateModified = e.date;
-                it.isVideo = e.video;
-                it.mime = e.video ? "video/*" : "image/*";
-                items.add(it);
-            }
-            setData(items);
-            if (shownItems.isEmpty() && query.isEmpty()) {
-                txtEmptyTitle.setText(R.string.safe_folder_empty_title);
-                txtEmptySub.setText(R.string.safe_folder_empty_sub);
-            }
-        });
+        // Как в корзине: чтение записей — в фоне, не на главном потоке
+        new Thread(() -> {
+            final List<SafeStore.Entry> loaded = SafeStore.get().entries(video, folder);
+            if (getActivity() == null) return;
+            getActivity().runOnUiThread(() -> {
+                if (!isAdded()) return;
+                showLoading(false);
+                entries.clear();
+                entries.addAll(loaded);
+                List<MediaItem> items = new ArrayList<>();
+                for (SafeStore.Entry e : entries) {
+                    MediaItem it = new MediaItem();
+                    it.path = e.path;
+                    it.name = e.name;
+                    it.size = e.size;
+                    it.dateModified = e.date;
+                    it.isVideo = e.video;
+                    it.mime = e.video ? "video/*" : "image/*";
+                    items.add(it);
+                }
+                setData(items);
+                if (shownItems.isEmpty() && query.isEmpty()) {
+                    txtEmptyTitle.setText(R.string.safe_folder_empty_title);
+                    txtEmptySub.setText(R.string.safe_folder_empty_sub);
+                }
+            });
+        }, "safe-load").start();
     }
 
     @Override

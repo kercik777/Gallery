@@ -186,6 +186,21 @@ public class PhotoViewerActivity extends AppCompatActivity {
     private TextView txtVwCur, txtVwDur;
     private SeekBar seekVw;
     private PhotoPagerAdapter.VH currentPage;
+    /** Карты записей корзины/сейфа по пути файла (строятся один раз). */
+    private java.util.Map<String, TrashStore.Entry> trashByPath;
+    private java.util.Map<String, SafeStore.Entry> safeByPath;
+
+    private TrashStore.Entry trashEntry(String path) {
+        if (path == null) return null;
+        if (trashByPath == null) {
+            trashByPath = new java.util.HashMap<>();
+            for (TrashStore.Entry e : TrashStore.get().entries()) {
+                trashByPath.put(e.path, e);
+            }
+        }
+        return trashByPath.get(path);
+    }
+
     private boolean seeking = false;
     private boolean resumePlayback = false;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -303,16 +318,24 @@ public class PhotoViewerActivity extends AppCompatActivity {
 
         adapter = new PhotoPagerAdapter(this, this::toggleBars, dragListener, videoListener);
         adapter.setRotateListener((view, degrees) -> rotateCurrentPhoto(view, degrees));
-        setupVideoControls();
+            setupVideoControls();
         if (mode == MODE_SAFE) {
+            // Карта записей строится ОДИН раз: раньше на каждый свайп
+            // decorateName заново парсил весь список сейфа/корзины и
+            // проверял существование каждого файла — при 1500 файлах
+            // просмотрщик в корзине безбожно тормозил
+            safeByPath = new java.util.HashMap<>();
             java.util.HashSet<String> videos = new java.util.HashSet<>();
             for (SafeStore.Entry e : SafeStore.get().entries()) {
+                safeByPath.put(e.path, e);
                 if (e.video) videos.add(e.path);
             }
             adapter.setVideoPaths(videos);
         } else if (mode == MODE_TRASH) {
+            trashByPath = new java.util.HashMap<>();
             java.util.HashSet<String> videos = new java.util.HashSet<>();
             for (TrashStore.Entry e : TrashStore.get().entries()) {
+                trashByPath.put(e.path, e);
                 if (e.video) videos.add(e.path);
             }
             adapter.setVideoPaths(videos);
@@ -917,6 +940,9 @@ public class PhotoViewerActivity extends AppCompatActivity {
      */
     private void afterCurrentRemoved() {
         if (pendingRemovePath != null) return; // уже листаем после прошлого действия
+        // Записи корзины/сейфа только что менялись — карты перестроятся
+        trashByPath = null;
+        safeByPath = null;
         int pos = pager.getCurrentItem();
         String path = adapter.getPath(pos);
         if (path == null) return;
@@ -979,12 +1005,8 @@ public class PhotoViewerActivity extends AppCompatActivity {
     private MediaItem decorateName(MediaItem it) {
         if (it == null) return null;
         if (mode == MODE_TRASH) {
-            for (TrashStore.Entry e : TrashStore.get().entries()) {
-                if (e.path.equals(it.path)) {
-                    applyEntry(it, e.name, e.video, e.size);
-                    break;
-                }
-            }
+            TrashStore.Entry e = trashEntry(it.path);
+            if (e != null) applyEntry(it, e.name, e.video, e.size);
         } else if (mode == MODE_SAFE) {
             SafeStore.Entry e = safeEntry(it.path);
             if (e != null) applyEntry(it, e.name, e.video, e.size);
@@ -1005,10 +1027,13 @@ public class PhotoViewerActivity extends AppCompatActivity {
     @Nullable
     private SafeStore.Entry safeEntry(String path) {
         if (path == null) return null;
-        for (SafeStore.Entry e : SafeStore.get().entries()) {
-            if (path.equals(e.path)) return e;
+        if (safeByPath == null) {
+            safeByPath = new java.util.HashMap<>();
+            for (SafeStore.Entry e : SafeStore.get().entries()) {
+                safeByPath.put(e.path, e);
+            }
         }
-        return null;
+        return safeByPath.get(path);
     }
 
     private void updateToolbar(int position) {
@@ -1189,9 +1214,8 @@ public class PhotoViewerActivity extends AppCompatActivity {
                 getString(R.string.op_restore), op::cancel);
         if (mode == MODE_TRASH) {
             List<TrashStore.Entry> entries = new ArrayList<>();
-            for (TrashStore.Entry e : TrashStore.get().entries()) {
-                if (e.path.equals(path)) entries.add(e);
-            }
+            TrashStore.Entry e = trashEntry(path);
+            if (e != null) entries.add(e);
             op.restoreTrash(entries, dlg, (ok, fail, cancelled) -> {
                 dlg.dismiss();
                 Toasts.makeText(this, Fmt.plural(this, R.plurals.result_restored, ok),
@@ -1200,9 +1224,8 @@ public class PhotoViewerActivity extends AppCompatActivity {
             });
         } else {
             List<SafeStore.Entry> entries = new ArrayList<>();
-            for (SafeStore.Entry e : SafeStore.get().entries()) {
-                if (e.path.equals(path)) entries.add(e);
-            }
+            SafeStore.Entry e = safeEntry(path);
+            if (e != null) entries.add(e);
             op.restoreSafe(entries, dlg, (ok, fail, cancelled) -> {
                 dlg.dismiss();
                 Toasts.makeText(this, Fmt.plural(this, R.plurals.result_restored, ok),
@@ -1219,6 +1242,7 @@ public class PhotoViewerActivity extends AppCompatActivity {
      */
     private void safeCopyMove(boolean copy) {
         String path = adapter.getPath(pager.getCurrentItem());
+        safeByPath = null; // папка файла могла измениться прошлыми операциями
         SafeStore.Entry entry = safeEntry(path);
         if (entry == null) {
             Toasts.makeText(this, R.string.error_generic, Toast.LENGTH_SHORT).show();

@@ -173,10 +173,14 @@ public class FolderFragment extends BaseMediaFragment {
         done.run();
     }
 
-    /** Внутри папки файлы видны — пользователь уже прошёл PIN при входе. */
+    /**
+     * Внутри обычной папки файлы видны — пользователь уже прошёл PIN при
+     * входе. Но виртуальная папка «Все» — это общая лента, как главный
+     * экран: содержимое заблокированных папок там показываться не должно.
+     */
     @Override
     protected boolean hidesLockedFolders() {
-        return false;
+        return isAll;
     }
 
     private void navigateTo(File dir) {

@@ -46,32 +46,39 @@ public class TrashFragment extends BaseMediaFragment {
     @Override
     protected void loadMedia() {
         showLoading(true);
-        recycler.post(() -> {
-            if (!isAdded()) return;
-            showLoading(false);
-            entries.clear();
-            entries.addAll(TrashStore.get().entries());
-            List<MediaItem> items = new ArrayList<>();
-            for (TrashStore.Entry e : entries) {
-                // Корзина показывает всё удалённое независимо от маскировки
-                MediaItem it = new MediaItem();
-                it.path = e.path;
-                it.name = e.name;
-                it.size = e.size;
-                it.dateModified = e.date;
-                it.isVideo = e.video;
-                it.mime = e.video ? "video/*" : "image/*";
-                long daysLeft = 30 - TimeUnit.MILLISECONDS.toDays(
-                        System.currentTimeMillis() - e.date);
-                it.badge = getString(R.string.trash_days_badge, (int) Math.max(0, daysLeft));
-                items.add(it);
-            }
-            setData(items);
-            if (shownItems.isEmpty() && query.isEmpty()) {
-                txtEmptyTitle.setText(R.string.trash_empty_title);
-                txtEmptySub.setText(R.string.trash_empty_sub);
-            }
-        });
+        // Чтение записей корзины (разбор индекса + проверка тысяч файлов)
+        // идёт в фоне: раньше это делалось на главном потоке, и вход в
+        // большую корзину заметно подвисал
+        new Thread(() -> {
+            final List<TrashStore.Entry> loaded = TrashStore.get().entries();
+            if (getActivity() == null) return;
+            getActivity().runOnUiThread(() -> {
+                if (!isAdded()) return;
+                showLoading(false);
+                entries.clear();
+                entries.addAll(loaded);
+                List<MediaItem> items = new ArrayList<>();
+                for (TrashStore.Entry e : entries) {
+                    // Корзина показывает всё удалённое независимо от маскировки
+                    MediaItem it = new MediaItem();
+                    it.path = e.path;
+                    it.name = e.name;
+                    it.size = e.size;
+                    it.dateModified = e.date;
+                    it.isVideo = e.video;
+                    it.mime = e.video ? "video/*" : "image/*";
+                    long daysLeft = 30 - TimeUnit.MILLISECONDS.toDays(
+                            System.currentTimeMillis() - e.date);
+                    it.badge = getString(R.string.trash_days_badge, (int) Math.max(0, daysLeft));
+                    items.add(it);
+                }
+                setData(items);
+                if (shownItems.isEmpty() && query.isEmpty()) {
+                    txtEmptyTitle.setText(R.string.trash_empty_title);
+                    txtEmptySub.setText(R.string.trash_empty_sub);
+                }
+            });
+        }, "trash-load").start();
     }
 
     @Override
