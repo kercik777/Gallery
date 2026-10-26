@@ -90,6 +90,9 @@ public class PhotoViewerActivity extends AppCompatActivity {
     // --- Направленное автопролистывание после действий с файлом ---
     /** Последняя показанная страница (для определения направления листания). */
     private int lastPos = -1;
+    /** Путь текущего файла: отличает настоящий переход на другой файл от
+     *  сдвига номеров страниц после удаления соседней (автопроход). */
+    private String lastPagePath;
     /** Куда пользователь листает: +1 — вперёд (к следующим), -1 — назад. */
     private int swipeDir = 1;
     /** Идёт программное пролистывание (не путать с ручным свайпом). */
@@ -329,13 +332,21 @@ public class PhotoViewerActivity extends AppCompatActivity {
         pager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
+                // Сменился ли сам файл. После автоперехода удалённая страница
+                // убирается из списка, номера страниц сдвигаются, и тот же
+                // файл приходит сюда с позицией на единицу меньше — раньше
+                // это принималось за «человек листнул влево», и направление
+                // автоперехода переворачивалось после первого же удаления
+                String pagePath = adapter != null ? adapter.getPath(position) : null;
+                boolean samePage = pagePath != null && pagePath.equals(lastPagePath);
+                if (pagePath != null) lastPagePath = pagePath;
                 // Запоминаем, куда человек листает, — после действий с файлом
                 // автопролистывание продолжит движение в ту же сторону
-                if (!autoAdvancing && lastPos >= 0 && position != lastPos) {
+                if (!autoAdvancing && !samePage && lastPos >= 0 && position != lastPos) {
                     swipeDir = position > lastPos ? 1 : -1;
                 }
                 // Перелистнули на другой файл — временная скорость сброшена
-                if (position != lastPos) resetSpeed();
+                if (!samePage && position != lastPos) resetSpeed();
                 lastPos = position;
                 updateToolbar(position);
                 // Видео на новой странице стартует само; предыдущее — останавливается
