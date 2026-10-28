@@ -49,6 +49,12 @@ public class App extends Application {
             } catch (Exception ignored) {
             }
             try {
+                // Заблокированные папки: список в корне — подхватить отсутствующие
+                // и записать копию, если её ещё нет
+                com.premiumlab.galleryx.data.LockStore.syncWithRootFile();
+            } catch (Exception ignored) {
+            }
+            try {
                 TrashStore.get().cleanup(30);
             } catch (Exception ignored) {
             }
