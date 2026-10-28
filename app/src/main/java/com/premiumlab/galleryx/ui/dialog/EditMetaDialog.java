@@ -48,7 +48,7 @@ public final class EditMetaDialog {
                             Listener listener) {
         View v = LayoutInflater.from(act).inflate(R.layout.dialog_edit_meta, null, false);
         EditText editName = v.findViewById(R.id.editMetaName);
-        TextView txtExt = v.findViewById(R.id.txtMetaExt);
+        EditText editExt = v.findViewById(R.id.editMetaExt);
         TextView txtDate = v.findViewById(R.id.txtMetaDate);
         TextView txtTime = v.findViewById(R.id.txtMetaTime);
         View rowDate = v.findViewById(R.id.rowMetaDate);
@@ -59,7 +59,8 @@ public final class EditMetaDialog {
         String ext = dot > 0 ? name.substring(dot) : "";
         editName.setText(base);
         editName.setSelection(base.length());
-        txtExt.setText(ext);
+        String extNoDot = ext.startsWith(".") ? ext.substring(1) : ext;
+        editExt.setText(extNoDot);
 
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(currentDate > 0 ? currentDate : System.currentTimeMillis());
@@ -91,9 +92,40 @@ public final class EditMetaDialog {
                     String newBase = editName.getText().toString().trim()
                             .replace('/', '_').replace('\\', '_');
                     if (newBase.isEmpty()) newBase = base;
-                    apply(act, item, newBase + ext, cal.getTimeInMillis(), listener);
+                    String newExt = sanitizeExt(editExt.getText().toString());
+                    String newName = newBase + (newExt.isEmpty() ? "" : "." + newExt);
+                    long when = cal.getTimeInMillis();
+                    if (!newExt.equalsIgnoreCase(extNoDot)) {
+                        // Расширение меняется: честно предупреждаем, что это
+                        // только переименование, а не конвертация формата
+                        new MaterialAlertDialogBuilder(act)
+                                .setTitle(R.string.meta_ext_warn_title)
+                                .setMessage(act.getString(R.string.meta_ext_warn,
+                                        extDisplay(act, extNoDot), extDisplay(act, newExt)))
+                                .setNegativeButton(R.string.cancel, null)
+                                .setPositiveButton(R.string.meta_ext_continue,
+                                        (dd, ww) -> apply(act, item, newName, when, listener))
+                                .show();
+                    } else {
+                        apply(act, item, newName, when, listener);
+                    }
                 })
                 .show();
+    }
+
+    /** Расширение из поля ввода: без точки, без пробелов и служебных символов. */
+    private static String sanitizeExt(String raw) {
+        if (raw == null) return "";
+        String s = raw.trim().toLowerCase(Locale.US);
+        while (s.startsWith(".")) s = s.substring(1);
+        s = s.replaceAll("[^a-z0-9]", "");
+        return s.length() > 12 ? s.substring(0, 12) : s;
+    }
+
+    /** «.mp4» или «без расширения» — для текста предупреждения. */
+    private static String extDisplay(Context ctx, String extNoDot) {
+        return extNoDot == null || extNoDot.isEmpty()
+                ? ctx.getString(R.string.meta_ext_none) : "." + extNoDot;
     }
 
     private static void apply(FragmentActivity act, MediaItem item, String newName,

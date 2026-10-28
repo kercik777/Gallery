@@ -826,6 +826,7 @@ public abstract class BaseMediaFragment extends Fragment
         if (!isAdded()) return;
         exitSelection();
         loadMedia();
+        refreshVisibleBadges();
     }
 
     // ---------- Выделение ----------
@@ -1046,8 +1047,29 @@ public abstract class BaseMediaFragment extends Fragment
         if (resumedOnce && !isHidden()) {
             // Вернулись из просмотрщика/другого экрана — данные могли измениться
             loadMedia();
+            refreshVisibleBadges();
         }
         resumedOnce = true;
+    }
+
+    /**
+     * Значки «избранное»/«заметка» читаются из хранилищ при привязке ячейки,
+     * а DiffUtil смену флага по тому же пути не замечает (сравнивает состояние
+     * хранилища само с собой). Поэтому при возвращении на экран просто
+     * перепривязываем видимые ячейки — сердечки и заметки появляются и
+     * исчезают сразу, без переключения экранов.
+     */
+    private void refreshVisibleBadges() {
+        if (recycler == null || adapter == null || layoutManager == null) return;
+        recycler.post(() -> {
+            if (!isAdded() || recycler == null || adapter == null
+                    || layoutManager == null) return;
+            int first = layoutManager.findFirstVisibleItemPosition();
+            int last = layoutManager.findLastVisibleItemPosition();
+            if (first >= 0 && last >= first) {
+                adapter.notifyItemRangeChanged(first, last - first + 1);
+            }
+        });
     }
 
     /** Применяет текущий размер сетки без перезапуска. */

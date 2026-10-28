@@ -299,6 +299,11 @@
     <string name="meta_saved">Изменения сохранены</string>
     <string name="meta_name_exists">Файл с таким именем уже есть</string>
     <string name="meta_failed">Не удалось изменить файл</string>
+    <string name="meta_ext_hint">Расширение тоже можно менять (например, mp4 → webm). Это только переименование — сам формат файла не конвертируется.</string>
+    <string name="meta_ext_warn_title">Изменить расширение?</string>
+    <string name="meta_ext_warn">Расширение изменится: %1$s → %2$s. Сам файл при этом не конвертируется: если содержимое не соответствует новому формату, файл может перестать открываться в других программах.</string>
+    <string name="meta_ext_continue">Изменить</string>
+    <string name="meta_ext_none">без расширения</string>
     <string name="info_adjust_date">Изменить дату</string>
     <string name="info_search_image">Поиск по картинке</string>
     <string name="info_no_lens">Google Lens не установлен</string>

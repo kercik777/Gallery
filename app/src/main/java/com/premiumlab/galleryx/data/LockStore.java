@@ -2,6 +2,10 @@ package com.premiumlab.galleryx.data;
 
 import org.json.JSONArray;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -10,7 +14,9 @@ import java.util.List;
  * Заблокированные папки (альбомы). Файлы внутри них (и во вложенных папках)
  * не показываются в общих разделах — Галерея, Избранное, Видео — независимо
  * от маскировки; открыть такую папку можно только после ввода PIN-кода.
- * Список путей хранится в настройках.
+ * Список путей хранится в настройках и дублируется в файл
+ * <корень>/.GalleryX/locked_folders.json — после переустановки приложения
+ * достаточно выбрать ту же корневую папку, и блокировки подхватятся сами.
  */
 public final class LockStore {
 
@@ -38,6 +44,71 @@ public final class LockStore {
         for (String s : l) arr.put(s);
         Prefs.sp().edit().putString(KEY, arr.toString()).apply();
         cache = new ArrayList<>(l);
+        writeMirror(l);
+    }
+
+    // ---------- Резервная копия в корневой папке ----------
+
+    private static final String FILE = "locked_folders.json";
+
+    private static File mirrorFile() {
+        File hidden = AppDirs.hiddenRoot();
+        return hidden == null ? null : new File(hidden, FILE);
+    }
+
+    /** Пишет список в <корень>/.GalleryX (атомарно, через временный файл). */
+    private static void writeMirror(List<String> l) {
+        try {
+            File f = mirrorFile();
+            if (f == null) return;
+            File dir = f.getParentFile();
+            if (dir != null && !dir.isDirectory() && !dir.mkdirs()) return;
+            JSONArray arr = new JSONArray();
+            for (String s : l) arr.put(s);
+            File tmp = new File(dir, "." + FILE + ".tmp");
+            try (FileOutputStream fos = new FileOutputStream(tmp)) {
+                fos.write(arr.toString().getBytes(StandardCharsets.UTF_8));
+                fos.getFD().sync();
+            }
+            if (!tmp.renameTo(f)) {
+                //noinspection ResultOfMethodCallIgnored
+                tmp.delete();
+            }
+        } catch (Exception ignored) {
+            // Резервная копия — не критично
+        }
+    }
+
+    /**
+     * Корень выбран/сменён (вызывает AppDirs): объединяет список из настроек
+     * со списком из файла в корне. Так блокировки переживают переустановку:
+     * настройки пусты — папки подберутся из файла (только существующие).
+     */
+    public static void syncWithRootFile() {
+        try {
+            List<String> merged = list();
+            boolean changed = false;
+            File f = mirrorFile();
+            if (f != null && f.isFile()) {
+                String json = new String(Files.readAllBytes(f.toPath()),
+                        StandardCharsets.UTF_8);
+                JSONArray arr = new JSONArray(json);
+                for (int i = 0; i < arr.length(); i++) {
+                    String p = arr.optString(i, "");
+                    if (!p.isEmpty() && !merged.contains(p)
+                            && new File(p).isDirectory()) {
+                        merged.add(p);
+                        changed = true;
+                    }
+                }
+            }
+            if (changed) {
+                save(merged);
+            } else if (f != null && !f.isFile() && !merged.isEmpty()) {
+                writeMirror(merged);
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     public static boolean any() {

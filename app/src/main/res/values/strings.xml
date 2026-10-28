@@ -300,6 +300,11 @@
     <string name="meta_saved">Changes saved</string>
     <string name="meta_name_exists">A file with this name already exists</string>
     <string name="meta_failed">Couldn’t change the file</string>
+    <string name="meta_ext_hint">You can change the extension too (e.g. mp4 → webm). This only renames the file — the format itself is not converted.</string>
+    <string name="meta_ext_warn_title">Change extension?</string>
+    <string name="meta_ext_warn">The extension will change: %1$s → %2$s. The file itself is not converted: if its contents don’t match the new format, it may stop opening in other apps.</string>
+    <string name="meta_ext_continue">Change</string>
+    <string name="meta_ext_none">no extension</string>
     <string name="info_adjust_date">Change date</string>
     <string name="info_search_image">Search by image</string>
     <string name="info_no_lens">Google Lens is not installed</string>

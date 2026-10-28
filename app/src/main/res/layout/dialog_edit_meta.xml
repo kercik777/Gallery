@@ -37,12 +37,37 @@
             android:textSize="15sp" />
 
         <TextView
-            android:id="@+id/txtMetaExt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="."
             android:textColor="@color/textTertiary"
+            android:textSize="15sp" />
+
+        <EditText
+            android:id="@+id/editMetaExt"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="2dp"
+            android:background="@null"
+            android:gravity="center"
+            android:hint="ext"
+            android:imeOptions="actionDone"
+            android:inputType="text"
+            android:maxLines="1"
+            android:minWidth="48dp"
+            android:textColor="?attr/gxAccent"
+            android:textStyle="bold"
             android:textSize="14sp" />
     </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="6dp"
+        android:text="@string/meta_ext_hint"
+        android:textColor="@color/textTertiary"
+        android:textSize="12sp" />
 
     <TextView
         style="@style/InfoSectionTitle"
