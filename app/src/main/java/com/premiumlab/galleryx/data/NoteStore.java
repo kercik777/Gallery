@@ -72,6 +72,13 @@ public final class NoteStore {
         return ctx.getDatabasePath(INTERNAL_NAME);
     }
 
+    /**
+     * Открывает базу. Никогда не бросает: если внешнее хранилище временно
+     * недоступно (отмонтировано, «Transport endpoint is not connected»,
+     * папку .GalleryX создать не удалось) — возвращает null, а следующий
+     * вызов попробует снова. Вызывающие методы и так сидят в try/catch,
+     * а null они переживают как обычную ошибку одного вызова.
+     */
     private static SQLiteDatabase open() {
         synchronized (LOCK) {
             File target = targetFile();
@@ -82,26 +89,41 @@ public final class NoteStore {
                 } catch (Exception ignored) {
                 }
                 db = null;
+                dbFile = null;
             }
-            File parent = target.getParentFile();
-            if (parent != null && !parent.exists()) {
-                //noinspection ResultOfMethodCallIgnored
-                parent.mkdirs();
+            SQLiteDatabase d = null;
+            try {
+                File parent = target.getParentFile();
+                if (parent != null && !parent.exists()) {
+                    //noinspection ResultOfMethodCallIgnored
+                    parent.mkdirs();
+                }
+                if (parent != null && !parent.isDirectory()) return null;
+                if (parent != null && AppDirs.HIDDEN_NAME.equals(parent.getName())) {
+                    AppDirs.noMedia(parent);
+                }
+                d = SQLiteDatabase.openOrCreateDatabase(target, null);
+                d.execSQL("CREATE TABLE IF NOT EXISTS notes ("
+                        + "path TEXT PRIMARY KEY, "
+                        + "title TEXT, "
+                        + "body TEXT, "
+                        + "updated INTEGER)");
+                migrateInternal(d, target);
+                reloadIndex(d);
+                db = d;
+                dbFile = target;
+                return d;
+            } catch (Exception e) {
+                if (d != null) {
+                    try {
+                        d.close();
+                    } catch (Exception ignored) {
+                    }
+                }
+                db = null;
+                dbFile = null;
+                return null;
             }
-            if (parent != null && AppDirs.HIDDEN_NAME.equals(parent.getName())) {
-                AppDirs.noMedia(parent);
-            }
-            SQLiteDatabase d = SQLiteDatabase.openOrCreateDatabase(target, null);
-            d.execSQL("CREATE TABLE IF NOT EXISTS notes ("
-                    + "path TEXT PRIMARY KEY, "
-                    + "title TEXT, "
-                    + "body TEXT, "
-                    + "updated INTEGER)");
-            db = d;
-            dbFile = target;
-            migrateInternal(d, target);
-            reloadIndex(d);
-            return d;
         }
     }
 
@@ -159,7 +181,14 @@ public final class NoteStore {
 
     /** Прогрев в фоне (при старте и после выбора корня). */
     public static void warmUp() {
-        EXEC.execute(NoteStore::open);
+        EXEC.execute(() -> {
+            try {
+                open();
+            } catch (Throwable ignored) {
+                // Хранилище могло быть временно недоступно — прогрев
+                // повторится при следующем обращении, краш недопустим
+            }
+        });
     }
 
     /** Закрыть базу перед переносом служебной папки. */
